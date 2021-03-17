@@ -27,33 +27,54 @@
   </body>
 </html>
 
-
 <script type="module">
+
+//PARTICLE CLASS AND ARRAYS
+var particles = [];
+var particles2 = [];
+
+class Particle{
+  constructor(i){
+    this.pos = createVector(random(0,300), 100);
+    this.newPos = this.pos;
+    this.lerpTime = 0.5;
+
+    this.size = 8;
+    this.color = color(random(100), 100, 100);
+  }
+  update(newVector,dt){
+    this.pos = this.pos.lerp(this.newPos, this.lerpTime);
+    if(newVector){
+      this.newPos=newVector
+    }
+  }
+}
+
+//MEDIAPIPE STUFF
 const videoElement = document.getElementsByClassName('input_video')[0];
 const canvasElement = document.getElementsByClassName('output_canvas')[0];
-// const canvasCtx = canvasElement.getContext('2d');
+const canvasCtx = canvasElement.getContext('2d');
 let myArray = [];
 let lmArr = [];
 function onResults(results) {
-// console.log(results);
-  // canvasCtx.save();
-  // canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+  // console.log(results);
+  canvasCtx.save();
+  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
   // canvasCtx.drawImage(
-  //     results.image, 0, 0, canvasElement.width, canvasElement.height);
+  // results.image, 0, 0, canvasElement.width, canvasElement.height);
   if (results.multiHandLandmarks) {
     myArray = [];
     // console.log(myArray);
     for (const landmarks of results.multiHandLandmarks) {
       myArray.push(landmarks);
-      // console.log(myArray);
-      // drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
-      //                {color: '#00FF00', lineWidth: 5});
-      // drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
+      console.log(HAND_CONNECTIONS, "jo");
+      drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
+                     {color: '#00FF00', lineWidth: 5});
+      drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
     }
     lmArr = myArray;
-    // console.log(lmArr);
   }
-  // canvasCtx.restore();
+  canvasCtx.restore();
 }
 
 const hands = new Hands({locateFile: (file) => {
@@ -82,62 +103,99 @@ let width = 400;
 let height = 255;
 let size = 20;
 
-// let countDisplay = document.querySelector(".counter");
+
 let j = 0;
 setInterval(function(){
   j++;
   document.querySelector(".counter").textContent=j;
   if(j>22){j=0;}
-  }, 3000);
+}, 1000);
+
+//TICK
+let dtdisplay = document.createElement('div')
+document.body.appendChild(dtdisplay);
+let lastUpdate = Date.now();
+let myInterval = setInterval(tick, 1);
+let now = Date.now();
+let dt;
+function tick() {
+  now = Date.now();
+  dt = now - lastUpdate;
+  lastUpdate = now;
+  dtdisplay.textContent=dt
+}
+setInterval(tick,0);
+
+//P5
 function setup(){
   canvas = createCanvas(400,255);
-  // console.log(canvas);
-  textSize(50);
+  for(let i = 0; i < 21; i++) {
+    let p = new Particle(i);
+    particles.push(p);
+  }
+  for(let i = 0; i < 21; i++) {
+    let p = new Particle(i);
+    particles2.push(p);
+  }
+
 }
 
 function draw(){
-  // console.log(lmArr);
-  background(color(0,0,255,10));
+  stroke(4);
+  background(color(100,25,255,100));
+  fill("white");
   if(lmArr.length==1){
-    console.log(lmArr);
     lmArr[0].forEach((el, i) => {
+
       let x = map(lmArr[0][i].x,0,1,0,width);
       let y = map(lmArr[0][i].y,0,1,0,height);
       let z = map(lmArr[0][i].z,0,-1,size,1);
-      if(i>4&&i<9){
-        fill("red");
-      } else if(i>8&&i<13){
-        fill("orange");
-      }else if(i>12&&i<17){
-        fill("blue");
-      }else if(i>16&&i<21){
-        fill("green");
-      } else{
-        fill("white");
+      if(i<particles.length){
+        particles[i].update(createVector(x,y),dt);
       }
-      ellipse(x, y, 8, 8);
+
+      // if(i>4&&i<9){
+      //   fill("red");
+      // } else if(i>8&&i<13){
+      //   fill("orange");
+      // }else if(i>12&&i<17){
+      //   fill("blue");
+      // }else if(i>16&&i<21){
+      //   fill("green");
+      // } else{
+      //   fill("white");
+      // }
+      ellipse(particles[i].pos.x, particles[i].pos.y, 8, 8);
     });
+
   } else if(lmArr.length==2){
     lmArr[0].forEach((el, i) => {
       let x = map(lmArr[0][i].x,0,1,0,width);
       let y = map(lmArr[0][i].y,0,1,0,height);
-      let z = map(lmArr[0][i].z,0,-1,1,size);
+      let z = map(lmArr[0][i].z,0,-1,size,1);
       let x2 = map(lmArr[1][i].x,0,1,0,width);
       let y2 = map(lmArr[1][i].y,0,1,0,height);
       let z2 = map(lmArr[1][i].z,0,-1,size,1);
-       if(i>4&&i<9){
-        fill("red");
-      } else if(i>8&&i<13){
-        fill("orange");
-      }else if(i>12&&i<17){
-        fill("blue");
-      }else if(i>16&&i<21){
-        fill("green");
-      } else{
-        fill("white");
+      if(i<particles.length){
+        particles[i].update(createVector(x,y),dt);
+        particles2[i].update(createVector(x2,y2),dt);
       }
-      ellipse(x, y, 8, 8);
-      ellipse(x2, y2, 8, 8);
+      //  if(i>4&&i<9){
+      //   fill("red");
+      // } else if(i>8&&i<13){
+      //   fill("orange");
+      // }else if(i>12&&i<17){
+      //   fill("blue");
+      // }else if(i>16&&i<21){
+      //   fill("green");
+      // } else{
+      //   fill("white");
+      // }
+      fill("white");
+      ellipse(particles[i].pos.x, particles[i].pos.y, 8, 8);
+      fill("red");
+      ellipse(particles2[i].pos.x, particles2[i].pos.y, 12, 12);
+      fill("white");
     });
   }
 

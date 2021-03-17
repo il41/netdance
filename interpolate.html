@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>interpolation demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.0/addons/p5.sound.min.js"></script>
+    <style>
+      .input_video{
+        display:none;
+      }
+      .output_canvas{
+        /* width:400px; */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="counter"></div>
+  </body>
+</html>
+
+
+<script type="module">
+class Particle{
+  constructor(i){
+    this.pos = createVector(random(0,300), 0);
+    this.newPos = this.pos;
+    this.lerpTime = 0.01;
+    // this.vel = createVector(random(-1, 1), random(-1, 1));
+    // this.accel = createVector(random(-0.06, 0.07), random(-.0014, .0020));
+
+    this.size = 8;
+    this.color = color(random(100), 100, 100);
+  }
+  update(dt){
+    this.pos = this.pos.lerp(this.newPos, this.lerpTime);
+    // this.vel.add(this.accel);
+    // this.pos.add(this.vel);
+  }
+  newPosition(newVector){
+    this.newPos=newVector
+  }
+}
+
+let particles = [];
+
+
+let canvas;
+let width = 400;
+let height = 255;
+let size = 20;
+let lerptime = 3;
+
+// let countDisplay = document.querySelector(".counter");
+let j = 0;
+setInterval(function(){
+  j++;
+  document.querySelector(".counter").textContent=j;
+  if(j>22){j=0;}
+}, 1000);
+
+
+//TICK
+let dtdisplay = document.createElement('div')
+document.body.appendChild(dtdisplay);
+let lastUpdate = Date.now();
+let myInterval = setInterval(tick, 1);
+let now = Date.now();
+let dt;
+function tick() {
+  now = Date.now();
+  dt = now - lastUpdate;
+  lastUpdate = now;
+dtdisplay.textContent=dt
+}
+setInterval(tick,0);
+
+//p5
+function setup(){
+  canvas = createCanvas(400,255);
+  for(let i = 0; i < 21; i++) {
+    let p = new Particle(i);
+    particles.push(p);
+    ellipse(particles[i].pos.x,particles[i].pos.y,8,8);
+  }
+}
+
+function draw(){
+  background("black");
+  canvas.mousePressed(changeit);
+
+  for(let i = 0; i < particles.length; i++) {
+    ellipse(particles[i].pos.x,particles[i].pos.y,8,8);
+    particles[i].update(dt);
+  }
+}
+
+function changeit(){
+  for (var i = 0; i < particles.length; i++) {
+    particles[i].newPosition(createVector(random(400),random(255)),0.1);
+  }
+}
+
+window.setup = setup;
+window.draw = draw;
+</script>

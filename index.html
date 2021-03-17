@@ -23,35 +23,37 @@
     <video class="input_video"></video>
     <canvas class="output_canvas" width="1280px" height="720px"></canvas>
   </div>
+    <div class="counter"></div>
   </body>
 </html>
+
 
 <script type="module">
 const videoElement = document.getElementsByClassName('input_video')[0];
 const canvasElement = document.getElementsByClassName('output_canvas')[0];
-const canvasCtx = canvasElement.getContext('2d');
+// const canvasCtx = canvasElement.getContext('2d');
 let myArray = [];
 let lmArr = [];
 function onResults(results) {
 // console.log(results);
-  canvasCtx.save();
-  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  canvasCtx.drawImage(
-      results.image, 0, 0, canvasElement.width, canvasElement.height);
+  // canvasCtx.save();
+  // canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+  // canvasCtx.drawImage(
+  //     results.image, 0, 0, canvasElement.width, canvasElement.height);
   if (results.multiHandLandmarks) {
     myArray = [];
     // console.log(myArray);
     for (const landmarks of results.multiHandLandmarks) {
       myArray.push(landmarks);
       // console.log(myArray);
-      drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
-                     {color: '#00FF00', lineWidth: 5});
-      drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
+      // drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
+      //                {color: '#00FF00', lineWidth: 5});
+      // drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
     }
     lmArr = myArray;
     // console.log(lmArr);
   }
-  canvasCtx.restore();
+  // canvasCtx.restore();
 }
 
 const hands = new Hands({locateFile: (file) => {
@@ -78,31 +80,62 @@ camera.start();
 let canvas;
 let width = 400;
 let height = 255;
-let size = 10;
+let size = 20;
+
+// let countDisplay = document.querySelector(".counter");
+let j = 0;
+setInterval(function(){
+  j++;
+  document.querySelector(".counter").textContent=j;
+  if(j>22){j=0;}
+  }, 3000);
 function setup(){
   canvas = createCanvas(400,255);
   // console.log(canvas);
+  textSize(50);
 }
 
 function draw(){
   // console.log(lmArr);
-  background(color(0,0,0,30));
+  background(color(0,0,255,10));
   if(lmArr.length==1){
     console.log(lmArr);
     lmArr[0].forEach((el, i) => {
       let x = map(lmArr[0][i].x,0,1,0,width);
       let y = map(lmArr[0][i].y,0,1,0,height);
-      let z = map(lmArr[0][i].z,-1,0,1,size);
+      let z = map(lmArr[0][i].z,0,-1,size,1);
+      if(i>4&&i<9){
+        fill("red");
+      } else if(i>8&&i<13){
+        fill("orange");
+      }else if(i>12&&i<17){
+        fill("blue");
+      }else if(i>16&&i<21){
+        fill("green");
+      } else{
+        fill("white");
+      }
       ellipse(x, y, 8, 8);
     });
   } else if(lmArr.length==2){
     lmArr[0].forEach((el, i) => {
       let x = map(lmArr[0][i].x,0,1,0,width);
       let y = map(lmArr[0][i].y,0,1,0,height);
-      let z = map(lmArr[0][i].z,-1,0,size,1);
+      let z = map(lmArr[0][i].z,0,-1,1,size);
       let x2 = map(lmArr[1][i].x,0,1,0,width);
       let y2 = map(lmArr[1][i].y,0,1,0,height);
-      let z2 = map(lmArr[0][i].z,-1,0,1,size);
+      let z2 = map(lmArr[1][i].z,0,-1,size,1);
+       if(i>4&&i<9){
+        fill("red");
+      } else if(i>8&&i<13){
+        fill("orange");
+      }else if(i>12&&i<17){
+        fill("blue");
+      }else if(i>16&&i<21){
+        fill("green");
+      } else{
+        fill("white");
+      }
       ellipse(x, y, 8, 8);
       ellipse(x2, y2, 8, 8);
     });

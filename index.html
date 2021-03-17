@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>netdance demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.0/addons/p5.sound.min.js"></script>
+    <style>
+      .input_video{
+        display:none;
+      }
+      .output_canvas{
+        width:400px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+    <video class="input_video"></video>
+    <canvas class="output_canvas" width="1280px" height="720px"></canvas>
+  </div>
+  </body>
+</html>
+
+<script type="module">
+const videoElement = document.getElementsByClassName('input_video')[0];
+const canvasElement = document.getElementsByClassName('output_canvas')[0];
+const canvasCtx = canvasElement.getContext('2d');
+let myArray = [];
+let lmArr = [];
+function onResults(results) {
+// console.log(results);
+  canvasCtx.save();
+  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+  canvasCtx.drawImage(
+      results.image, 0, 0, canvasElement.width, canvasElement.height);
+  if (results.multiHandLandmarks) {
+    myArray = [];
+    // console.log(myArray);
+    for (const landmarks of results.multiHandLandmarks) {
+      myArray.push(landmarks);
+      // console.log(myArray);
+      drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
+                     {color: '#00FF00', lineWidth: 5});
+      drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
+    }
+    lmArr = myArray;
+    // console.log(lmArr);
+  }
+  canvasCtx.restore();
+}
+
+const hands = new Hands({locateFile: (file) => {
+  return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+}});
+hands.setOptions({
+  maxNumHands: 2,
+  minDetectionConfidence: 0.5,
+  minTrackingConfidence: 0.5
+});
+hands.onResults(onResults);
+const camera = new Camera(videoElement, {
+  onFrame: async () => {
+    await hands.send({image: videoElement});
+  },
+  width: 1280,
+  height: 720
+});
+camera.start();
+
+
+
+
+let canvas;
+let width = 400;
+let height = 255;
+let size = 10;
+function setup(){
+  canvas = createCanvas(400,255);
+  // console.log(canvas);
+}
+
+function draw(){
+  // console.log(lmArr);
+  background(color(0,0,0,30));
+  if(lmArr.length==1){
+    console.log(lmArr);
+    lmArr[0].forEach((el, i) => {
+      let x = map(lmArr[0][i].x,0,1,0,width);
+      let y = map(lmArr[0][i].y,0,1,0,height);
+      let z = map(lmArr[0][i].z,-1,0,1,size);
+      ellipse(x, y, 8, 8);
+    });
+  } else if(lmArr.length==2){
+    lmArr[0].forEach((el, i) => {
+      let x = map(lmArr[0][i].x,0,1,0,width);
+      let y = map(lmArr[0][i].y,0,1,0,height);
+      let z = map(lmArr[0][i].z,-1,0,size,1);
+      let x2 = map(lmArr[1][i].x,0,1,0,width);
+      let y2 = map(lmArr[1][i].y,0,1,0,height);
+      let z2 = map(lmArr[0][i].z,-1,0,1,size);
+      ellipse(x, y, 8, 8);
+      ellipse(x2, y2, 8, 8);
+    });
+  }
+
+}
+
+window.setup = setup;
+window.draw = draw;
+</script>

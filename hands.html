@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"></script>
+  </head>
+  <body>
+    <div class="container">
+      <video class="input_video"></video>
+      <canvas class="output_canvas" width="1280px" height="720px"></canvas>
+    </div>
+    <script>
+      // Load the MediaPipe handpose model assets.
+      const model = await handpose.load();
+
+      // Pass in a video stream to the model to obtain
+      // a prediction from the MediaPipe graph.
+      const video = document.querySelector("video");
+      const hands = await model.estimateHands(video);
+
+      // Each hand object contains a `landmarks` property,
+      // which is an array of 21 3-D landmarks.
+      hands.forEach(hand => console.log(hand.landmarks));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>netdance demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.0/addons/p5.sound.min.js"></script>
+    <style>
+      .input_video{
+        display:none;
+      }
+      .output_canvas{
+        width:400px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+    <video class="input_video"></video>
+    <canvas class="output_canvas" width="1280px" height="720px"></canvas>
+  </div>
+    <div class="counter"></div>
+  </body>
+</html>
+
+<script type="module">
+
+//PARTICLE CLASS AND ARRAYS
+var particles = [];
+
+class Particle{
+  constructor(i){
+    this.pos = createVector(random(0,300), 100);
+    this.newPos = this.pos;
+    this.lerpTime = 0.9;
+
+    this.size = 8;
+    this.color = color(random(100), 100, 100);
+  }
+  update(newVector,dt){
+    this.pos = this.pos.lerp(this.newPos, this.lerpTime);
+    if(newVector){
+      this.newPos=newVector
+    }
+  }
+}
+
+//BOID class
+class Boid{
+  constructor(i){
+    this.position = createVector(random(640),random(360));
+    this.velocity = p5.Vector.random2D();
+    this.acceleration = createVector();
+    this.velocity.setMag(random(2,4));
+    this.maxForce = 0.2;
+    this.maxSpeed = 4;
+  }
+
+  edges(){
+    if(this.position.x>width){
+      this.position.x=0;
+    } else if(this.position.x <0){
+      this.position.x=width;
+    }
+    if(this.position.y>height){
+      this.position.y=0;
+    } else if (this.position.y<0){
+      this.position.y=height;
+    }
+  }
+
+  align(boids){
+    let perceptionRadius = 50;
+    let steering = createVector();
+    let total=0;
+    for (let other of boids) {
+      let d = dist(
+        this.position.x,this.position.y,
+        other.position.x,other.position.y);
+      if(other != this && d<perceptionRadius){
+        steering.add(other.velocity);
+        total++;
+      }
+    }
+    if(total>0){
+      steering.div(total);
+      steering.setMag(this.maxSpeed);
+      steering.sub(this.velocity);
+      steering.limit(this.maxForce);
+    }
+    return steering;
+  }
+
+  separation(boids){
+    let perceptionRadius = 50;
+    let steering = createVector();
+    let total=0;
+    for (let other of boids) {
+      let d = dist(
+        this.position.x,this.position.y,
+        other.position.x,other.position.y);
+      if(other != this && d<perceptionRadius){
+        let diff = p5.Vector.sub(this.position,other.position);
+        diff.div(d);
+        steering.add(diff);
+        total++;
+      }
+    }
+    if(total>0){
+      steering.div(total);
+      steering.setMag(this.maxSpeed)
+      steering.sub(this.velocity);
+      steering.limit(this.maxForce);
+    }
+    return steering;
+  }
+
+  cohesion(boids){
+    let perceptionRadius = 100;
+    let steering = createVector();
+    let total=0;
+    for (let other of boids) {
+      let d = dist(
+        this.position.x,this.position.y,
+        other.position.x,other.position.y);
+      if(other != this && d<perceptionRadius){
+        steering.add(other.position);
+        total++;
+      }
+    }
+    if(total>0){
+      steering.div(total);
+      steering.sub(this.position);
+      steering.setMag(this.maxSpeed)
+      steering.sub(this.velocity);
+      steering.limit(this.maxForce);
+    }
+    return steering;
+  }
+
+  flock(boids){
+    let alignment = this.align(boids);
+    let cohesion = this.cohesion(boids);
+    let separation = this.separation(boids);
+
+    separation.mult(separationSlider.value());
+    cohesion.mult(cohesionSlider.value());
+    alignment.mult(alignmentSlider.value());
+
+    this.acceleration.add(separation);
+    this.acceleration.add(alignment);
+    this.acceleration.add(cohesion);
+  }
+
+  update(){
+    this.position.add(this.velocity);
+    this.velocity.add(this.acceleration);
+    this.velocity.limit(this.maxSpeed);
+    this.acceleration.mult(0);
+  }
+
+  show(){
+    strokeWeight(8);
+    stroke(255);
+    point(this.position.x,this.position.y)
+  }
+}
+let flock = [];
+
+
+
+//MEDIAPIPE STUFF
+const videoElement = document.getElementsByClassName('input_video')[0];
+const canvasElement = document.getElementsByClassName('output_canvas')[0];
+const canvasCtx = canvasElement.getContext('2d');
+let myArray = [];
+let lmArr = [];
+// function onResults(results) {
+//   console.log(results);
+//   canvasCtx.save();
+//   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+//   // canvasCtx.drawImage(
+//   // results.image, 0, 0, canvasElement.width, canvasElement.height);
+//   if (results.multiHandLandmarks) {
+//     myArray = [];
+//     // console.log(myArray);
+//     for (const landmarks of results.multiHandLandmarks) {
+//       myArray.push(landmarks);
+//       drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
+//                  {color: '#00FF00', lineWidth: 4});
+//       drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
+//     }
+//     lmArr = myArray;
+//   }
+//   canvasCtx.restore();
+// }
+
+function onResults(results) {
+  // console.log(results);
+  canvasCtx.save();
+  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+  canvasCtx.drawImage(
+      results.image, 0, 0, canvasElement.width, canvasElement.height);
+  if (results.poseLandmarks) {
+    myArray = [];
+    // console.log(myArray);
+    for (const landmarks of results.poseLandmarks) {
+      myArray.push(landmarks);
+      drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
+                 {color: '#00FF00', lineWidth: 4});
+      drawLandmarks(canvasCtx, results.poseLandmarks,
+                {color: '#FF0000', lineWidth: 2});
+    }
+    lmArr = myArray;
+  }
+  canvasCtx.restore();
+}
+
+const pose = new Pose({locateFile: (file) => {
+  return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+}});
+pose.setOptions({
+  upperBodyOnly: true,
+  smoothLandmarks: true,
+  minDetectionConfidence: 0.5,
+  minTrackingConfidence: 0.5
+});
+pose.onResults(onResults);
+
+const camera = new Camera(videoElement, {
+  onFrame: async () => {
+    await pose.send({image: videoElement});
+  },
+  width: 1280,
+  height: 720
+});
+camera.start();
+
+
+
+//Long Tick
+let j = 0;
+setInterval(function(){
+  j++;
+  document.querySelector(".counter").textContent=j;
+  if(j>22){j=0;}
+}, 1000);
+
+//TICK
+let dtdisplay = document.createElement('div')
+document.body.appendChild(dtdisplay);
+let lastUpdate = Date.now();
+let myInterval = setInterval(tick, 1);
+let now = Date.now();
+let dt;
+function tick() {
+  now = Date.now();
+  dt = now - lastUpdate;
+  lastUpdate = now;
+  dtdisplay.textContent=dt
+}
+setInterval(tick,0);
+
+//P5
+let canvas;
+let width = 400;
+let height = 255;
+let size = 20;
+let alignmentSlider, cohesionSlider, separationSlider;
+
+function setup(){
+  createCanvas(width,height);
+  alignmentSlider = createSlider(0,5,1,0.1);
+  cohesionSlider = createSlider(0,5,1,0.1);
+  separationSlider = createSlider(0,5,1,0.1);
+  for(let i=0; i<25; i++){
+    flock.push(new Boid());
+  }
+  for(let i = 0; i < 25; i++) {
+    let p = new Particle(i);
+    particles.push(p);
+  }
+
+}
+
+function draw(){
+  for(let boid of flock){
+    boid.edges();
+    boid.update();
+    boid.show();
+    boid.flock(flock);
+  }
+  stroke(4);
+  background(color(100,25,255,100));
+  fill("white");
+  if(lmArr.length>0){
+    lmArr.forEach((el, i) => {
+
+      let x = map(lmArr[i].x,0,1,0,width);
+      let y = map(lmArr[i].y,0,1,0,height);
+      let z = map(lmArr[i].z,0,-1,size,1);
+      if(i<particles.length){
+        particles[i].update(createVector(x,y),dt);
+      }
+
+      // if(i>4&&i<9){
+      //   fill("red");
+      // } else if(i>8&&i<13){
+      //   fill("orange");
+      // }else if(i>12&&i<17){
+      //   fill("blue");
+      // }else if(i>16&&i<21){
+      //   fill("green");
+      // } else{
+      //   fill("white");
+      // }
+      ellipse(particles[i].pos.x, particles[i].pos.y, 8, 8);
+    });
+
+  }
+
+}
+
+window.setup = setup;
+window.draw = draw;
+</script>

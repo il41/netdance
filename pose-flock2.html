@@ -162,9 +162,9 @@ function setup(){
   alignmentSlider = createSlider(0,5,1,0.1);
   cohesionSlider = createSlider(0,5,1,0.1);
   separationSlider = createSlider(0,5,1,0.1);
-  // for(let i=0; i<25; i++){
-  //   flock.push(new Boid());
-  // }
+  for(let i=0; i<25; i++){
+    flock.push(new Boid());
+  }
   for(let i = 0; i < 25; i++) {
     let p = new Particle(i);
     particles.push(p);

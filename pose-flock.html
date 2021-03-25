@@ -99,14 +99,17 @@ Boid.prototype.flock = function(boids) {
   let sep = this.separate(boids);   // Separation
   let ali = this.align(boids);      // Alignment
   let coh = this.cohesion(boids);   // Cohesion
+  // let mag = this.magnetism(boids);   // Magnetism
   // Arbitrarily weight these forces
   sep.mult(1.5);
   ali.mult(1.0);
   coh.mult(1.0);
+  // mag.mult(1.0);
   // Add the force vectors to acceleration
   this.applyForce(sep);
   this.applyForce(ali);
   this.applyForce(coh);
+  // this.applyForce(mag);
 }
 
 // Method to update location
@@ -138,15 +141,16 @@ Boid.prototype.render = function() {
   let theta = this.velocity.heading() + radians(90);
   fill(127);
   stroke(200);
-  push();
-  translate(this.position.x, this.position.y);
-  rotate(theta);
-  beginShape();
-  vertex(0, -this.r * 2);
-  vertex(-this.r, this.r * 2);
-  vertex(this.r, this.r * 2);
-  endShape(CLOSE);
-  pop();
+  // push();
+  // translate(this.position.x, this.position.y);
+  // rotate(theta);
+  // beginShape();
+  // vertex(0, -this.r * 2);
+  // vertex(-this.r, this.r * 2);
+  // vertex(this.r, this.r * 2);
+  // endShape(CLOSE);
+  // pop();
+  ellipse(this.position.x, this.position.y,3);
 }
 
 // Wraparound
@@ -237,6 +241,25 @@ Boid.prototype.cohesion = function(boids) {
     return createVector(0, 0);
   }
 }
+// Magnetism
+
+// Boid.prototype.magnetism = function(boids,newpos) {
+//   let sum = createVector(0, 0);   // Start with empty vector to accumulate all locations
+//   let count = 0;
+//   for (let i = 0; i < boids.length; i++) {
+//     let d = p5.Vector.dist(this.position,newpos);
+//     if ((d > 0) && (d < neighbordist)) {
+//       sum.add(newpos); // Add location
+//       count++;
+//     }
+//   }
+//   if (count > 0) {
+//     sum.div(count);
+//     return this.seek(sum);  // Steer towards the location
+//   } else {
+//     return createVector(0, 0);
+//   }
+// }
 
 
 
@@ -362,8 +385,6 @@ function draw(){
   flock.run();
   for(let i=0; i<flock.boids.length;i++){
     if(particles[i].position){
-      flock.boids[i].seek(particles[i].position);
-      flock.boids[i].seek(particles[i].position);
       flock.boids[i].seek(particles[i].position);
     }
   }

@@ -20,7 +20,11 @@
         margin-right: 10px;
         background-color: lightpink;
       }
-
+      canvas{
+        position:absolute;
+        top:0;
+        left:0;
+      }
     </style>
   </head>
   <body>
@@ -36,7 +40,6 @@
 </html>
 
 <script type="module">
-
 //PARTICLE CLASS AND ARRAYS
 var particles = [];
 var particles2 = [];
@@ -68,17 +71,17 @@ function onResults(results) {
   // console.log(results);
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  // canvasCtx.drawImage(
-  // results.image, 0, 0, canvasElement.width, canvasElement.height);
+  canvasCtx.drawImage(
+  results.image, 0, 0, canvasElement.width, canvasElement.height);
   if (results.multiHandLandmarks) {
     myArray = [];
     // console.log(myArray);
     for (const landmarks of results.multiHandLandmarks) {
       myArray.push(landmarks);
-      console.log(HAND_CONNECTIONS, "jo");
-      drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
-                     {color: '#00FF00', lineWidth: 5});
-      drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
+      // console.log(HAND_CONNECTIONS, "jo");
+      // drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
+      //                {color: '#00FF00', lineWidth: 5});
+      // drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
     }
     lmArr = myArray;
   }
@@ -104,11 +107,11 @@ const camera = new Camera(videoElement, {
 camera.start();
 
 
-
+console.log(canvasElement.width,canvasElement.height);
 
 let canvas;
 let width = 400;
-let height = 255;
+let height = 225;
 let size = 20;
 
 
@@ -135,8 +138,11 @@ function tick() {
 setInterval(tick,0);
 
 //P5
+  let extraCanvas;
 function setup(){
   canvas = createCanvas(400,255);
+  extraCanvas = createGraphics(width,height);
+  extraCanvas.clear();
   for(let i = 0; i < 21; i++) {
     let p = new Particle(i);
     particles.push(p);
@@ -149,8 +155,9 @@ function setup(){
 }
 
 function draw(){
-  stroke(4);
-  background(color(100,25,255,100));
+  clear();
+  stroke(color(0,0,0,0));
+  // background(color(100,25,255,100));
   fill("white");
   if(lmArr.length==1){
     lmArr[0].forEach((el, i) => {
@@ -173,7 +180,7 @@ function draw(){
       // } else{
       //   fill("white");
       // }
-      ellipse(particles[i].pos.x, particles[i].pos.y, 8, 8);
+      extraCanvas.ellipse(particles[i].pos.x, particles[i].pos.y, 8, 8);
     });
 
   } else if(lmArr.length==2){
@@ -188,25 +195,38 @@ function draw(){
         particles[i].update(createVector(x,y),dt);
         particles2[i].update(createVector(x2,y2),dt);
       }
-      //  if(i>4&&i<9){
-      //   fill("red");
-      // } else if(i>8&&i<13){
-      //   fill("orange");
-      // }else if(i>12&&i<17){
-      //   fill("blue");
-      // }else if(i>16&&i<21){
-      //   fill("green");
-      // } else{
-      //   fill("white");
-      // }
-      fill("white");
-      ellipse(particles[i].pos.x, particles[i].pos.y, 8, 8);
-      fill("red");
-      ellipse(particles2[i].pos.x, particles2[i].pos.y, 12, 12);
+       if(i>4&&i<9){
+        extraCanvas.fill("red");
+      } else if(i>8&&i<13){
+        extraCanvas.fill("orange");
+      }else if(i>12&&i<17){
+        extraCanvas.fill("blue");
+      }else if(i>16&&i<21){
+        extraCanvas.fill("green");
+      } else{
+        extraCanvas.fill("white");
+      }
+
+      // fill("white");
+      extraCanvas.ellipse(particles[i].pos.x, particles[i].pos.y, 8, 8);
+      // fill("red");
+      extraCanvas.ellipse(particles2[i].pos.x, particles2[i].pos.y, 12, 12);
       fill("white");
     });
   }
+  extraCanvas.noStroke();
+  // extraCanvas.fill(255,150);
 
+  // imageMode(CENTER);
+  extraCanvas.globalCompositeOperation = "exclusion";
+  image(extraCanvas,0,0);
+  push();
+  // translate(200,200);
+  // rotate(0.1);
+  // tint(0,255,0);
+  // extraCanvas.setAlpha(0.14);
+  image(extraCanvas,0,0);
+  pop();
 }
 
 window.setup = setup;

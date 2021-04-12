@@ -154,6 +154,7 @@ setInterval(tick,0);
   let followers = [];
   let followers2 = [];
   let extraCanvas;
+  let depth = 14;
 function setup(){
   canvas = createCanvas(width,height);
   extraCanvas = createGraphics(width,height);
@@ -184,29 +185,42 @@ function draw(){
 
       let x = map(lmArr[0][i].x,0,1,0,width);
       let y = map(lmArr[0][i].y,0,1,0,height);
-      let z = map(lmArr[0][i].z,0,-1,size,1);
+      let z = map(lmArr[0][i].z,-1,0,0,1);
+      z = lmArr[0][i].z;
+      z=abs(z*obj.depth);
       if(i<particles.length){
         particles[i].update(createVector(x,y),dt);
         followers[i].springUpdate(createVector(x,y));
+        // if(i>4&&i<9){
+        //   fill("red");
+        // } else if(i>8&&i<13){
+        //   fill("orange");
+        // }else if(i>12&&i<17){
+        //   fill("blue");
+        // }else if(i>16&&i<21){
+        //   fill("green");
+        // } else{
+        //   fill("white");
+        // }
+        extraCanvas.strokeWeight(2);
+        extraCanvas.strokeWeight(z)
+        extraCanvas.stroke(51);
+        // extraCanvas.stroke('red');
+        extraCanvas.fill(255);
+        if(obj.outlineOnly){
+          extraCanvas.noFill();
+          extraCanvas.stroke('blue');
+          extraCanvas.stroke(color(255,sin(i*5)*255,i*6));
+        }
+        if(obj.spring){
+          extraCanvas.ellipse(followers[i].pos.x, followers[i].pos.y, obj.size, obj.size);
+        } else {
+          extraCanvas.ellipse(particles[i].pos.x, particles[i].pos.y, obj.size, obj.size);
+        }
       }
 
-      if(i>4&&i<9){
-        fill("red");
-      } else if(i>8&&i<13){
-        fill("orange");
-      }else if(i>12&&i<17){
-        fill("blue");
-      }else if(i>16&&i<21){
-        fill("green");
-      } else{
-        fill("white");
-      }
       // extraCanvas.ellipse(particles[i].pos.x, particles[i].pos.y, 8, 8);
-      if(obj.spring){
-        extraCanvas.ellipse(followers[i].pos.x, followers[i].pos.y, obj.size, obj.size);
-      } else {
-        extraCanvas.ellipse(particles[i].pos.x, particles[i].pos.y, obj.size, obj.size);
-      }
+
     });
 
   } else if(lmArr.length==2){
@@ -214,9 +228,13 @@ function draw(){
       let x = map(lmArr[0][i].x,0,1,0,width);
       let y = map(lmArr[0][i].y,0,1,0,height);
       let z = map(lmArr[0][i].z,0,-1,size,1);
+      z = lmArr[0][i].z;
+      z=abs(z*obj.depth);
       let x2 = map(lmArr[1][i].x,0,1,0,width);
       let y2 = map(lmArr[1][i].y,0,1,0,height);
       let z2 = map(lmArr[1][i].z,0,-1,size,1);
+      z2 = lmArr[1][i].z;
+      z2=abs(z*obj.depth);
       if(i<particles.length){
         particles[i].update(createVector(x,y),dt);
         particles2[i].update(createVector(x2,y2),dt);
@@ -240,6 +258,13 @@ function draw(){
       // fill("red");
       // extraCanvas.ellipse(particles2[i].pos.x, particles2[i].pos.y, 12, 12);
       // extraCanvas.fill("white");
+      extraCanvas.strokeWeight(z)
+      extraCanvas.stroke(51);
+      if(obj.outlineOnly){
+        extraCanvas.noFill();
+        extraCanvas.stroke('blue');
+        extraCanvas.stroke(color(255,sin(i*5)*255,i*6));
+      }
       if(obj.spring){
         // extraCanvas.fill("blue");
         extraCanvas.ellipse(followers[i].pos.x, followers[i].pos.y, obj.size, obj.size);
@@ -254,8 +279,8 @@ function draw(){
 
 
     });
-  }
-  extraCanvas.noStroke();
+  } else{}
+  // extraCanvas.noStroke();
   // extraCanvas.fill(255,150);
 
   // imageMode(CENTER);
@@ -273,8 +298,8 @@ function draw(){
 window.setup = setup;
 window.draw = draw;
 
-//dat.GUI
 
+//dat.GUI
 const gui = new dat.GUI();
 
 let obj = {
@@ -282,14 +307,10 @@ let obj = {
   springStrength: 0.1,
   smooth: 0.5,
   size: 8,
-  spring: true
+  spring: true,
+  outlineOnly:false,
+  depth:14
 }
-
-// gui.add(obj, "spring");
-// gui.add(obj, "springDrag").min(0).max(1).step(0.01);
-// gui.add(obj, "springStrength").min(0).max(1).step(0.01);
-// gui.add(obj, "smooth").min(0).max(1).step(0.01);
-// gui.add(obj, "size").min(0).max(20).step(0.01);
 
 gui.add(obj, "spring").onChange(function(newValue) {
 	obj.spring = newValue;
@@ -325,6 +346,12 @@ gui.add(obj, "size").min(0).max(20).step(0.01).onChange(function(newValue) {
   followers2.forEach((e)=>{
     e.size=obj.size;
   })
+});
+gui.add(obj, "outlineOnly").onChange(function(newValue) {
+  obj.outlineOnly=newValue
+});
+gui.add(obj, "depth").min(0).max(20).step(0.01).onChange(function(newValue) {
+  obj.depth=newValue
 });
 
 

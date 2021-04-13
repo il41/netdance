@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>netdance demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.0/p5.min.js"></script>
+    <script type="text/javascript" src="js/dat.gui.min.js"></script>
+    <style>
+      .input_video{
+        display:none;
+      }
+      .output_canvas{
+        width:800px;
+      }
+      a{
+        margin-right: 10px;
+        background-color: lightpink;
+      }
+      canvas{
+        position:absolute;
+        top:0;
+        left:0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+    <video class="input_video"></video>
+    <canvas class="output_canvas" width="1280px" height="720px"></canvas>
+  </div>
+    <div class="counter"></div>
+  </body>
+</html>
+
+<script>
+
+//PARTICLE CLASS AND ARRAYS
+var particles = [];
+var particles2 = [];
+
+class Particle{
+  constructor(i){
+    this.vel = createVector(0,0);
+    this.drag = 0.55;
+    this.strength = 0.1;
+    this.pos = createVector(random(0,300));
+    this.newPos = this.pos;
+    this.lerpTime = 0.5;
+
+    this.size = 8;
+    this.color = color(random(100), 100, 100);
+  }
+  update(newVector,dt){
+    this.pos = this.pos.lerp(this.newPos, obj.smooth);
+    if(newVector){
+      this.newPos=newVector
+    }
+  }
+
+  springUpdate(target){
+    let force = p5.Vector.sub(target, this.pos);
+    force = force.mult(this.strength);
+    this.vel =this. vel.mult(this.drag);
+    this.vel = this.vel.add(force);
+    this.pos = this.pos.add(this.vel);
+  }
+}
+
+//MEDIAPIPE STUFF
+const videoElement = document.getElementsByClassName('input_video')[0];
+const canvasElement = document.getElementsByClassName('output_canvas')[0];
+const canvasCtx = canvasElement.getContext('2d');
+let myArray = [];
+let lmArr = [];
+function onResults(results) {
+  // console.log(results);
+  canvasCtx.save();
+  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+  canvasCtx.drawImage(
+      results.image, 0, 0, canvasElement.width, canvasElement.height);
+  if (results.poseLandmarks) {
+    myArray = [];
+    // console.log(myArray);
+    for (const landmarks of results.poseLandmarks) {
+      myArray.push(landmarks);
+      // drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
+      //            {color: '#00FF00', lineWidth: 4});
+      // drawLandmarks(canvasCtx, results.poseLandmarks,
+      //           {color: '#FF0000', lineWidth: 2});
+    }
+    lmArr = myArray;
+  }
+  canvasCtx.restore();
+}
+
+const pose = new Pose({locateFile: (file) => {
+  return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+}});
+pose.setOptions({
+  upperBodyOnly: true,
+  smoothLandmarks: true,
+  minDetectionConfidence: 0.5,
+  minTrackingConfidence: 0.5
+});
+pose.onResults(onResults);
+
+const camera = new Camera(videoElement, {
+  onFrame: async () => {
+    await pose.send({image: videoElement});
+  },
+  width: 1280,
+  height: 720
+});
+camera.start();
+
+
+console.log(canvasElement.width,canvasElement.height);
+
+let canvas;
+let width = 400;
+let height = 225;
+let size = 20;
+width *=2;
+height *=2;
+
+let j = 0;
+setInterval(function(){
+  j++;
+  document.querySelector(".counter").textContent=j;
+  if(j>22){j=0;}
+}, 1000);
+
+//TICK
+let dtdisplay = document.createElement('div')
+document.body.appendChild(dtdisplay);
+let lastUpdate = Date.now();
+let myInterval = setInterval(tick, 1);
+let now = Date.now();
+let dt;
+function tick() {
+  now = Date.now();
+  dt = now - lastUpdate;
+  lastUpdate = now;
+  dtdisplay.textContent=dt
+}
+setInterval(tick,0);
+
+//P5
+  let followers = [];
+  let extraCanvas;
+  let depth = 14;
+function setup(){
+  canvas = createCanvas(width,height);
+  extraCanvas = createGraphics(width,height);
+  extraCanvas.clear();
+  for(let i = 0; i < 25; i++) {
+    let p = new Particle(i);
+    particles.push(p);
+    let f = new Particle(i);
+    followers.push(f);
+  }
+
+}
+
+function draw(){
+  clear();
+  extraCanvas.clear();
+  stroke(color(0,0,0,0));
+  // background(color(100,25,255,100));
+  fill("white");
+  if(lmArr.length>0){
+    lmArr.forEach((el, i) => {
+
+      let x = map(lmArr[i].x,0,1,0,width);
+      let y = map(lmArr[i].y,0,1,0,height);
+      let z = map(lmArr[i].z,-1,0,0,1);
+      z = lmArr[i].z;
+      z=abs(z*obj.depth);
+      z=obj.depth;
+      if(i<particles.length){
+        particles[i].update(createVector(x,y),dt);
+        followers[i].springUpdate(createVector(x,y));
+        // if(i>4&&i<9){
+        //   fill("red");
+        // } else if(i>8&&i<13){
+        //   fill("orange");
+        // }else if(i>12&&i<17){
+        //   fill("blue");
+        // }else if(i>16&&i<21){
+        //   fill("green");
+        // } else{
+        //   fill("white");
+        // }
+        extraCanvas.strokeWeight(2);
+        extraCanvas.strokeWeight(z)
+        extraCanvas.stroke(obj.color);
+        // extraCanvas.stroke('red');
+        extraCanvas.fill(255);
+        if(obj.outlineOnly){
+          extraCanvas.noFill();
+          extraCanvas.stroke('blue');
+          extraCanvas.stroke(color(255,sin(i*5)*255,i*6));
+        }
+        if(obj.spring){
+          extraCanvas.ellipse(followers[i].pos.x, followers[i].pos.y, obj.size, obj.size);
+        } else {
+          extraCanvas.ellipse(particles[i].pos.x, particles[i].pos.y, obj.size, obj.size);
+        }
+      }
+
+      // extraCanvas.ellipse(particles[i].pos.x, particles[i].pos.y, 8, 8);
+
+    });
+
+  }
+  // extraCanvas.noStroke();
+  // extraCanvas.fill(255,150);
+
+  // imageMode(CENTER);
+  // extraCanvas.globalCompositeOperation = "exclusion";
+  image(extraCanvas,0,0);
+  push();
+  // translate(200,200);
+  // rotate(0.1);
+  // tint(0,255,0);
+  // extraCanvas.setAlpha(0.14);
+  image(extraCanvas,0,0);
+  pop();
+}
+
+window.setup = setup;
+window.draw = draw;
+
+
+//dat.GUI
+const gui = new dat.GUI();
+
+let obj = {
+  springDrag: 0.55,
+  springStrength: 0.1,
+  smooth: 0.5,
+  size: 8,
+  spring: true,
+  outlineOnly:false,
+  depth:2,
+  color:'#515151'
+}
+
+gui.add(obj, "spring").onChange(function(newValue) {
+	obj.spring = newValue;
+});
+gui.add(obj, "springDrag").min(0).max(1).step(0.01).onChange(function(newValue) {
+	followers.forEach((e)=>{
+    e.drag=obj.springDrag;
+  })
+});
+gui.add(obj, "springStrength").min(0).max(1).step(0.01).onChange(function(newValue) {
+  followers.forEach((e)=>{
+    e.strength=obj.springStrenth;
+  })
+});
+gui.add(obj, "smooth").min(0).max(1).step(0.01).onChange(function(newValue) {
+  followers.forEach((e)=>{
+    e.lerpTime=obj.smooth;
+  })
+});
+gui.add(obj, "size").min(0).max(20).step(0.01).onChange(function(newValue) {
+  followers.forEach((e)=>{
+    e.size=obj.size;
+  })
+});
+gui.add(obj, "outlineOnly").onChange(function(newValue) {
+  obj.outlineOnly=newValue
+});
+gui.add(obj, "depth").min(0).max(20).step(0.01).onChange(function(newValue) {
+  obj.depth=newValue
+});
+gui.addColor(obj, "color").onChange(function(newValue) {
+  obj.color=newValue
+});
+
+
+
+
+</script>

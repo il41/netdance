@@ -37,6 +37,10 @@
 </html>
 
 <script>
+//hex to rgba function from www.
+let f=
+s=>s.match(/../g).map((c,i)=>('0x'+c)/(i-3?1:255))
+// console.log(f('00ff0080'));
 
 //PARTICLE CLASS AND ARRAYS
 var particles = [];
@@ -200,11 +204,18 @@ function draw(){
         extraCanvas.stroke(obj.color);
         // extraCanvas.stroke('red');
         extraCanvas.fill(255);
+
         if(obj.outlineOnly){
           extraCanvas.noFill();
           extraCanvas.stroke('blue');
-          extraCanvas.stroke(color(255,sin(i*5)*255,i*6));
+          let c = obj.color.split('#');
+          c = c[1]
+          // c = c.match(/.{1,2}/g)
+          c = f(c)
+          // console.log(c);
+          extraCanvas.stroke(color(c[0],sin(i*5)*c[1],i*6*c[2]));
         }
+
         if(obj.spring){
           extraCanvas.ellipse(followers[i].pos.x, followers[i].pos.y, obj.size, obj.size);
         } else {

@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.0/addons/p5.sound.min.js"></script>
     <script type="text/javascript" src="js/dat.gui.min.js"></script>
     <style>
       .input_video{
@@ -25,6 +26,11 @@
         top:0;
         left:0;
       }
+      .back{
+        position:absolute;
+        bottom:100px;
+        left:10px;
+      }
     </style>
   </head>
   <body>
@@ -33,6 +39,7 @@
     <canvas class="output_canvas" width="1280px" height="720px"></canvas>
   </div>
     <div class="counter"></div>
+    <a href="index.html" class="back">back</a>
   </body>
 </html>
 
@@ -157,7 +164,11 @@ setInterval(tick,0);
   let followers = [];
   let extraCanvas;
   let depth = 14;
+  let mic;
 function setup(){
+  userStartAudio();
+  mic = new p5.AudioIn();
+  mic.start();
   canvas = createCanvas(width,height);
   extraCanvas = createGraphics(width,height);
   extraCanvas.clear();
@@ -167,13 +178,18 @@ function setup(){
     let f = new Particle(i);
     followers.push(f);
   }
+  extraCanvas.mousePressed(userStartAudio);
 
 }
 
 function draw(){
+  let vol = mic.getLevel();
   clear();
   extraCanvas.clear();
   stroke(color(0,0,0,0));
+
+  let h = map(vol, 0, 1, height, 0);
+  // extraCanvas.ellipse(width / 2, h - 25, 50, 50);
   // background(color(100,25,255,100));
   fill("white");
   if(lmArr.length>0){
@@ -204,6 +220,12 @@ function draw(){
         extraCanvas.stroke(obj.color);
         // extraCanvas.stroke('red');
         extraCanvas.fill(255);
+
+        if(obj.audioReactive){
+          obj.size = 10+vol*400;
+        } else{
+
+        }
 
         if(obj.outlineOnly){
           extraCanvas.noFill();
@@ -258,8 +280,10 @@ let obj = {
   spring: true,
   outlineOnly:false,
   depth:2,
-  color:'#515151'
+  color:'#515151',
+  audioReactive: false
 }
+let prevDepth = obj.depth;
 
 gui.add(obj, "spring").onChange(function(newValue) {
 	obj.spring = newValue;
@@ -292,6 +316,10 @@ gui.add(obj, "depth").min(0).max(20).step(0.01).onChange(function(newValue) {
 });
 gui.addColor(obj, "color").onChange(function(newValue) {
   obj.color=newValue
+});
+gui.add(obj,"audioReactive").onChange(function(newValue) {
+  prevDepth = obj.depth;
+  obj.audioReactive = newValue;
 });
 
 

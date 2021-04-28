@@ -31,13 +31,17 @@
         bottom:100px;
         left:10px;
       }
+      .p5Canvas{
+        -webkit-transform: scaleX(-1);
+        transform: scaleX(-1);
+      }
     </style>
   </head>
   <body>
     <div class="container">
-    <video class="input_video"></video>
-    <canvas class="output_canvas" width="1280px" height="720px"></canvas>
-  </div>
+      <video class="input_video"></video>
+      <canvas class="output_canvas" width="1280px" height="720px"></canvas>
+    </div>
     <div class="counter"></div>
     <a href="index.html" class="back">back</a>
   </body>
@@ -87,6 +91,8 @@ const canvasElement = document.getElementsByClassName('output_canvas')[0];
 const canvasCtx = canvasElement.getContext('2d');
 let myArray = [];
 let lmArr = [];
+canvasCtx.translate(1280, 0);  //these 2 lines
+canvasCtx.scale(-1, 1);      //help flip the camera feed
 function onResults(results) {
   // console.log(results);
   canvasCtx.save();

@@ -115,8 +115,9 @@ function onResults(results) {
 }
 
 const pose = new Pose({locateFile: (file) => {
-  return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+  return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.2/${file}`;
 }});
+console.log(pose);
 pose.setOptions({
   upperBodyOnly: true,
   smoothLandmarks: true,

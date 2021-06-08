@@ -3,7 +3,7 @@ const SETTINGS = {
   points_in_hand: 21,
   videoWidth: 720,
   videoHeight: 540,
-  videoFlip: true,
+  videoFlip: false,
   algoTypes: ['lerp', 'spring'],
   algorithm: 'lerp',
   smooth: 0.5, // for lerp

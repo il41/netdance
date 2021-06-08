@@ -35,6 +35,9 @@
         -webkit-transform: scaleX(-1);
         transform: scaleX(-1);
       }
+      .shader-layer{
+        display:block;
+      }
     </style>
   </head>
   <body>
@@ -222,6 +225,7 @@ function setup(){
 
   // this layer will use webgl with our shader
   shaderLayer = createGraphics(width, height, WEBGL);
+  shaderLayer.addClass('shader-layer');
 
   // this layer will just be a copy of what we just did with the shader
   copyLayer = createGraphics(width, height);
@@ -229,29 +233,29 @@ function setup(){
 }
 
 function draw(){
-//shader code
-// shader() sets the active shader with our shader
-shaderLayer.shader(camShader);
+  //shader code
+  // shader() sets the active shader with our shader
+  shaderLayer.shader(camShader);
 
-// lets just send the cam to our shader as a uniform
-camShader.setUniform('tex0', cam);
+  // lets just send the cam to our shader as a uniform
+  camShader.setUniform('tex0', extraCanvas);
 
-// also send the copy layer to the shader as a uniform
-camShader.setUniform('tex1', copyLayer);
+  // also send the copy layer to the shader as a uniform
+  camShader.setUniform('tex1', copyLayer);
 
-// send mouseIsPressed to the shader as a int (either 0 or 1)
-camShader.setUniform('mouseDown', int(mouseIsPressed));
+  // send mouseIsPressed to the shader as a int (either 0 or 1)
+  camShader.setUniform('mouseDown', int(mouseIsPressed));
 
-camShader.setUniform('time', frameCount * 0.01);
+  camShader.setUniform('time', frameCount * 0.01);
 
-// rect gives us some geometry on the screen
-shaderLayer.rect(0,0,width, height);
+  // rect gives us some geometry on the screen
+  shaderLayer.rect(0,0,width, height);
 
-// draw the shaderlayer into the copy layer
-copyLayer.image(shaderLayer, 0,0,width, height);
+  // draw the shaderlayer into the copy layer
+  copyLayer.image(shaderLayer, 0,0,width, height);
 
-// render the shaderlayer to the screen
-image(shaderLayer, 0,0,width, height);
+  // render the shaderlayer to the screen
+  image(shaderLayer, 0,0,width, height);
 
 
   //rest of the code

@@ -1,3 +1,7 @@
+//from https://itp-xstory.github.io/p5js-shaders/#/./docs/examples/image_effects
+//with chroma key addition from https://stackoverflow.com/questions/60767805/chromakey-glsl-shader-with-transparent-background
+
+
 // a shader variable
 let theShader;
 let cam;

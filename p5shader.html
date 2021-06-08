@@ -1,14 +1,471 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0>
-    <!-- <link rel="stylesheet" href="../../sketch-styles.css"> -->
-    <script src="js/p5.min.js" type="text/javascript"></script>
-    <script src="js/p5.dom.js" type="text/javascript"></script>
-    <script src="js/shadersketch.js"></script>
-    <title>4-16 A video feedback efect with the webcam</title>
+    <title>netdance demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.0/addons/p5.sound.min.js"></script>
+    <script type="text/javascript" src="js/dat.gui.min.js"></script>
+    <style>
+      .input_video{
+        display:none;
+      }
+      .output_canvas{
+        width:800px;
+      }
+      a{
+        margin-right: 10px;
+        background-color: lightpink;
+      }
+      canvas{
+        position:absolute;
+        top:0;
+        left:0;
+      }
+      .back{
+        position:absolute;
+        bottom:100px;
+        left:10px;
+      }
+      .p5Canvas{
+        -webkit-transform: scaleX(-1);
+        transform: scaleX(-1);
+      }
+    </style>
   </head>
   <body>
+    <!-- <a href="pose.html">pose</a>
+    <a href="flock.html">flock</a>
+    <a href="pose-flock2.html">pose+flock (unfinished)</a> -->
+    <div class="container">
+    <video class="input_video"></video>
+    <canvas class="output_canvas" width="1280px" height="720px"></canvas>
+  </div>
+    <div class="counter"></div>
+    <a href="index.html" class="back">back</a>
   </body>
 </html>
+
+<script>
+//hex to rgba function from www.
+let f=
+s=>s.match(/../g).map((c,i)=>('0x'+c)/(i-3?1:255))
+// console.log(f('00ff0080'));
+
+//PARTICLE CLASS AND ARRAYS
+var particles = [];
+var particles2 = [];
+
+class Particle{
+  constructor(i){
+    this.vel = createVector(0,0);
+    this.drag = 0.55;
+    this.strength = 0.1;
+    this.pos = createVector(random(0,300));
+    this.newPos = this.pos;
+    this.lerpTime = 0.5;
+
+    this.size = 8;
+    this.color = color(random(100), 100, 100);
+  }
+  update(newVector,dt){
+    this.pos = this.pos.lerp(this.newPos, obj.smooth);
+    if(newVector){
+      this.newPos=newVector
+    }
+  }
+
+  springUpdate(target){
+    let force = p5.Vector.sub(target, this.pos);
+    force = force.mult(this.strength);
+    this.vel =this. vel.mult(this.drag);
+    this.vel = this.vel.add(force);
+    this.pos = this.pos.add(this.vel);
+  }
+}
+
+//MEDIAPIPE STUFF
+const videoElement = document.getElementsByClassName('input_video')[0];
+const canvasElement = document.getElementsByClassName('output_canvas')[0];
+const canvasCtx = canvasElement.getContext('2d');
+let myArray = [];
+let lmArr = [];
+canvasCtx.translate(1280, 0);  //these 2 lines
+canvasCtx.scale(-1, 1);      //help flip the camera feed
+function onResults(results) {
+  // console.log(results);
+  canvasCtx.save();
+  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+  canvasCtx.drawImage(
+  results.image, 0, 0, canvasElement.width, canvasElement.height);
+  if (results.multiHandLandmarks) {
+    myArray = [];
+    // console.log(myArray);
+    for (const landmarks of results.multiHandLandmarks) {
+      myArray.push(landmarks);
+      // console.log(HAND_CONNECTIONS, "jo");
+      // drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
+      //                {color: '#00FF00', lineWidth: 5});
+      // drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
+    }
+    lmArr = myArray;
+  }
+  canvasCtx.restore();
+}
+
+const hands = new Hands({locateFile: (file) => {
+  return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+}});
+hands.setOptions({
+  maxNumHands: 2,
+  minDetectionConfidence: 0.5,
+  minTrackingConfidence: 0.5
+});
+hands.onResults(onResults);
+const camera = new Camera(videoElement, {
+  onFrame: async () => {
+    await hands.send({image: videoElement});
+  },
+  width: 1280,
+  height: 720
+});
+camera.start();
+
+
+console.log(canvasElement.width,canvasElement.height);
+
+let canvas;
+let width = 400;
+let height = 225;
+let size = 20;
+width *=2;
+height *=2;
+
+let j = 0;
+setInterval(function(){
+  j++;
+  document.querySelector(".counter").textContent=j;
+  if(j>22){j=0;}
+}, 1000);
+
+//TICK
+let dtdisplay = document.createElement('div')
+document.body.appendChild(dtdisplay);
+let lastUpdate = Date.now();
+let myInterval = setInterval(tick, 1);
+let now = Date.now();
+let dt;
+function tick() {
+  now = Date.now();
+  dt = now - lastUpdate;
+  lastUpdate = now;
+  dtdisplay.textContent=dt
+}
+setInterval(tick,0);
+
+//P5 Shader Preload
+let camShader;
+
+// the camera variable
+let cam;
+
+// we will need at least two layers for this effect
+let shaderLayer;
+let copyLayer;
+
+function preload(){
+  // load the shader
+  camShader = loadShader('assets/effect.vert', 'assets/effect.frag');
+}
+
+
+
+//P5
+
+  let followers = [];
+  let followers2 = [];
+  let extraCanvas;
+  let depth = 14;
+  let mic;
+function setup(){
+
+  userStartAudio();
+  mic = new p5.AudioIn();
+  mic.start();
+  canvas = createCanvas(width,height);
+  extraCanvas = createGraphics(width,height);
+  extraCanvas.clear();
+  for(let i = 0; i < 21; i++) {
+    let p = new Particle(i);
+    particles.push(p);
+    let f = new Particle(i)
+    followers.push(f);
+  }
+  for(let i = 0; i < 21; i++) {
+    let p = new Particle(i);
+    particles2.push(p);
+    let f = new Particle(i)
+    followers2.push(f);
+  }
+
+
+  //shader code
+  cam = createCapture(VIDEO);
+  cam.size(width, height);
+
+  // hide the html element that createCapture adds to the screen
+  cam.hide();
+
+  // this layer will use webgl with our shader
+  shaderLayer = createGraphics(width, height, WEBGL);
+
+  // this layer will just be a copy of what we just did with the shader
+  copyLayer = createGraphics(width, height);
+
+}
+
+function draw(){
+//shader code
+// shader() sets the active shader with our shader
+shaderLayer.shader(camShader);
+
+// lets just send the cam to our shader as a uniform
+camShader.setUniform('tex0', cam);
+
+// also send the copy layer to the shader as a uniform
+camShader.setUniform('tex1', copyLayer);
+
+// send mouseIsPressed to the shader as a int (either 0 or 1)
+camShader.setUniform('mouseDown', int(mouseIsPressed));
+
+camShader.setUniform('time', frameCount * 0.01);
+
+// rect gives us some geometry on the screen
+shaderLayer.rect(0,0,width, height);
+
+// draw the shaderlayer into the copy layer
+copyLayer.image(shaderLayer, 0,0,width, height);
+
+// render the shaderlayer to the screen
+image(shaderLayer, 0,0,width, height);
+
+
+  //rest of the code
+  let vol = mic.getLevel();
+  clear();
+  extraCanvas.clear();
+  stroke(color(0,0,0,0));
+  // background(color(100,25,255,100));
+  fill("white");
+  if(lmArr.length==1){
+    lmArr[0].forEach((el, i) => {
+
+      let x = map(lmArr[0][i].x,0,1,0,width);
+      let y = map(lmArr[0][i].y,0,1,0,height);
+      let z = map(lmArr[0][i].z,-1,0,0,1);
+      z = lmArr[0][i].z;
+      z=abs(z*obj.depth);
+      if(i<particles.length){
+        particles[i].update(createVector(x,y),dt);
+        followers[i].springUpdate(createVector(x,y));
+        // if(i>4&&i<9){
+        //   fill("red");
+        // } else if(i>8&&i<13){
+        //   fill("orange");
+        // }else if(i>12&&i<17){
+        //   fill("blue");
+        // }else if(i>16&&i<21){
+        //   fill("green");
+        // } else{
+        //   fill("white");
+        // }
+        extraCanvas.strokeWeight(2);
+        extraCanvas.strokeWeight(z)
+        extraCanvas.stroke(51);
+        // extraCanvas.stroke('red');
+        extraCanvas.fill(255);
+
+        if(obj.audioReactive){
+          obj.size = 10+vol*400;
+        } else{
+
+        }
+
+        if(obj.outlineOnly){
+          extraCanvas.noFill();
+          extraCanvas.stroke('blue');
+          let c = obj.color.split('#');
+          c = c[1]
+          // c = c.match(/.{1,2}/g)
+          c = f(c)
+          // console.log(c);
+          extraCanvas.stroke(color(c[0],sin(i*5)*c[1],i*6*c[2]));
+        }
+
+        if(obj.spring){
+          extraCanvas.ellipse(followers[i].pos.x, followers[i].pos.y, obj.size, obj.size);
+        } else {
+          extraCanvas.ellipse(particles[i].pos.x, particles[i].pos.y, obj.size, obj.size);
+        }
+      }
+
+      // extraCanvas.ellipse(particles[i].pos.x, particles[i].pos.y, 8, 8);
+
+    });
+
+  } else if(lmArr.length==2){
+    lmArr[0].forEach((el, i) => {
+      let x = map(lmArr[0][i].x,0,1,0,width);
+      let y = map(lmArr[0][i].y,0,1,0,height);
+      let z = map(lmArr[0][i].z,0,-1,size,1);
+      z = lmArr[0][i].z;
+      z=abs(z*obj.depth);
+      let x2 = map(lmArr[1][i].x,0,1,0,width);
+      let y2 = map(lmArr[1][i].y,0,1,0,height);
+      let z2 = map(lmArr[1][i].z,0,-1,size,1);
+      z2 = lmArr[1][i].z;
+      z2=abs(z*obj.depth);
+      if(i<particles.length){
+        particles[i].update(createVector(x,y),dt);
+        particles2[i].update(createVector(x2,y2),dt);
+        followers[i].springUpdate(createVector(x,y));
+        followers2[i].springUpdate(createVector(x2,y2));
+      }
+       if(i>4&&i<9){
+        extraCanvas.fill("red");
+      } else if(i>8&&i<13){
+        extraCanvas.fill("orange");
+      }else if(i>12&&i<17){
+        extraCanvas.fill("blue");
+      }else if(i>16&&i<21){
+        extraCanvas.fill("green");
+      } else{
+        extraCanvas.fill("white");
+      }
+
+      // fill("white");
+      // extraCanvas.ellipse(particles[i].pos.x, particles[i].pos.y, 8, 8);
+      // fill("red");
+      // extraCanvas.ellipse(particles2[i].pos.x, particles2[i].pos.y, 12, 12);
+      // extraCanvas.fill("white");
+      extraCanvas.strokeWeight(z)
+      extraCanvas.stroke(51);
+
+      if(obj.outlineOnly){
+        extraCanvas.noFill();
+        extraCanvas.stroke('blue');
+        let c = obj.color.split('#');
+        c = c[1]
+        // c = c.match(/.{1,2}/g)
+        c = f(c)
+        // console.log(c);
+        extraCanvas.stroke(color(c[0],sin(i*5)*c[1],i*6*c[2]));
+      }
+
+      if(obj.spring){
+        // extraCanvas.fill("blue");
+        extraCanvas.ellipse(followers[i].pos.x, followers[i].pos.y, obj.size, obj.size);
+        // extraCanvas.fill("green");
+        extraCanvas.ellipse(followers2[i].pos.x, followers2[i].pos.y, obj.size, obj.size);
+      } else {
+        extraCanvas.fill("white");
+        extraCanvas.ellipse(particles[i].pos.x, particles[i].pos.y, obj.size, obj.size);
+        extraCanvas.fill("red");
+        extraCanvas.ellipse(particles2[i].pos.x, particles2[i].pos.y, obj.size, obj.size);
+      }
+
+
+    });
+  } else{}
+  // extraCanvas.noStroke();
+  // extraCanvas.fill(255,150);
+
+  // imageMode(CENTER);
+  // extraCanvas.globalCompositeOperation = "exclusion";
+  image(extraCanvas,0,0);
+  push();
+  // translate(200,200);
+  // rotate(0.1);
+  // tint(0,255,0);
+  // extraCanvas.setAlpha(0.14);
+  image(extraCanvas,0,0);
+  pop();
+}
+
+window.setup = setup;
+window.draw = draw;
+
+
+//dat.GUI
+const gui = new dat.GUI();
+
+let obj = {
+  springDrag: 0.55,
+  springStrength: 0.1,
+  smooth: 0.5,
+  size: 8,
+  spring: true,
+  outlineOnly:false,
+  depth:14,
+  color:'#515151',
+  audioReactive: false
+}
+let prevDepth = obj.depth;
+
+gui.add(obj, "spring").onChange(function(newValue) {
+	obj.spring = newValue;
+});
+gui.add(obj, "springDrag").min(0).max(1).step(0.01).onChange(function(newValue) {
+	followers.forEach((e)=>{
+    e.drag=obj.springDrag;
+  })
+  followers2.forEach((e)=>{
+    e.drag=obj.springDrag;
+  })
+});
+gui.add(obj, "springStrength").min(0).max(1).step(0.01).onChange(function(newValue) {
+  followers.forEach((e)=>{
+    e.strength=obj.springStrenth;
+  })
+  followers2.forEach((e)=>{
+    e.strength=obj.springStrenth;
+  })
+});
+gui.add(obj, "smooth").min(0).max(1).step(0.01).onChange(function(newValue) {
+  followers.forEach((e)=>{
+    e.lerpTime=obj.smooth;
+  })
+  followers2.forEach((e)=>{
+    e.lerpTime=obj.smooth;
+  })
+});
+gui.add(obj, "size").min(0).max(20).step(0.01).onChange(function(newValue) {
+  followers.forEach((e)=>{
+    e.size=obj.size;
+  })
+  followers2.forEach((e)=>{
+    e.size=obj.size;
+  })
+});
+gui.add(obj, "outlineOnly").onChange(function(newValue) {
+  obj.outlineOnly=newValue
+});
+gui.add(obj, "depth").min(0).max(20).step(0.01).onChange(function(newValue) {
+  obj.depth=newValue
+});
+gui.addColor(obj, "color").onChange(function(newValue) {
+  obj.color=newValue
+});
+gui.add(obj,"audioReactive").onChange(function(newValue) {
+  prevDepth = obj.depth;
+  obj.audioReactive = newValue;
+});
+
+
+
+
+</script>

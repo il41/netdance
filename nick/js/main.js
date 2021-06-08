@@ -8,7 +8,8 @@ const SETTINGS = {
   algorithm: 'lerp',
   smooth: 0.5, // for lerp
   drag: 0.55, // for spring
-  strength: 0.1 // for spring
+  strength: 0.1, // for spring
+  zoom: 0.98 // shader uniform
 }
 
 const particles = [[], []]
@@ -33,6 +34,9 @@ lerpFolder.add(SETTINGS, 'smooth').min(0).max(1).step(0.01)
 const springFolder = gui.addFolder('spring params')
 springFolder.add(SETTINGS, 'drag').min(0).max(1).step(0.01)
 springFolder.add(SETTINGS, 'strength').min(0).max(1).step(0.01)
+
+const shaderFolder = gui.addFolder('shader unis')
+shaderFolder.add(SETTINGS, 'zoom').min(0).max(1).step(0.01)
 
 // SETUP P5
 // ----------------------
@@ -93,6 +97,7 @@ window.main = new P5(p => {
     p.fbShader.setUniform('tex1', p.copyLayer)
     p.fbShader.setUniform('mouseDown', p.int(p.mouseIsPressed))
     p.fbShader.setUniform('time', p.frameCount * 0.01)
+    p.fbShader.setUniform('zoom', SETTINGS.zoom)
     p.shaderLayer.rect(0, 0, p.width, p.height)
     p.copyLayer.image(p.shaderLayer, 0, 0, p.width, p.height)
     p.image(p.shaderLayer, 0, 0, p.width, p.height)

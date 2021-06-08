@@ -12,6 +12,7 @@ uniform sampler2D tex1;
 
 uniform float mouseDown;
 uniform float time;
+uniform float zoom;
 
 vec3 rgb2hsb(vec3 c){
     vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -43,7 +44,7 @@ void main() {
   feedbackUv = uv * 2.0 - 1.0;
 
   // scale the uvs up just a tad for a feedback zoom
-  feedbackUv *= 0.98;
+  feedbackUv *= zoom;
 
   // return the uvs to 0 - 1 range
   feedbackUv = feedbackUv * 0.5 + 0.5;

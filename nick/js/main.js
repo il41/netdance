@@ -39,20 +39,26 @@ springFolder.add(SETTINGS, 'strength').min(0).max(1).step(0.01)
 
 window.main = new P5(p => {
   p.preload = () => {
-    // for later
+    p.fbShader = p.loadShader('shaders/effect.vert', 'shaders/effect.frag')
   }
 
   p.setup = () => {
     p.canvas = p.createCanvas()
+    p.particlesLayer = p.createGraphics(p.width, p.height)
+    p.shaderLayer = p.createGraphics(p.width, p.height, p.WEBGL)
+    p.copyLayer = p.createGraphics(p.width, p.height)
     for (let i = 0; i < SETTINGS.points_in_hand; i++) {
-      particles[0].push(new Particle(P5, p))
-      particles[1].push(new Particle(P5, p))
+      particles[0].push(new Particle(P5, p, p.particlesLayer))
+      particles[1].push(new Particle(P5, p, p.particlesLayer))
     }
   }
 
   p.draw = () => {
     if (MP.width > 0 && MP.width !== p.canvas.width) {
-      p.resizeCanvas(MP.width, MP.height)
+      p.resizeCanvas(MP.width, MP.height) // resizes main canvas, ie. p.canvas
+      p.particlesLayer.resizeCanvas(MP.width, MP.height)
+      p.shaderLayer.resizeCanvas(MP.width, MP.height)
+      p.copyLayer.resizeCanvas(MP.width, MP.height)
     }
 
     if (MP.image) {
@@ -63,6 +69,7 @@ window.main = new P5(p => {
       p.canvas.drawingContext.drawImage(MP.image, 0, 0)
     }
 
+    p.particlesLayer.clear()
     for (var h = 0; h < 2; h++) { // loop twice, left hand && right hand
       if (MP.dataPoints[h]) {
         /*
@@ -85,5 +92,14 @@ window.main = new P5(p => {
         })
       }
     }
+
+    p.shaderLayer.shader(p.fbShader)
+    p.fbShader.setUniform('tex0', p.particlesLayer)
+    p.fbShader.setUniform('tex1', p.copyLayer)
+    p.fbShader.setUniform('mouseDown', p.int(p.mouseIsPressed))
+    p.fbShader.setUniform('time', p.frameCount * 0.01)
+    p.shaderLayer.rect(0, 0, p.width, p.height)
+    p.copyLayer.image(p.shaderLayer, 0, 0, p.width, p.height)
+    p.image(p.shaderLayer, 0, 0, p.width, p.height)
   }
 }, 'main')

@@ -6,12 +6,14 @@
   const p = new Particle(P5Library, p5Instance)
   // first arg is a referance to the p5 library
   // second arg is a reference to an instance of p5
+  // third arg is optional p5Canvas (if not the default canvas)
 
 */
 class Particle {
-  constructor (P5, p5) {
+  constructor (P5, p5, p5Canvas) {
     this.P5 = P5
     this.p5 = p5
+    this.p5Canvas = p5Canvas
     this.vel = this.p5.createVector(0, 0)
     this.pos = this.p5.createVector(this.p5.random(0, 300))
     this.newPos = this.pos
@@ -36,7 +38,8 @@ class Particle {
   }
 
   draw () {
-    this.p5.ellipse(this.pos.x, this.pos.y, this.size)
+    if (this.p5Canvas) this.p5Canvas.ellipse(this.pos.x, this.pos.y, this.size)
+    else this.p5.ellipse(this.pos.x, this.pos.y, this.size)
   }
 }
 

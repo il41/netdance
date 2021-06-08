@@ -54,6 +54,7 @@ window.main = new P5(p => {
   }
 
   p.draw = () => {
+    // resize all canvases to match camera aspect ratio
     if (MP.width > 0 && MP.width !== p.canvas.width) {
       p.resizeCanvas(MP.width, MP.height) // resizes main canvas, ie. p.canvas
       p.particlesLayer.resizeCanvas(MP.width, MP.height)
@@ -61,14 +62,7 @@ window.main = new P5(p => {
       p.copyLayer.resizeCanvas(MP.width, MP.height)
     }
 
-    if (MP.image) {
-      if (SETTINGS.videoFlip) {
-        p.canvas.drawingContext.translate(MP.width, 0)
-        p.canvas.drawingContext.scale(-1, 1)
-      }
-      p.canvas.drawingContext.drawImage(MP.image, 0, 0)
-    }
-
+    // update the particles (hand tracking)
     p.particlesLayer.clear()
     for (var h = 0; h < 2; h++) { // loop twice, left hand && right hand
       if (MP.dataPoints[h]) {
@@ -93,6 +87,7 @@ window.main = new P5(p => {
       }
     }
 
+    // update feedback shaders
     p.shaderLayer.shader(p.fbShader)
     p.fbShader.setUniform('tex0', p.particlesLayer)
     p.fbShader.setUniform('tex1', p.copyLayer)
@@ -101,5 +96,16 @@ window.main = new P5(p => {
     p.shaderLayer.rect(0, 0, p.width, p.height)
     p.copyLayer.image(p.shaderLayer, 0, 0, p.width, p.height)
     p.image(p.shaderLayer, 0, 0, p.width, p.height)
+
+    // draw video feed
+    if (MP.image) {
+      if (SETTINGS.videoFlip) {
+        p.canvas.drawingContext.translate(MP.width, 0)
+        p.canvas.drawingContext.scale(-1, 1)
+      }
+      p.canvas.drawingContext.globalAlpha = 0.4
+      p.canvas.drawingContext.drawImage(MP.image, 0, 0)
+      p.canvas.drawingContext.globalAlpha = 1
+    }
   }
 }, 'main')

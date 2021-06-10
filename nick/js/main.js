@@ -6,6 +6,9 @@ const SETTINGS = {
   videoFlip: false,
   algoTypes: ['lerp', 'spring'],
   algorithm: 'lerp',
+  size: 8,
+  depth:0,
+  // color:'#515151',
   smooth: 0.5, // for lerp
   drag: 0.55, // for spring
   strength: 0.1, // for spring
@@ -35,8 +38,12 @@ const springFolder = gui.addFolder('spring params')
 springFolder.add(SETTINGS, 'drag').min(0).max(1).step(0.01)
 springFolder.add(SETTINGS, 'strength').min(0).max(1).step(0.01)
 
+const particleFolder = gui.addFolder('particle params')
+particleFolder.add(SETTINGS, 'size').min(0).max(20).step(0.01)
+particleFolder.add(SETTINGS, 'depth').min(0).max(20).step(0.01)
+
 const shaderFolder = gui.addFolder('shader unis')
-shaderFolder.add(SETTINGS, 'zoom').min(0).max(1).step(0.01)
+shaderFolder.add(SETTINGS, 'zoom').min(0).max(2).step(0.01)
 
 // SETUP P5
 // ----------------------
@@ -79,16 +86,27 @@ window.main = new P5(p => {
           const x = p.map(pts.x, 0, 1, 0, p.width)
           const y = p.map(pts.y, 0, 1, 0, p.height)
           // let z = p.map(pts.z, -1, 0, 0, 1)
+          let z = p.abs(pts.z*SETTINGS.depth)
+          p.particlesLayer.strokeWeight(z)
 
           if (SETTINGS.algorithm === 'lerp') {
             particles[h][i].lerpUpdate(x, y, SETTINGS.smooth)
           } else if (SETTINGS.algorithm === 'spring') {
             particles[h][i].springUpdate(x, y, SETTINGS.drag, SETTINGS.strength)
           }
-
-          particles[h][i].draw()
+          p.stroke(SETTINGS.depth)
+          particles[h][i].draw(SETTINGS.size)
         })
       }
+    }
+    if (MP.image) {
+      if (SETTINGS.videoFlip) {
+        p.canvas.drawingContext.translate(MP.width, 0)
+        p.canvas.drawingContext.scale(-1, 1)
+      }
+      // p.canvas.drawingContext.globalAlpha = 0.4
+      p.canvas.drawingContext.drawImage(MP.image, 0, 0)
+      // p.canvas.drawingContext.globalAlpha = 1
     }
 
     // update feedback shaders
@@ -101,16 +119,9 @@ window.main = new P5(p => {
     p.shaderLayer.rect(0, 0, p.width, p.height)
     p.copyLayer.image(p.shaderLayer, 0, 0, p.width, p.height)
     p.image(p.shaderLayer, 0, 0, p.width, p.height)
+    p.image(p.particlesLayer, 0, 0, p.width, p.height)
 
     // draw video feed
-    if (MP.image) {
-      if (SETTINGS.videoFlip) {
-        p.canvas.drawingContext.translate(MP.width, 0)
-        p.canvas.drawingContext.scale(-1, 1)
-      }
-      p.canvas.drawingContext.globalAlpha = 0.4
-      p.canvas.drawingContext.drawImage(MP.image, 0, 0)
-      p.canvas.drawingContext.globalAlpha = 1
-    }
+
   }
 }, 'main')

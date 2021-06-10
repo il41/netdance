@@ -37,9 +37,9 @@ class Particle {
     this.pos = this.pos.add(this.vel)
   }
 
-  draw () {
-    if (this.p5Canvas) this.p5Canvas.ellipse(this.pos.x, this.pos.y, this.size)
-    else this.p5.ellipse(this.pos.x, this.pos.y, this.size)
+  draw (size) {
+    if (this.p5Canvas) this.p5Canvas.ellipse(this.pos.x, this.pos.y, size)
+    else this.p5.ellipse(this.pos.x, this.pos.y, size)
   }
 }
 

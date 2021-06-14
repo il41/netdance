@@ -1,4 +1,9 @@
 /* global p5, dat, MyMediaPipe, Particle */
+//hex to rgba function from www.
+let f=
+s=>s.match(/../g).map((c,i)=>('0x'+c)/(i-3?1:255))
+// console.log(f('00ff0080'));
+
 const SETTINGS = {
   points_in_hand: 21,
   videoWidth: 720,
@@ -8,13 +13,14 @@ const SETTINGS = {
   algorithm: 'lerp',
   size: 8,
   depth:0,
-  // color:'#515151',
+  color:"#ffffff",
+  audioReactive:false,
+  outlineOnly:false,
   smooth: 0.5, // for lerp
   drag: 0.55, // for spring
   strength: 0.1, // for spring
   zoom: 0.98 // shader uniform
 }
-
 const particles = [[], []]
 
 const P5 = p5
@@ -38,9 +44,12 @@ const springFolder = gui.addFolder('spring params')
 springFolder.add(SETTINGS, 'drag').min(0).max(1).step(0.01)
 springFolder.add(SETTINGS, 'strength').min(0).max(1).step(0.01)
 
-const particleFolder = gui.addFolder('particle params')
-particleFolder.add(SETTINGS, 'size').min(0).max(20).step(0.01)
-particleFolder.add(SETTINGS, 'depth').min(0).max(20).step(0.01)
+// const particleFolder = gui.addFolder('particle params')
+gui.add(SETTINGS, 'size').min(0).max(20).step(0.01)
+gui.add(SETTINGS, 'depth').min(0).max(20).step(0.01)
+gui.addColor(SETTINGS, "color")
+gui.add(SETTINGS, 'audioReactive')
+gui.add(SETTINGS, 'outlineOnly')
 
 const shaderFolder = gui.addFolder('shader unis')
 shaderFolder.add(SETTINGS, 'zoom').min(0).max(2).step(0.01)
@@ -54,6 +63,8 @@ window.main = new P5(p => {
   }
 
   p.setup = () => {
+    // p.mic= new p.AudioIn();
+    // p.mic.start();
     p.canvas = p.createCanvas()
     p.particlesLayer = p.createGraphics(p.width, p.height)
     p.shaderLayer = p.createGraphics(p.width, p.height, p.WEBGL)
@@ -65,6 +76,7 @@ window.main = new P5(p => {
   }
 
   p.draw = () => {
+    // p.vol = p.mic.getLevel();
     // resize all canvases to match camera aspect ratio
     if (MP.width > 0 && MP.width !== p.canvas.width) {
       p.resizeCanvas(MP.width, MP.height) // resizes main canvas, ie. p.canvas
@@ -94,7 +106,20 @@ window.main = new P5(p => {
           } else if (SETTINGS.algorithm === 'spring') {
             particles[h][i].springUpdate(x, y, SETTINGS.drag, SETTINGS.strength)
           }
-          p.stroke(SETTINGS.depth)
+          p.particlesLayer.stroke(SETTINGS.depth)
+          p.particlesLayer.fill(SETTINGS.color)
+
+          if(SETTINGS.audioReactive){
+            SETTINGS.size = 10+p.vol*400;
+          }
+          if(SETTINGS.outlineOnly){
+            p.particlesLayer.noFill();
+            p.particlesLayer.stroke('blue');
+            let c = SETTINGS.color.split('#');
+            c = c[1]
+            c = f(c)
+            p.particlesLayer.stroke(p.color(c[0],p.sin(i*5)*c[1],i*6*c[2]));
+          }
           particles[h][i].draw(SETTINGS.size)
         })
       }

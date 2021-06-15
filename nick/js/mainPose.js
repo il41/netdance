@@ -5,7 +5,7 @@ s=>s.match(/../g).map((c,i)=>('0x'+c)/(i-3?1:255))
 // console.log(f('00ff0080'));
 
 const SETTINGS = {
-  points_in_hand: 21,
+  points_in_hand: 33,
   videoWidth: 720,
   videoHeight: 540,
   videoFlip: false,
@@ -27,6 +27,7 @@ const particles = [[], []]
 const P5 = p5
 const gui = new dat.GUI()
 const MP = new MyMediaPipe({
+  debug:true,
   width: SETTINGS.videoWidth,
   height: SETTINGS.videoHeight
   // debug: true
@@ -65,20 +66,20 @@ window.main = new P5(p => {
   }
 
   p.setup = () => {
-    p.mic= new p5.AudioIn();
-    p.mic.start();
+    // p.mic= new p.AudioIn();
+    // p.mic.start();
     p.canvas = p.createCanvas()
     p.particlesLayer = p.createGraphics(p.width, p.height)
     p.shaderLayer = p.createGraphics(p.width, p.height, p.WEBGL)
     p.copyLayer = p.createGraphics(p.width, p.height)
     for (let i = 0; i < SETTINGS.points_in_hand; i++) {
       particles[0].push(new Particle(P5, p, p.particlesLayer))
-      particles[1].push(new Particle(P5, p, p.particlesLayer))
+      // particles[1].push(new Particle(P5, p, p.particlesLayer))
     }
   }
 
   p.draw = () => {
-    p.vol = p.mic.getLevel();
+    // p.vol = p.mic.getLevel();
     // resize all canvases to match camera aspect ratio
     if (MP.width > 0 && MP.width !== p.canvas.width) {
       p.resizeCanvas(MP.width, MP.height) // resizes main canvas, ie. p.canvas
@@ -89,7 +90,7 @@ window.main = new P5(p => {
 
     // update the particles (hand tracking)
     p.particlesLayer.clear()
-    for (var h = 0; h < 2; h++) { // loop twice, left hand && right hand
+    for (var h = 0; h < 1; h++) { // loop twice, left hand && right hand
       if (MP.dataPoints[h]) {
         /*
         MP.dataPoints.length > 1 // how many hands

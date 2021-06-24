@@ -1,11 +1,11 @@
 /**
- * Function to help with handling promises. 
+ * Helper function for handling promises. 
  * 
  * If/When the promise succeeds, returns the result. 
  * 
  * If/When the promise fails, returns null.
  */
-async function maybe(promise) {
+const _maybe = (promise) => {
   try {
     return await promise;
   } catch {
@@ -16,20 +16,34 @@ async function maybe(promise) {
 
 /**
  * Acquires a MediaStream containing video and audio input if they exist. 
- * If one does not exist, it will try to just get the other.
+ * - If camera access cannot be acquired, `stream` will only be audio.
+ * - If microphone access cannot be acquired, `stream` will only be video.
+ * - If neither can be acquired, `stream` will be null.
  * 
  * Default video params are 1280x720, facing user
  * 
  * You should probably only use this once and cache the result.
  * @param {Object} videoConstraints 
- * @returns \{stream: MediaStream, hasVideo: boolean, hasAudio: boolean\}
+ * @returns Promise<\{stream: MediaStream, hasVideo: boolean, hasAudio: boolean\}>
+ * 
+ * @example
+ * getUserMedia()
+ *  .then((data) => {
+ *    if(data.hasVideo){
+ *      doVideoThings(data.stream);
+ *    }
+ * 
+ *    if(data.hasAudio){
+ *      doAudioThings(data.stream);
+ *    }
+ *  });
  */
 async function getUserMedia(videoConstraints = {
   facingMode: "user",
   width: 1280,
   height: 720
 }) {
-  const videoAndAudio = await maybe(navigator.mediaDevices.getUserMedia({
+  const videoAndAudio = await _maybe(navigator.mediaDevices.getUserMedia({
     audio: true,
     video: videoConstraints,
   }));
@@ -41,7 +55,7 @@ async function getUserMedia(videoConstraints = {
     };
   }
 
-  const justVideo = await maybe(navigator.mediaDevices.getUserMedia({
+  const justVideo = await _maybe(navigator.mediaDevices.getUserMedia({
     video: videoConstraints,
   }));
   if (justVideo !== null) {
@@ -52,7 +66,7 @@ async function getUserMedia(videoConstraints = {
     };
   }
 
-  const justAudio = await maybe(navigator.mediaDevices.getUserMedia({
+  const justAudio = await _maybe(navigator.mediaDevices.getUserMedia({
     audio: true,
   }));
   if (justAudio !== null) {

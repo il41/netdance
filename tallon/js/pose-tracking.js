@@ -5,13 +5,11 @@
  * 
  * Use `setCallback` to set the callback function.
  * 
- * **Example Usage:**
- * ```js
+ * @example
  * const video = document.getElementById("my-video-element");
  * const tracker = new VideoHandTracker(video);
  * tracker.setCallback(console.log);
  * tracker.start();
- * ```
  */
 class VideoHandTracker {
   constructor(videoElement) {

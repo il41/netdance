@@ -1,5 +1,17 @@
 /**
- * A VideoHandTracker takes an HTMLVideoElement and a callback as initialization params.
+ * Does hand tracking on a provided HTMLVideoElement. 
+ * 
+ * Starts tracking when the `start` method is called. Tracking results are sent to the provided callback function.
+ * 
+ * Use `setCallback` to set the callback function.
+ * 
+ * **Example Usage:**
+ * ```js
+ * const video = document.getElementById("my-video-element");
+ * const tracker = new VideoHandTracker(video);
+ * tracker.setCallback(console.log);
+ * tracker.start();
+ * ```
  */
 class VideoHandTracker {
   constructor(videoElement) {
@@ -9,7 +21,6 @@ class VideoHandTracker {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
       }
     });
-
 
     this.tracker.setOptions({
       maxNumHands: 2,

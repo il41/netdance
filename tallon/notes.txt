@@ -1,0 +1,1 @@
+- for the provided dance video, we should bake the tracking data; it's a huge waste of processing power to calculate it constantly.

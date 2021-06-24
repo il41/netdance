@@ -5,7 +5,7 @@
  * 
  * If/When the promise fails, returns null.
  */
-const _maybe = (promise) => {
+const _maybe = async (promise) => {
   try {
     return await promise;
   } catch {

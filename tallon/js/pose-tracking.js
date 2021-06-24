@@ -13,14 +13,14 @@
  */
 class VideoHandTracker {
   constructor(videoElement) {
-    this.videoElement = videoElement;
-    this.tracker = new Hands({
+    this._videoElement = videoElement;
+    this._tracker = new Hands({
       locateFile: (file) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
       }
     });
 
-    this.tracker.setOptions({
+    this._tracker.setOptions({
       maxNumHands: 2,
       minDetectionConfidence: 0.5,
       minTrackingConfidence: 0.5
@@ -28,18 +28,18 @@ class VideoHandTracker {
   }
 
   setCallback(func) {
-    this.tracker.onResults(func);
+    this._tracker.onResults(func);
   }
 
   startTracking(){
     let lastVideoTime = 0;
     const updateVideo = () => {
       let onFrameResult = null;
-      if (!this.videoElement.paused && lastVideoTime !== this.videoElement.currentTime) {
-        lastVideoTime = this.videoElement.currentTime;
+      if (!this._videoElement.paused && lastVideoTime !== this._videoElement.currentTime) {
+        lastVideoTime = this._videoElement.currentTime;
 
-        onFrameResult = this.tracker.send({
-          image: this.videoElement,
+        onFrameResult = this._tracker.send({
+          image: this._videoElement,
         });
       }
       if (onFrameResult === null) {

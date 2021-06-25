@@ -1,1 +1,1 @@
-exampleTwoFilters();
+exampleMultipleFilters();

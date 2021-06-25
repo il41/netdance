@@ -1,4 +1,4 @@
-const container = document.getElementById("example-container");
+// const container = document.getElementById("example-container");
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // EXAMPLE: Tracking a video from a regular url

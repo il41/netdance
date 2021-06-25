@@ -92,8 +92,3 @@ function exampleTrackFromWebcamWithMicLevel() {
     micVolDisp.innerText = `Volume: ${Math.round(getMicLevel() * 100)}%`;
   }, 20);
 }
-
-
-
-
-// exampleTrackFromWebcamWithMicLevel();

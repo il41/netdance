@@ -98,7 +98,7 @@ class VideoFilterStack {
 
 class VideoFilterType {
 	/**
-	 * `filterParams` takes an array of \{name, default: number = 0, min: number = 0, max: number? = 1, step: number = undefined\}
+	 * `filterParams` takes an array of \{name, default: any, min: number = 0, max: number? = 1, step: number = undefined\}
 	 *
 	 * The order of params in `filterParams` reflects the order of arguments to the kernel function
 	 */
@@ -121,14 +121,14 @@ class VideoFilterType {
 		const gui = new dat.GUI();
 
 		for (const param of this._filterParams) {
-			values[param.name] = param.default ?? 0;
+			values[param.name] = param.default;
 			orderedValueNames.push(param.name);
 
 			gui.add(values, param.name, param.min ?? 0, param.max ?? 1, param.step);
 		}
 
 		const getValues = () => {
-			return orderedValueNames.map((valName) => values[valName]);
+			return orderedValueNames.map((valName) => values[valName] + 0);
 		};
 
 		return {
@@ -154,6 +154,7 @@ class VideoFilterInstance {
 		this.getParamValues = getValues;
 	}
 
+  
 	process(pipe, otherData) {
 		return this._kernelFunc(pipe, otherData.trackingData, ...this.getParamValues());
 	}

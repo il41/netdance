@@ -119,7 +119,7 @@ class VideoFilterType {
 		const orderedValueNames = [];
 
 		const gui = new dat.GUI();
-
+    
 		for (const param of this._filterParams) {
 			values[param.name] = param.default;
 			orderedValueNames.push(param.name);

@@ -1,24 +1,59 @@
 <!DOCTYPE html>
 <html>
+	<head>
+		<meta charset="utf-8" />
+		<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+		<script src="./js/library/gpu-browser.min.js"></script>
+		<script src="./js/library/dat.gui.min.js"></script>
+		<script src="./js/library/Sortable.min.js"></script>
 
-<head>
-  <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-  <script src="./js/gpu-browser.min.js"></script>
-  <script src="./js/dat.gui.min.js"></script>
-</head>
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400&display=swap" rel="stylesheet">
 
-<body>
-  <div id="example-container">
+    <link rel="stylesheet" href="./filter-menu.css">
+	</head>
 
-  </div>
-  <script src="./js/webcam.js"></script>
-  <script src="./js/pose-tracking.js"></script>
-  <script src="./js/video-filter.js"></script>
-  <script src="./js/examples-shaders.js"></script>
-  <script src="./js/examples-tracking.js"></script>
-  <script src="./js/main.js"></script>
-</body>
+	<body>
+		<div id="example-container">
+			<div id="filter-list">
+        <div class="filter-list-header">
+          Filters
+        </div>
+				
+        <div class="filter-item">
+					<div class="filter-edge">
+						<span class="drag-icon material-icons"> drag_indicator </span>
+					</div>
+          <div class="filter-contents">
+            <div class="filter-header">Filter 1</div>
+            <div class="filter-body" id="5243">
+            </div>
+          </div>
+				</div>
 
+				<div class="filter-item">
+					<div class="filter-edge">
+						<span class="drag-icon material-icons"> drag_indicator </span>
+					</div>
+          <div class="filter-contents">
+            <div class="filter-header">Filter 2</div>
+            <div class="filter-body">
+              Lorem ipsum dolor sit amet consectetur adipisicing elit. Sed voluptatibus at illo atque et, quis facilis mollitia similique? Dolor praesentium ea voluptatem magnam vitae reprehenderit vel sed qui omnis reiciendis?
+            </div>
+          </div>
+				</div>
+
+      </div>
+		</div>
+
+		<script src="./js/webcam.js"></script>
+		<script src="./js/pose-tracking.js"></script>
+		<script src="./js/video-filter.js"></script>
+		<script src="./js/examples-shaders.js"></script>
+		<script src="./js/examples-tracking.js"></script>
+		<script src="./js/main.js"></script>
+	</body>
 </html>

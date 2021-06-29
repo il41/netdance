@@ -21,7 +21,7 @@ function exampleMultipleFilters() {
 
       // the actual shader function (note that it's written in JS, not HLSL)
 			return gpu
-				.createKernel(function (frame, trackingData, redControl, greenControl, blueControl, invert) {
+				.createKernel(function (frame, redControl, greenControl, blueControl, invert) {
           const x = this.thread.x;
           const y = this.thread.y;
 					const pixel = frame[y][x];

@@ -3,11 +3,12 @@ const container = document.getElementById("example-container");
 function exampleMultipleFilters() {
 	// a weird filter that lets you control red/green channels or invert everything
 	const exampleVideoFilter = new VideoFilterType(
-		"Example",
+		"RGB Levels (example filter)",
 		[
-			{ name: "Red", min: 0, max: 2, default: 1 },
-			{ name: "Green", min: 0, max: 2, default: 1 },
-			{ name: "Invert", default: false },
+			{ name: "Red", type: "number",  min: 0, max: 2, default: 1 },
+			{ name: "Green", type: "number", min: 0, max: 2, default: 1 },
+			{ name: "Blue", type: "number", min: 0, max: 2, default: 1 },
+			{ name: "Invert", type: "boolean", default: false },
 		],
 		() => {
       // helper function for the shader
@@ -22,14 +23,14 @@ function exampleMultipleFilters() {
 
       // the actual shader function (note that it's written in JS, not HLSL)
 			return gpu
-				.createKernel(function (frame, trackingData, redControl, greenControl, invert) {
+				.createKernel(function (frame, trackingData, redControl, greenControl, blueControl, invert) {
           const x = this.thread.x;
           const y = this.thread.y;
 					const pixel = frame[y][x];
 
 					return lerp4(
-						[pixel[0] * redControl, pixel[1] * greenControl, pixel[2], pixel[3]],
-						[1 - pixel[0] * redControl, 1 - pixel[1] * greenControl, 1 - pixel[2], pixel[3]],
+						[pixel[0] * redControl, pixel[1] * greenControl, pixel[2] * blueControl, pixel[3]],
+						[1 - pixel[0] * redControl, 1 - pixel[1] * greenControl, 1 - pixel[2] * blueControl, pixel[3]],
 						invert
 					);
 				})
@@ -50,11 +51,11 @@ function exampleMultipleFilters() {
 
   // hand tracking stuff
   let handData = (new Array(42)).fill([0,0,0]);
-	const handTracker = new VideoHandTracker(videoElement);
-	handTracker.setCallback((dat, pointDataOnly) => {
-    handData = pointDataOnly;
-  });
-	handTracker.startTracking();
+	// const handTracker = new VideoHandTracker(videoElement);
+	// handTracker.setCallback((dat, pointDataOnly) => {
+  //   handData = pointDataOnly;
+  // });
+	// handTracker.startTracking();
 
   // do filter stuff once the video is loaded
 	videoElement.onloadedmetadata = () => {
@@ -70,5 +71,7 @@ function exampleMultipleFilters() {
 		filterStack.start({
 			trackingData: handData,
 		});
+
+		container.append(filterStack.getMenu());
 	};
 }

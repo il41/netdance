@@ -6,7 +6,7 @@
 /* Filter Menu */
 /* ~~~~~~~~~~~ */
 
-.filter-menu {
+.filter-menu .menu {
 	background-color: #aaa;
 
 	padding: 8px;
@@ -15,13 +15,13 @@
 	font-family: "Exo 2", sans-serif;
 }
 
-.filter-menu-header {
+.filter-menu .menu-header {
 	color: #222;
 	font-size: x-large;
 	padding-bottom: 8px;
 }
 
-.filter-list {
+.filter-menu .panel-list {
 	border: 1px dashed #444;
 	/* background-color: #666; */
 	/* border-radius: 8px; */
@@ -32,7 +32,7 @@
 /* Filter Item */
 /* ~~~~~~~~~~~ */
 
-.filter-item {
+.filter-menu .panel {
 	--background-color: #ddd;
 	--edge-color: #c8c8c8;
 
@@ -47,11 +47,11 @@
 	border-bottom: 2px solid #444;
 }
 
-.filter-item:not(:last-of-type) {
+.filter-menu .panel:not(:last-of-type) {
 	margin-bottom: 6px;
 }
 
-.filter-edge {
+.filter-menu .panel-edge {
 	flex: 0 0 0;
 	width: 30px;
 	background-color: var(--background-color);
@@ -64,28 +64,28 @@
 	user-select: none;
 }
 
-.filter-edge {
+.filter-menu .panel-edge {
 	cursor: grab;
 }
 
-.filter-edge:active {
+.filter-menu .panel-edge:active {
 	cursor: grabbing;
 }
 
-.filter-contents {
+.filter-menu .panel-contents {
 	display: flex;
 	flex-direction: column;
 	width: 100%;
   /* border: 1px dashed darkgreen; */
 }
 
-.filter-header {
+.filter-menu .panel-header {
 	padding: 4px;
 	border-bottom: 2px solid var(--edge-color);
 	font-size: larger;
 }
 
-.filter-body {
+.filter-menu .panel-body {
 	/* padding: 6px; */
 	display: grid;
 	grid-auto-columns: 0fr 0fr;
@@ -99,7 +99,7 @@
 /* Filter Parameter */
 /* ~~~~~~~~~~~~~~~~ */
 
-.filter-param-label {
+.filter-menu .param-label {
   grid-column: 1;
 	text-align: right;
 	align-items: center;
@@ -112,7 +112,7 @@
   /* border: 1px dashed cornflowerblue; */
 }
 
-.filter-param-body {
+.filter-menu .param-body {
   grid-column: 2;
 	padding: 0px;
 	/* border: 1px dashed blue; */
@@ -125,14 +125,14 @@
 /* Range Input */
 /* ~~~~~~~~~~~ */
 
-.filter-param-body .range {
+.filter-menu .param-body .range {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 	justify-content: flex-start;
 }
 
-.filter-param-body .number {
+.filter-menu .param-body .number {
 	appearance: none;
 	-webkit-appearance: none;
 	border: none;
@@ -145,7 +145,7 @@
   font-size: small;
 }
 
-.filter-param-body .slider {
+.filter-menu .param-body .slider {
 	margin: 0px;
 	padding: 0px;
 
@@ -163,7 +163,7 @@
 	height: var(--slider-height);
 }
 
-.filter-param-body .slider::-webkit-slider-thumb {
+.filter-menu .param-body .slider::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	width: 2px;
 	background: var(--grabber-color);
@@ -171,7 +171,7 @@
 	height: var(--slider-height);
 }
 
-.filter-param-body .slider::-moz-range-thumb {
+.filter-menu .param-body .slider::-moz-range-thumb {
 	-webkit-appearance: none;
 	width: 2px;
 	background: var(--grabber-color);
@@ -183,11 +183,11 @@
 /* Checkbox Input */
 /* ~~~~~~~~~~~~~~ */
 
-.checkbox {
+.filter-men .param-body .checkbox {
   display: none;
 }
 
-.filter-param-body .checkbox-outer {
+.filter-menu .param-body .checkbox-outer {
 	padding: 0px;
 	margin: 0px;
 
@@ -196,7 +196,7 @@
   display: flex;
 }
 
-.filter-param-body .checkbox-display {
+.filter-menu .param-body .checkbox-display {
   width: 100%;
 	height: 100%;
 
@@ -206,19 +206,19 @@
   transition: all 0.1s ease-in-out;
 }
 
-.filter-param-body .checkbox-outer:active .checkbox-display:active {
+.filter-menu .param-body .checkbox-outer:active .checkbox-display:active {
   background-color: #91aa8e;
 }
 
-.filter-param-body .checkbox:not(:checked)+.checkbox-display {
+.filter-menu .param-body .checkbox:not(:checked)+.checkbox-display {
   background-color: #666;
 }
 
-.filter-param-body .checkbox:checked+.checkbox-display {
+.filter-menu .param-body .checkbox:checked+.checkbox-display {
   background-color: #22ec08;
 }
 
-.filter-param-body .checkbox-display-dot {
+.filter-menu .param-body .checkbox-display-dot {
   --margin: 2px;
   margin: var(--margin);
   height: calc(100% - (2 * var(--margin)));
@@ -228,14 +228,14 @@
   transition: all 0.1s ease-in-out;
 }
 
-.filter-param-body .checkbox:checked+.checkbox-display>.checkbox-display-dot {
+.filter-menu .param-body .checkbox:checked+.checkbox-display>.checkbox-display-dot {
   margin-left: calc(50% + var(--margin));
 }
 
-.filter-param-body .checkbox-outer:active .checkbox-display-dot {
+.filter-menu .param-body .checkbox-outer:active .checkbox-display-dot {
   width: calc(60%);
 }
 
-.filter-param-body .checkbox:checked+.checkbox-display:active>.checkbox-display-dot {
+.filter-menu .param-body .checkbox:checked+.checkbox-display:active>.checkbox-display-dot {
   margin-left: calc(30% + var(--margin));
 }

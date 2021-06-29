@@ -35,10 +35,27 @@ class VideoFilterStack {
 			.setGraphical(true);
 
 		// non-visible canvas used for getting static images from a video
-		this._vidCanvas = document.createElement("canvas");
+		this._vidCanvas = elem("canvas");
 		this._vidCanvas.width = this._width;
 		this._vidCanvas.height = this._height;
 		this._vidContext = this._vidCanvas.getContext("2d");
+
+		this._createMenu();
+	}
+
+	_createMenu() {
+		this._menuNode = elem("div", ["filter-menu"]);
+		this._menuHeader = elem("div", ["filter-menu-header"], { innerText: "Filters" });
+		this._filterList = elem("div", ["filter-list"]);
+		this._menuNode.append(this._menuHeader);
+		this._menuNode.append(this._filterList);
+
+		this._filterListSortable = Sortable.create(this._filterList, {
+			animation: 150,
+			handle: ".filter-edge",
+			draggable: ".filter-item",
+			swapThreshold: 0.5,
+		});
 	}
 
 	getCanvas() {
@@ -59,6 +76,8 @@ class VideoFilterStack {
 
 		const filterInstance = new VideoFilterInstance(filterType, filterType.instantiateParams(), kernelFunc);
 		this._filters.push(filterInstance);
+
+		this._filterList.append(filterInstance.getGuiRoot());
 		return filterInstance;
 	}
 
@@ -94,11 +113,23 @@ class VideoFilterStack {
 		}
 		this._postFilter(pipe);
 	}
+
+	getMenu() {
+		return this._menuNode;
+	}
 }
 
 class VideoFilterType {
 	/**
-	 * `filterParams` takes an array of \{name, default: any, min: number = 0, max: number? = 1, step: number = undefined\}
+	 * `filterParams` takes an array of objects containing:
+	 * - name: string,
+	 * - type: string,
+	 * - default: any,
+	 * - min: number? = 0,
+	 * - max: number? = 1,
+	 * - hardMin: boolean = false,
+	 * - hardMax: boolean = false,
+	 * - step: number? = undefined
 	 *
 	 * The order of params in `filterParams` reflects the order of arguments to the kernel function
 	 */
@@ -109,7 +140,35 @@ class VideoFilterType {
 	}
 
 	getName() {
-		return this.name;
+		return this._name;
+	}
+
+	_createMenuItem() {
+		const root = elem("div", ["filter-item"]);
+
+		const edge = elem("div", ["filter-edge"]);
+		const dragIcon = elem("span", ["drag-icon", "material-icons"], { innerText: "drag_indicator" });
+		root.append(edge);
+		edge.append(dragIcon);
+
+		const contents = elem("div", ["filter-contents"]);
+		root.append(contents);
+
+		const header = elem("div", ["filter-header"]);
+		header.innerText = this._name;
+		const body = elem("div", ["filter-body"]);
+		contents.append(header);
+		contents.append(body);
+
+		return {
+			root,
+			edge,
+			dragIcon,
+			contents,
+			header,
+			body,
+			inputElements: new Map(),
+		};
 	}
 
 	instantiateParams() {
@@ -118,13 +177,30 @@ class VideoFilterType {
 		// orderedValueNames provides a way to access values in order later
 		const orderedValueNames = [];
 
-		const gui = new dat.GUI();
-    
+		const guiParts = this._createMenuItem();
 		for (const param of this._filterParams) {
 			values[param.name] = param.default;
 			orderedValueNames.push(param.name);
 
-			gui.add(values, param.name, param.min ?? 0, param.max ?? 1, param.step);
+			let inputElement = null;
+			switch (param.type) {
+				case "number":
+					inputElement = createRangeInput(values, param);
+					break;
+				case "boolean":
+					inputElement = createCheckboxInput(values, param);
+					break;
+			}
+			if (inputElement !== null) {
+				const paramLabel = elem("div", ["filter-param-label"], { innerText: param.name });
+				guiParts.body.append(paramLabel);
+
+				const paramBody = elem("div", ["filter-param-body"]);
+				paramBody.append(inputElement);
+				guiParts.body.append(paramBody);
+
+				guiParts.inputElements.set(param.name, {inputLabel: paramLabel, inputBody: paramBody});
+			}
 		}
 
 		const getValues = () => {
@@ -132,7 +208,7 @@ class VideoFilterType {
 		};
 
 		return {
-			gui,
+			guiParts,
 			getValues,
 		};
 	}
@@ -147,15 +223,88 @@ class VideoFilterType {
 }
 
 class VideoFilterInstance {
-	constructor(filterType, { gui, getValues }, kernelFunc) {
+	constructor(filterType, { guiParts, getValues }, kernelFunc) {
 		this._filterType = filterType;
 		this._kernelFunc = kernelFunc;
-		this._paramsGui = gui;
+		this._guiParts = guiParts;
 		this.getParamValues = getValues;
 	}
 
-  
+	getGuiRoot() {
+		return this._guiParts.root;
+	}
+
 	process(pipe, otherData) {
 		return this._kernelFunc(pipe, otherData.trackingData, ...this.getParamValues());
 	}
+}
+
+function createRangeInput(values, param) {
+	const outer = elem("div", ["range"]);
+
+	// number input
+	const number = elem("input", ["number"], {
+		type: "number",
+		min: param.min,
+		max: param.max,
+		value: param.default ?? 0,
+		step: param.step || 0.01,
+	});
+	outer.append(number);
+
+	const slider = elem("input", ["slider"], {
+		type: "range",
+		min: param.min ?? 0,
+		max: param.max ?? 1,
+		value: param.default ?? 0,
+		step: param.step || 0.01,
+	});
+	outer.append(slider);
+
+	const changeEvent = (e) => {
+		// the parse is needed, don't question it
+		let val = parseFloat(e.target.value);
+
+		if (param.hardMin) {
+			val = Math.max(param.min ?? 0, val);
+		}
+		if (param.hardMax) {
+			val = Math.min(param.max ?? 1, val);
+		}
+		values[param.name] = val;
+		number.value = val;
+		slider.value = val;
+	};
+
+	number.addEventListener("change", changeEvent);
+	slider.addEventListener("input", changeEvent);
+
+	return outer;
+}
+
+function createCheckboxInput(values, param) {
+	const outer = elem("div", ["checkbox-outer"]);
+
+	const checkbox = elem("input", ["checkbox"], {
+		type: "checkbox",
+		checked: param.value,
+	});
+	
+	checkbox.addEventListener("change", (e) => {
+		values[param.name] = e.target.checked ? true : false;
+	});
+	outer.append(checkbox);
+	
+	const checkboxDisplay = elem("div", ["checkbox-display"]);
+
+	checkboxDisplay.addEventListener("click", (e) => {
+		checkbox.click();
+	});
+
+	const checkboxDisplayDot = elem("div", ["checkbox-display-dot"]);
+	checkboxDisplay.append(checkboxDisplayDot)
+
+	outer.append(checkboxDisplay);
+
+	return outer;
 }

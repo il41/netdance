@@ -40,8 +40,18 @@ class VideoFilterStack {
 		this._vidCanvas.height = this._height;
 		this._vidContext = this._vidCanvas.getContext("2d");
 
-		// map of (mask names) to (canvases containing mask data)
-		this._maskCanvases = new Map();
+		/**
+		 * data that can be used in mask functions or in filters
+		 *
+		 * @type {Map<String, any>}
+		 */
+		this._externalData = new Map();
+
+		/**
+		 * images that are regenerated every frame for use in filters
+		 * @type {Map<String, {destinationCanvas: HTMLCanvasElement, destinationContext: CanvasRenderingContext2D, (destinationCanvas: HTMLCanvasElement, destinationCtx: CanvasRenderingContext2D, rawInput: HTMLCanvasElement, otherData: Object) => void}>}
+		 */
+		this._masks = new Map();
 
 		this._menuComponents = createMenu("Filters", this._filters);
 	}
@@ -52,6 +62,31 @@ class VideoFilterStack {
 
 	getMenu() {
 		return this._menuComponents.root;
+	}
+
+	/**
+	 * @param {String} name
+	 * @param {(destinationCanvas: HTMLCanvasElement, destinationCtx: CanvasRenderingContext2D, rawInput: HTMLCanvasElement, otherData: Object) => void} drawFunction
+	 */
+	addMaskGenerator(name, drawFunction) {
+		const canvas = elem("canvas");
+		canvas.width = this._width;
+		canvas.height = this._height;
+		const ctx = canvas.getContext("2d");
+
+		const bundle = {canvas, ctx, drawFunction};
+		this._masks.set(name, bundle);
+		return bundle;
+	}
+
+	updateMasks(){
+		for(const [cvs, ctx, func] in this._masks){
+			func(cvs, ctx, this._vidCanvas, this._externalData);
+		}
+	}
+
+	registerExternalData(name, data) {
+		this._externalData.set(name, data);
 	}
 
 	/**
@@ -73,7 +108,7 @@ class VideoFilterStack {
 		return filterInstance;
 	}
 
-	start(otherData) {
+	start() {
 		this._running = true;
 		const updateShader = () => {
 			if (this._requestedStop) {
@@ -83,7 +118,7 @@ class VideoFilterStack {
 
 			if (this._videoElement.readyState >= 3) {
 				this._vidContext.drawImage(this._videoElement, 0, 0);
-				this._process(this._vidCanvas, otherData);
+				this._process(this._vidCanvas, this._externalData);
 			}
 
 			// queue up the next update
@@ -98,10 +133,10 @@ class VideoFilterStack {
 		this._requestedStop = true;
 	}
 
-	_process(imageData, otherData) {
+	_process(imageData, externalData) {
 		let pipe = this._preFilter(imageData);
 		for (const filter of this._filters) {
-			pipe = filter.process(pipe, otherData);
+			pipe = filter.process(pipe, externalData);
 		}
 		this._postFilter(pipe);
 	}
@@ -168,9 +203,4 @@ class VideoFilterInstance {
 		});
 		return this._kernelFunc(pipe, ...params);
 	}
-}
-
-function createTrackingTypeInput(stack, values, param) {
-	// TODO
-	values[param.name] = stack.getTrackingCanvas(e.target.value);
 }

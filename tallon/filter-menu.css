@@ -200,7 +200,7 @@
   width: 100%;
 	height: 100%;
 
-  /* border-radius: var(--single-height); */
+  border-radius: var(--single-height);
   overflow: hidden;
 
   transition: all 0.1s ease-in-out;
@@ -223,7 +223,7 @@
   margin: var(--margin);
   height: calc(100% - (2 * var(--margin)));
   width: calc(50% - (2 * var(--margin)));
-  /* border-radius: calc(var(--single-height) - (2 * var(--margin))); */
+  border-radius: calc(var(--single-height) - (2 * var(--margin)));
   background-color: #fff;
   transition: all 0.1s ease-in-out;
 }

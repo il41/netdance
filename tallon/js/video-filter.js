@@ -44,17 +44,25 @@ class VideoFilterStack {
 	}
 
 	_createMenu() {
-		this._menuNode = elem("div", ["filter-menu"]);
-		this._menuHeader = elem("div", ["filter-menu-header"], { innerText: "Filters" });
-		this._filterList = elem("div", ["filter-list"]);
-		this._menuNode.append(this._menuHeader);
-		this._menuNode.append(this._filterList);
+		this._menuElem = elem("div", ["filter-menu"]);
+		this._menuHeaderElem = elem("div", ["filter-menu-header"], { innerText: "Filters" });
+		this._filterListElem = elem("div", ["filter-list"]);
+		this._menuElem.append(this._menuHeaderElem);
+		this._menuElem.append(this._filterListElem);
 
-		this._filterListSortable = Sortable.create(this._filterList, {
+		this._filterListSortable = Sortable.create(this._filterListElem, {
 			animation: 150,
 			handle: ".filter-edge",
 			draggable: ".filter-item",
 			swapThreshold: 0.5,
+			onUpdate: (e) => {
+				// sort occured entirely within this list
+				if(e.from === e.to){
+					const temp = this._filters[e.oldIndex];
+					this._filters[e.oldIndex] = this._filters[e.newIndex];
+					this._filters[e.newIndex] = temp;
+				}
+			},
 		});
 	}
 
@@ -77,7 +85,7 @@ class VideoFilterStack {
 		const filterInstance = new VideoFilterInstance(filterType, filterType.instantiateParams(), kernelFunc);
 		this._filters.push(filterInstance);
 
-		this._filterList.append(filterInstance.getGuiRoot());
+		this._filterListElem.append(filterInstance.getGuiRoot());
 		return filterInstance;
 	}
 
@@ -115,7 +123,7 @@ class VideoFilterStack {
 	}
 
 	getMenu() {
-		return this._menuNode;
+		return this._menuElem;
 	}
 }
 

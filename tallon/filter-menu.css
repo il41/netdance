@@ -207,7 +207,7 @@
 }
 
 .filter-param-body .checkbox-outer:active .checkbox-display:active {
-  background-color: #7cc772;
+  background-color: #91aa8e;
 }
 
 .filter-param-body .checkbox:not(:checked)+.checkbox-display {

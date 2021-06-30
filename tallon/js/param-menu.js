@@ -84,7 +84,10 @@ function createParameterPanel(headerText, params) {
 	for (const param of params) {
 		values[param.name] = param.default;
 		orderedValueNames.push(param.name);
-
+		
+		if(param.hidden){
+			continue;
+		}
 		let inputElement = null;
 		switch (param.type) {
 			case "number":
@@ -136,9 +139,9 @@ function createRangeInput(values, param) {
 		type: "range",
 		min: param.min ?? 0,
 		max: param.max ?? 1,
-		value: param.default,
 		step: param.step || 0.01,
 	});
+	slider.value = param.default; // this has to happen after step/min/max are set
 	outer.append(slider);
 
 	const changeEvent = (e) => {

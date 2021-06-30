@@ -1,11 +1,11 @@
 const vfColor = new VideoFilterType(
 	"Color",
 	[
-		{ name: "Shape", type: "enum", optionsSource: "Textures", default: "Trails" },
+		{ name: "Shape", type: "enum", source: "Textures", default: "Trails" },
 		{ name: "Red", type: "number", min: 0, max: 1, default: 1 },
 		{ name: "Green", type: "number", min: 0, max: 1, default: 0 },
 		{ name: "Blue", type: "number", min: 0, max: 1, default: 0 },
-		{ name: "Opacity", type: "number", min: 0, max: 1, default: 1 },
+		{ name: "Opacity", type: "number", min: 0, max: 1, default: 0.5 },
 	],
 	() => {
 		// helper function for the shader
@@ -37,7 +37,7 @@ const vfColor = new VideoFilterType(
 const vfRGBLevels = new VideoFilterType(
 	"RGB Levels",
 	[
-		{ name: "Shape", type: "enum", optionsSource: "Textures", default: "Everything" },
+		{ name: "Shape", type: "enum", source: "Textures", default: "Everything" },
 		{ name: "Red", type: "number", min: 0, max: 2, default: 1 },
 		{ name: "Green", type: "number", min: 0, max: 2, default: 1 },
 		{ name: "Blue", type: "number", min: 0, max: 2, default: 1 },
@@ -81,15 +81,16 @@ const vfRGBLevels = new VideoFilterType(
 	}
 );
 
-
 const vfWobble = new VideoFilterType(
 	"Wobble",
 	[
-		{ name: "Shape", type: "enum", optionsSource: "Textures", default: "Everything" },
-		// { name: "Red", type: "number", min: 0, max: 1, default: 1 },
+		{ name: "Shape", type: "enum", source: "Textures", default: "Everything" },
+		{ name: "Time", type: "number", source: "Time", hidden: true },
 		// { name: "Green", type: "number", min: 0, max: 1, default: 0 },
 		// { name: "Blue", type: "number", min: 0, max: 1, default: 0 },
-		{ name: "Intensity", type: "number", min: 0, max: 5, default: 1 },
+		{ name: "Speed", type: "number", min: -10, max: 10, default: 1 },
+		{ name: "Frequency", type: "number", min: 0, max: 0.2, default: 0.05, step: 0.001 },
+		{ name: "Intensity", type: "number", min: 0, max: 0.2, default: 0.02, step: 0.001 },
 	],
 	() => {
 		// helper function for the shader
@@ -97,8 +98,8 @@ const vfWobble = new VideoFilterType(
 			return a + x * (b - a);
 		}
 
-		function mult3(a3, x) {
-			return [a3[0] * x, a3[1] * x, a3[2] * x];
+		function iclamp(a, min, max) {
+			return Math.max(min, Math.min(a, max));
 		}
 
 		// helper function for the shader
@@ -108,12 +109,18 @@ const vfWobble = new VideoFilterType(
 
 		// the actual shader function (note that it's written in JS, not HLSL)
 		return gpu
-			.createKernel(function (frame, mask, redControl, greenControl, blueControl, opacity) {
-				const x = this.thread.x + Math.sin();
+			.createKernel(function (frame, mask, time, speed, frequency, intensity) {
+				const x = this.thread.x;
 				const y = this.thread.y;
+				const w = this.constants.width;
+				const h = this.constants.height;
+				const canvasSizeFactor = Math.min(w, h);
 
-				return lerp3_3(frame[y][x], [redControl, greenControl, blueControl], mult3(mask[y][x], opacity));
+				const xWobble = iclamp(x + Math.round(Math.sin(time * speed + y * frequency) * w) * intensity, 0, w);
+				const yWobble = iclamp(y + Math.round(Math.cos(time * speed + x * frequency) * h) * intensity, 0, h);
+
+				return lerp3_3(frame[y][x], frame[yWobble][xWobble], mask[yWobble][xWobble]);
 			})
-			.setFunctions([lerp, lerp3_3, mult3]);
+			.setFunctions([iclamp, lerp, lerp3_3]);
 	}
 );

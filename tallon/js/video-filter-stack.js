@@ -1,4 +1,5 @@
 const gpu = new GPU();
+const startTime = new Date().getTime();
 
 class VideoFilterStack {
 	constructor(videoElement) {
@@ -163,13 +164,20 @@ class VideoFilterType {
 	}
 
 	createKernel(w, h) {
-		return this._kernelGenerationFunc().setOutput([w, h]).setPipeline(true);
+		return this._kernelGenerationFunc().setOutput([w, h]).setPipeline(true).setConstants({
+			width: w,
+			height: h,
+		});
 	}
 
 	instantiate(w, h, textureNames) {
 		for (const paramInfo of this._filterParams) {
-			if (paramInfo.type === "enum" && paramInfo.optionsSource === "Textures") {
-				paramInfo.options = textureNames;
+			if (paramInfo.type === "enum" && paramInfo.options === undefined) {
+				if (paramInfo.source === "Textures") {
+					paramInfo.options = textureNames;
+				} else {
+					console.error(`Unknown enum source "${paramInfo.source}"!`);
+				}
 			}
 		}
 		const { panelComponents, getValues } = createParameterPanel(this._name, this._filterParams);
@@ -211,25 +219,36 @@ class VideoFilterInstance {
 	 */
 	process(pipe, textures, otherData) {
 		const rawParamValues = this.getParamValues();
-		
+
+		const d = new Date();
+
 		const cleanedParamValues = new Array(rawParamValues.length);
 		for (let i = 0; i < this._filterParams.length; i++) {
 			const paramInfo = this._filterParams[i];
 			const paramValue = rawParamValues[i];
 
-
 			let cleaned = paramValue;
 			switch (paramInfo.type) {
 				case "number":
+					if (paramInfo.source !== undefined) {
+						switch (paramInfo.source) {
+							case "Time":
+								cleaned = (d.getTime() - startTime) / 1000;
+								break;
+							default:
+								console.error(`Unknown enum source "${paramInfo.source}"!`);
+								break;
+						}
+					}
 					break;
 				case "boolean":
 					cleaned = paramValue ? 1 : 0;
 					break;
 				case "enum":
-					if (paramInfo.optionsSource === "Textures") {
+					if (paramInfo.source === "Textures") {
 						cleaned = textures.get(paramValue).canvas;
-						if(cleaned === undefined){
-							console.error(`No texture exists with the name "${paramValue}"!`)
+						if (cleaned === undefined) {
+							console.error(`No texture exists with the name "${paramValue}"!`);
 						}
 					}
 					break;

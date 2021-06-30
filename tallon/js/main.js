@@ -23,6 +23,7 @@ function testing() {
 
 	// do filter stuff once the video is loaded
 	videoElement.onloadedmetadata = () => {
+		// auto-play as soon as possible? (this is important to have if using webcam input)
 		// videoElement.play();
 
 		const filterStack = new VideoFilterStack(videoElement);
@@ -38,9 +39,10 @@ function testing() {
 		filterStack.addTextureGenerator("Sprinkles", tgSprinkles);
 		filterStack.addTextureGenerator("Wireframe", tgWireframe);
 
-		filterStack.addFilter(vfColor);
-		filterStack.addFilter(vfRGBLevels);
-		filterStack.addFilter(vfRGBLevels);
+		filterStack.addFilter(vfWobble);
+		// filterStack.addFilter(vfColor);
+		// filterStack.addFilter(vfRGBLevels);
+		// filterStack.addFilter(vfRGBLevels);
 
 		filterStack.start();
 

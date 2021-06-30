@@ -1,6 +1,6 @@
-const tgNone = (canvas, ctx, input, other) => {};
+const tgNothing = (canvas, ctx, input, other) => {};
 
-const tgAll = (canvas, ctx, input, other) => {
+const tgEverything = (canvas, ctx, input, other) => {
 	ctx.fillStyle = "#fff";
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 };

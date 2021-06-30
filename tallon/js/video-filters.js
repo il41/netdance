@@ -1,7 +1,7 @@
 const vfColor = new VideoFilterType(
 	"Color",
 	[
-		{ name: "Mask", type: "enum", optionsSource: "Textures", default: "Trails" },
+		{ name: "Shape", type: "enum", optionsSource: "Textures", default: "Trails" },
 		{ name: "Red", type: "number", min: 0, max: 1, default: 1 },
 		{ name: "Green", type: "number", min: 0, max: 1, default: 0 },
 		{ name: "Blue", type: "number", min: 0, max: 1, default: 0 },
@@ -32,7 +32,7 @@ const vfColor = new VideoFilterType(
 const vfRGBLevels = new VideoFilterType(
 	"RGB Levels",
 	[
-		{ name: "Mask", type: "enum", optionsSource: "Textures", default: "All" },
+		{ name: "Shape", type: "enum", optionsSource: "Textures", default: "Everything" },
 		{ name: "Red", type: "number", min: 0, max: 2, default: 1 },
 		{ name: "Green", type: "number", min: 0, max: 2, default: 1 },
 		{ name: "Blue", type: "number", min: 0, max: 2, default: 1 },

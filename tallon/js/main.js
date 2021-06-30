@@ -31,8 +31,8 @@ function testing() {
 		filterStack.registerExternalData("lastPoseData", lastHandData);
 		filterStack.registerExternalData("poseData", handData);
 
-		filterStack.addTextureGenerator("None", tgNone);
-		filterStack.addTextureGenerator("All", tgAll);
+		filterStack.addTextureGenerator("Nothing", tgNothing);
+		filterStack.addTextureGenerator("Everything", tgEverything);
 		filterStack.addTextureGenerator("Trails", tgTrails);
 		filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
 		filterStack.addTextureGenerator("Sprinkles", tgSprinkles);

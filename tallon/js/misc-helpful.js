@@ -1,5 +1,5 @@
 /**
- * 
+ * A helper function for creating HTML elements in 1 line
  * @param {String} element 
  * @param {[String]} classes 
  * @param {Object} info 
@@ -16,10 +16,19 @@ function clamp(val, min, max){
 	return Math.max(min, Math.min(val, max));
 }
 
+/**
+ * @param {number} range 
+ * @returns A random number within `[-range, range)`
+ */
 function randNP(range){
 	return (Math.random() * 2 - 1) * range;
 }
 
+/**
+ * Shuffles an array in-place
+ * @param {[any]} array 
+ * @returns the original array (which should be shuffled)
+ */
 function shuffleArray(array) {
 	for (let i = array.length - 1; i > 0; i--) {
 			const j = Math.floor(Math.random() * (i + 1));

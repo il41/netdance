@@ -35,14 +35,17 @@ class VideoFilterStack {
 			.setOutput([this._width, this._height])
 			.setGraphical(true);
 
-		// non-visible canvas used for getting static images from a video
+		/**
+		 * non-visible canvas used for getting static images from a video
+		 * @type {HTMLCanvasElement}
+		 */
 		this._vidCanvas = elem("canvas");
 		this._vidCanvas.width = this._width;
 		this._vidCanvas.height = this._height;
 		this._vidContext = this._vidCanvas.getContext("2d");
 
 		/**
-		 * data that can be used in texture functions or in filters
+		 * arbitrary data that can be used in texture functions or in filters
 		 *
 		 * @type {Map<String, any>}
 		 */
@@ -85,18 +88,7 @@ class VideoFilterStack {
 		this._externalData.set(name, data);
 	}
 
-	/**
-	 * filter instances are created once per stack.
-	 *
-	 * They can be reused within the same stack (or anywhere where the image dimensions are always the same)
-	 */
 	addFilter(filterType) {
-		// let kernelFunc = this._createdKernels.get(filterType.getName());
-		// if (kernelFunc === undefined) {
-		// 	kernelFunc = filterType.createKernel(this._width, this._height);
-		// 	// this._createdKernels.set(filterType.getName(), kernelFunc);
-		// }
-
 		const filterInstance = filterType.instantiate(this._width, this._height, Array.from(this._textures.keys()));
 		this._filters.push(filterInstance);
 
@@ -139,19 +131,33 @@ class VideoFilterStack {
 	}
 }
 
+/**
+ * Information about how a shader should work, what parameters it requires, and how those parameters should be exposed
+ */
 class VideoFilterType {
 	/**
-	 * `filterParams` takes an array of objects containing:
-	 * - name: string,
-	 * - type: string,
-	 * - default: any,
-	 * - min: number? = 0,
-	 * - max: number? = 1,
-	 * - hardMin: boolean = false,
-	 * - hardMax: boolean = false,
-	 * - step: number? = undefined
 	 *
-	 * The order of params in `filterParams` reflects the order of arguments to the kernel function
+	 * @param {String} name
+	 * @param {Object} filterParams
+	 * @param {() => {GPUKernelFunction}} kernelGenerationFunc
+	 * @example
+	 *
+	 * const vfRedShapes = new VideoFilterType(
+	 * // name (the name of the shader)
+	 * 	"Red Shapes",
+	 * // filterParams (parameters that will be fed to the shader (order matters!))
+	 * 	[
+	 * 		{ name: "Shape", type: "enum", source: "Textures", default: "Nothing"},
+	 * 		{ name: "Brightness", type: "number", min: 0, max: 1, default: 0.5 },
+	 * 		{ name: "OutlineOnly", type: "boolean", default: false },
+	 * 	],
+	 * // kernelGenerationFunc (a function that returns the actual shader kernel)
+	 * 	() => {
+	 * 		const kernel = gpu.createKernel(function(frame, shape, brightness, outlineOnly){
+	 * 			return ...
+	 * 		});
+	 * 	}
+	 * );
 	 */
 	constructor(name, filterParams, kernelGenerationFunc) {
 		this._filterParams = filterParams;
@@ -189,6 +195,9 @@ class VideoFilterType {
 	}
 }
 
+/**
+ * These are handled by the `VideoFilterStack`. You should not interact with these directly.
+ */
 class VideoFilterInstance {
 	/**
 	 *

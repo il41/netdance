@@ -65,9 +65,9 @@ const _createPanelElement = (headerText) => {
 /**
  * Given information about a collection of variables, creates a panel for editing those variables.
  * Also returns a function for retrieving the values of those variables.
- * 
- * @param {*} headerText 
- * @param {*} params 
+ *
+ * @param {*} headerText
+ * @param {*} params
  * @returns {{
  * getValues: () => [any],
  * panelComponents: {HTMLElement},
@@ -93,8 +93,8 @@ function createParameterPanel(headerText, params) {
 			case "boolean":
 				inputElement = createCheckboxInput(values, param);
 				break;
-			case "tracking":
-				inputElement = createTrackingTypeInput(values, param);
+			case "enum":
+				inputElement = createEnumInput(values, param);
 				break;
 		}
 		if (inputElement !== null) {
@@ -118,7 +118,6 @@ function createParameterPanel(headerText, params) {
 		getValues,
 	};
 }
-
 
 function createRangeInput(values, param) {
 	const outer = elem("div", ["range"]);
@@ -186,6 +185,31 @@ function createCheckboxInput(values, param) {
 	checkboxDisplay.append(checkboxDisplayDot);
 
 	outer.append(checkboxDisplay);
+
+	return outer;
+}
+
+function createEnumInput(values, param) {
+	const outer = elem("div", ["select-outer"]);
+
+	const input = elem("select", ["select"]);
+
+	input.addEventListener("change", (e) => {
+		values[param.name] = e.target.value;
+	});
+
+	for (const optName of param.options) {
+		const opt = elem("option", ["option"], {
+			innerText: optName,
+			value: optName,
+		});
+		if(optName === param.default){
+			opt.selected = "selected";
+		}
+		input.append(opt);
+	}
+
+	outer.append(input);
 
 	return outer;
 }

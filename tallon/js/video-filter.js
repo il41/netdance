@@ -101,7 +101,7 @@ class VideoFilterStack {
 		// 	// this._createdKernels.set(filterType.getName(), kernelFunc);
 		// }
 
-		const filterInstance = filterType.instantiate(this._width, this._height);
+		const filterInstance = filterType.instantiate(this._width, this._height, Array.from(this._textures.keys()));
 		this._filters.push(filterInstance);
 
 		this._menuComponents.list.append(filterInstance.getGuiRoot());
@@ -171,7 +171,12 @@ class VideoFilterType {
 		return this._kernelGenerationFunc().setOutput([w, h]).setPipeline(true);
 	}
 
-	instantiate(w, h) {
+	instantiate(w, h, textureNames) {
+		for (const paramInfo of this._filterParams) {
+			if (paramInfo.type === "enum" && paramInfo.optionsSource === "Textures") {
+				paramInfo.options = textureNames;
+			}
+		}
 		const { panelComponents, getValues } = createParameterPanel(this._name, this._filterParams);
 		return new VideoFilterInstance(this, this._filterParams, panelComponents, getValues, this.createKernel(w, h));
 	}
@@ -183,12 +188,12 @@ class VideoFilterType {
 
 class VideoFilterInstance {
 	/**
-	 * 
-	 * @param {*} filterType 
-	 * @param {*} filterParams 
-	 * @param {Object} panelComponents 
-	 * @param {() => [any]} getValues 
-	 * @param {*} kernelFunc 
+	 *
+	 * @param {*} filterType
+	 * @param {*} filterParams
+	 * @param {Object} panelComponents
+	 * @param {() => [any]} getValues
+	 * @param {*} kernelFunc
 	 */
 	constructor(filterType, filterParams, panelComponents, getValues, kernelFunc) {
 		this._filterType = filterType;
@@ -203,11 +208,11 @@ class VideoFilterInstance {
 	}
 
 	/**
-	 * 
-	 * @param {*} pipe 
-	 * @param {Map<String, {destinationCanvas: HTMLCanvasElement, destinationContext: CanvasRenderingContext2D, drawFunction: (destinationCanvas: HTMLCanvasElement, destinationCtx: CanvasRenderingContext2D, rawInput: HTMLCanvasElement, otherData: Object) => void}>} textures 
-	 * @param {Object} otherData 
-	 * @returns 
+	 *
+	 * @param {*} pipe
+	 * @param {Map<String, {destinationCanvas: HTMLCanvasElement, destinationContext: CanvasRenderingContext2D, drawFunction: (destinationCanvas: HTMLCanvasElement, destinationCtx: CanvasRenderingContext2D, rawInput: HTMLCanvasElement, otherData: Object) => void}>} textures
+	 * @param {Object} otherData
+	 * @returns
 	 */
 	process(pipe, textures, otherData) {
 		const rawParamValues = this.getParamValues();
@@ -218,11 +223,15 @@ class VideoFilterInstance {
 
 			let cleaned = paramValue;
 			switch (paramInfo.type) {
+				case "number":
+					break;
 				case "boolean":
 					cleaned = paramValue ? 1 : 0;
 					break;
-				case "texture":
-					cleaned = textures.get(paramValue).destinationCanvas;
+				case "enum":
+					if (paramInfo.optionsSource === "Textures") {
+						cleaned = textures.get(paramValue).destinationCanvas;
+					}
 					break;
 			}
 			cleanedParamValues[i] = cleaned;

@@ -1,3 +1,10 @@
+/**
+ * 
+ * @param {String} element 
+ * @param {[String]} classes 
+ * @param {Object} info 
+ * @returns {HTMLElement}
+ */
 function elem(element = "div", classes = [], info = {}) {
 	const newElem = document.createElement(element);
 	classes.forEach((c) => newElem.classList.add(c));
@@ -7,4 +14,8 @@ function elem(element = "div", classes = [], info = {}) {
 
 function clamp(val, min, max){
 	return Math.max(min, Math.min(val, max));
+}
+
+function randNP(range){
+	return (Math.random() * 2 - 1) * range;
 }

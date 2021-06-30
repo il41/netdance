@@ -12,18 +12,19 @@ const vfColor = new VideoFilterType(
 		{ name: "Opacity", type: "number", min: 0, max: 1, default: 0.5 },
 	],
 	() => {
-		// helper function for the shader
+		// linear interpolation between floats
 		function lerp(a, b, x) {
 			return a + x * (b - a);
 		}
 
-		function mult3(a3, x) {
-			return [a3[0] * x, a3[1] * x, a3[2] * x];
-		}
-
-		// helper function for the shader
+		// linear interpolation between vec3s, using a float as the factor
 		function lerp3_3(a3, b3, x3) {
 			return [lerp(a3[0], b3[0], x3[0]), lerp(a3[1], b3[1], x3[1]), lerp(a3[2], b3[2], x3[2]), 1];
+		}
+
+		// multiply a vec3 by a float
+		function mult3(a3, x) {
+			return [a3[0] * x, a3[1] * x, a3[2] * x];
 		}
 
 		// the actual shader function (note that it's written in JS, not HLSL)
@@ -103,19 +104,14 @@ const vfWobble = new VideoFilterType(
 		{ name: "Intensity", type: "number", min: 0, max: 0.2, default: 0.02, step: 0.001 },
 	],
 	() => {
-		// linear interpolation between floats
-		function lerp(a, b, x) {
-			return a + x * (b - a);
-		}
-
 		// clamping (can't call it "clamp" because gpu.js uses that already)
 		function iclamp(a, min, max) {
 			return Math.max(min, Math.min(a, max));
 		}
 
-		// linear interpolation between vec3s, using a vec3 as the factor
-		function lerp3_3(a3, b3, x3) {
-			return [lerp(a3[0], b3[0], x3[0]), lerp(a3[1], b3[1], x3[1]), lerp(a3[2], b3[2], x3[2]), 1];
+		// multiply a vec3 by a float
+		function mult3(a3, x) {
+			return [a3[0] * x, a3[1] * x, a3[2] * x];
 		}
 
 		// the actual shader function (note that it's written in JS, not HLSL)
@@ -126,11 +122,17 @@ const vfWobble = new VideoFilterType(
 				const w = this.constants.width;
 				const h = this.constants.height;
 
-				const xWobble = iclamp(x + Math.round(Math.sin(time * speed + y * frequency) * w) * intensity, 0, w);
-				const yWobble = iclamp(y + Math.round(Math.cos(time * speed + x * frequency) * h) * intensity, 0, h);
+				const maskPixel = mask[y][x];
+				
+				const xFactor = Math.sin(time * speed + y * frequency) * w * intensity * maskPixel[0];
+				const yFactor = Math.cos(time * speed + x * frequency) * h * intensity * maskPixel[0];
 
-				return lerp3_3(frame[y][x], frame[yWobble][xWobble], mask[yWobble][xWobble]);
+
+				const xWobble = Math.round(iclamp(x + xFactor, 0, w));
+				const yWobble = Math.round(iclamp(y + yFactor, 0, h));
+
+				return frame[yWobble][xWobble];
 			})
-			.setFunctions([iclamp, lerp, lerp3_3]);
+			.setFunctions([iclamp]);
 	}
 );

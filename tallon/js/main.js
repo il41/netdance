@@ -3,8 +3,8 @@ const container = document.getElementById("example-container");
 function main() {
 	// set up the source video element
 	const videoElement = document.createElement("video");
-	videoElement.src = "https://media.istockphoto.com/videos/hand-waving-bye-video-id150487553";
-	// videoElement.src = "https://media.istockphoto.com/videos/sign-language-as-a-way-for-communication-video-id1131657616";
+	// videoElement.src = "https://media.istockphoto.com/videos/hand-waving-bye-video-id150487553";
+	videoElement.src = "https://media.istockphoto.com/videos/sign-language-as-a-way-for-communication-video-id1131657616";
 	videoElement.crossOrigin = "anonymous";
 	videoElement.controls = true;
 	videoElement.loop = true;

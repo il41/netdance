@@ -136,7 +136,7 @@ function createRangeInput(values, param) {
 		type: "range",
 		min: param.min ?? 0,
 		max: param.max ?? 1,
-		value: param.default ?? 0,
+		value: param.default,
 		step: param.step || 0.01,
 	});
 	outer.append(slider);

@@ -1,3 +1,7 @@
+/**
+ * A minimal video filter that fills its shape with a solid color.
+ * @type {VideoFilterType}
+ */
 const vfColor = new VideoFilterType(
 	"Color",
 	[
@@ -34,6 +38,10 @@ const vfColor = new VideoFilterType(
 	}
 );
 
+/**
+ * A video filter that adjusts RGB values.
+ * @type {VideoFilterType}
+ */
 const vfRGBLevels = new VideoFilterType(
 	"RGB Levels",
 	[
@@ -44,17 +52,17 @@ const vfRGBLevels = new VideoFilterType(
 		{ name: "Invert", type: "boolean", default: false },
 	],
 	() => {
-		// helper function for the shader
+		// linear interpolation between floats
 		function lerp(a, b, x) {
 			return a + x * (b - a);
 		}
 
-		// helper function for the shader
+		// linear interpolation between vec3s, using a float as the factor
 		function lerp3(a3, b3, x) {
 			return [lerp(a3[0], b3[0], x), lerp(a3[1], b3[1], x), lerp(a3[2], b3[2], x), 1];
 		}
 
-		// helper function for the shader
+		// linear interpolation between vec3s, using a vec3 as the factor
 		function lerp3_3(a3, b3, x3) {
 			return [lerp(a3[0], b3[0], x3[0]), lerp(a3[1], b3[1], x3[1]), lerp(a3[2], b3[2], x3[2]), 1];
 		}
@@ -81,28 +89,31 @@ const vfRGBLevels = new VideoFilterType(
 	}
 );
 
+/**
+ * A video filter that wobbles the image.
+ * @type {VideoFilterType}
+ */
 const vfWobble = new VideoFilterType(
 	"Wobble",
 	[
 		{ name: "Shape", type: "enum", source: "Textures", default: "Everything" },
 		{ name: "Time", type: "number", source: "Time", hidden: true },
-		// { name: "Green", type: "number", min: 0, max: 1, default: 0 },
-		// { name: "Blue", type: "number", min: 0, max: 1, default: 0 },
 		{ name: "Speed", type: "number", min: -10, max: 10, default: 1 },
 		{ name: "Frequency", type: "number", min: 0, max: 0.2, default: 0.05, step: 0.001 },
 		{ name: "Intensity", type: "number", min: 0, max: 0.2, default: 0.02, step: 0.001 },
 	],
 	() => {
-		// helper function for the shader
+		// linear interpolation between floats
 		function lerp(a, b, x) {
 			return a + x * (b - a);
 		}
 
+		// clamping (can't call it "clamp" because gpu.js uses that already)
 		function iclamp(a, min, max) {
 			return Math.max(min, Math.min(a, max));
 		}
 
-		// helper function for the shader
+		// linear interpolation between vec3s, using a vec3 as the factor
 		function lerp3_3(a3, b3, x3) {
 			return [lerp(a3[0], b3[0], x3[0]), lerp(a3[1], b3[1], x3[1]), lerp(a3[2], b3[2], x3[2]), 1];
 		}
@@ -114,7 +125,6 @@ const vfWobble = new VideoFilterType(
 				const y = this.thread.y;
 				const w = this.constants.width;
 				const h = this.constants.height;
-				const canvasSizeFactor = Math.min(w, h);
 
 				const xWobble = iclamp(x + Math.round(Math.sin(time * speed + y * frequency) * w) * intensity, 0, w);
 				const yWobble = iclamp(y + Math.round(Math.cos(time * speed + x * frequency) * h) * intensity, 0, h);

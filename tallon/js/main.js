@@ -32,7 +32,8 @@ function testing() {
 		filterStack.registerExternalData("poseData", handData);
 
 		filterStack.addTextureGenerator("All", tgAll);
-		filterStack.addTextureGenerator("BlurryDots", tgBlurryDots);
+		filterStack.addTextureGenerator("Blurry Dots", tgBlurryDots);
+		filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
 
 		filterStack.addFilter(vfRGBLevels);
 		filterStack.addFilter(vfRGBLevels);

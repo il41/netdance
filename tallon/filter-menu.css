@@ -269,3 +269,24 @@
 .param-body .checkbox:focus + .checkbox-display > .checkbox-display-dot {
 	background-color: var(--focus-color);
 }
+
+/* ~~~~~~~~~~~~~~~ */
+/* Selection Input */
+/* ~~~~~~~~~~~~~~~ */
+
+.param-body .select {
+	appearance: none;
+	outline: none;
+	height: var(--single-height);
+	border: 1px solid #888;
+	border-radius: 6px;
+	text-align-last:center;
+	text-align: center;
+	align-items: center;
+	width: 150px;
+}
+
+.param-body .select:focus {
+	border-color: var(--focus-color);
+	box-shadow: 0px 0px 4px var(--focus-color);
+}

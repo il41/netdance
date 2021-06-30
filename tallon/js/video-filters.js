@@ -25,7 +25,7 @@ const vfColor = new VideoFilterType(
 
 				return lerp3_3(frame[y][x], [redControl, greenControl, blueControl], mask[y][x]);
 			})
-			.setFunctions([lerp, lerp3, lerp3_3]);
+			.setFunctions([lerp, lerp3_3]);
 	}
 );
 

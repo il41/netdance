@@ -49,7 +49,7 @@ class VideoFilterStack {
 
 		/**
 		 * images that are regenerated every frame for use in filters
-		 * @type {Map<String, {destinationCanvas: HTMLCanvasElement, destinationContext: CanvasRenderingContext2D, drawFunction: (destinationCanvas: HTMLCanvasElement, destinationCtx: CanvasRenderingContext2D, rawInput: HTMLCanvasElement, otherData: Object) => void}>}
+		 * @type {Map<String, TextureGeneratorInstance>}
 		 */
 		this._textures = new Map();
 
@@ -66,22 +66,17 @@ class VideoFilterStack {
 
 	/**
 	 * @param {String} name
-	 * @param {(destinationCanvas: HTMLCanvasElement, destinationCtx: CanvasRenderingContext2D, rawInput: HTMLCanvasElement, otherData: Object) => void} drawFunction
+	 * @param {TextureGeneratorType} textureGenType
 	 */
-	addTextureGenerator(name, drawFunction) {
-		const canvas = elem("canvas");
-		canvas.width = this._width;
-		canvas.height = this._height;
-		const ctx = canvas.getContext("2d");
-
-		const bundle = { destinationCanvas: canvas, destinationContext: ctx, drawFunction: drawFunction };
-		this._textures.set(name, bundle);
-		return bundle;
+	addTextureGenerator(name, textureGenType) {
+		const texGen = textureGenType.instantiate(this._vidCanvas, this._externalData);
+		this._textures.set(name, texGen);
+		return texGen;
 	}
 
 	_updateTextures() {
-		for (const [textureName, { destinationCanvas, destinationContext, drawFunction }] of this._textures) {
-			drawFunction(destinationCanvas, destinationContext, this._vidCanvas, this._externalData);
+		for (const [textureName, texGen] of this._textures) {
+			texGen.draw(this._externalData);
 		}
 	}
 
@@ -210,16 +205,18 @@ class VideoFilterInstance {
 	/**
 	 *
 	 * @param {*} pipe
-	 * @param {Map<String, {destinationCanvas: HTMLCanvasElement, destinationContext: CanvasRenderingContext2D, drawFunction: (destinationCanvas: HTMLCanvasElement, destinationCtx: CanvasRenderingContext2D, rawInput: HTMLCanvasElement, otherData: Object) => void}>} textures
+	 * @param {Map<String, TextureGeneratorInstance} textures
 	 * @param {Object} otherData
 	 * @returns
 	 */
 	process(pipe, textures, otherData) {
 		const rawParamValues = this.getParamValues();
+		
 		const cleanedParamValues = new Array(rawParamValues.length);
 		for (let i = 0; i < this._filterParams.length; i++) {
 			const paramInfo = this._filterParams[i];
 			const paramValue = rawParamValues[i];
+
 
 			let cleaned = paramValue;
 			switch (paramInfo.type) {
@@ -230,7 +227,10 @@ class VideoFilterInstance {
 					break;
 				case "enum":
 					if (paramInfo.optionsSource === "Textures") {
-						cleaned = textures.get(paramValue).destinationCanvas;
+						cleaned = textures.get(paramValue).canvas;
+						if(cleaned === undefined){
+							console.error(`No texture exists with the name "${paramValue}"!`)
+						}
 					}
 					break;
 			}

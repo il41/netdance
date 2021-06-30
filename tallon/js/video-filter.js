@@ -41,7 +41,7 @@ class VideoFilterStack {
 		this._vidContext = this._vidCanvas.getContext("2d");
 
 		/**
-		 * data that can be used in mask functions or in filters
+		 * data that can be used in texture functions or in filters
 		 *
 		 * @type {Map<String, any>}
 		 */
@@ -49,9 +49,9 @@ class VideoFilterStack {
 
 		/**
 		 * images that are regenerated every frame for use in filters
-		 * @type {Map<String, {destinationCanvas: HTMLCanvasElement, destinationContext: CanvasRenderingContext2D, (destinationCanvas: HTMLCanvasElement, destinationCtx: CanvasRenderingContext2D, rawInput: HTMLCanvasElement, otherData: Object) => void}>}
+		 * @type {Map<String, {destinationCanvas: HTMLCanvasElement, destinationContext: CanvasRenderingContext2D, drawFunction: (destinationCanvas: HTMLCanvasElement, destinationCtx: CanvasRenderingContext2D, rawInput: HTMLCanvasElement, otherData: Object) => void}>}
 		 */
-		this._masks = new Map();
+		this._textures = new Map();
 
 		this._menuComponents = createMenu("Filters", this._filters);
 	}
@@ -68,20 +68,20 @@ class VideoFilterStack {
 	 * @param {String} name
 	 * @param {(destinationCanvas: HTMLCanvasElement, destinationCtx: CanvasRenderingContext2D, rawInput: HTMLCanvasElement, otherData: Object) => void} drawFunction
 	 */
-	addMaskGenerator(name, drawFunction) {
+	addTextureGenerator(name, drawFunction) {
 		const canvas = elem("canvas");
 		canvas.width = this._width;
 		canvas.height = this._height;
 		const ctx = canvas.getContext("2d");
 
-		const bundle = {canvas, ctx, drawFunction};
-		this._masks.set(name, bundle);
+		const bundle = { destinationCanvas: canvas, destinationContext: ctx, drawFunction: drawFunction };
+		this._textures.set(name, bundle);
 		return bundle;
 	}
 
-	updateMasks(){
-		for(const [cvs, ctx, func] in this._masks){
-			func(cvs, ctx, this._vidCanvas, this._externalData);
+	_updateTextures() {
+		for (const [textureName, { destinationCanvas, destinationContext, drawFunction }] of this._textures) {
+			drawFunction(destinationCanvas, destinationContext, this._vidCanvas, this._externalData);
 		}
 	}
 
@@ -118,6 +118,7 @@ class VideoFilterStack {
 
 			if (this._videoElement.readyState >= 3) {
 				this._vidContext.drawImage(this._videoElement, 0, 0);
+				this._updateTextures();
 				this._process(this._vidCanvas, this._externalData);
 			}
 
@@ -136,7 +137,7 @@ class VideoFilterStack {
 	_process(imageData, externalData) {
 		let pipe = this._preFilter(imageData);
 		for (const filter of this._filters) {
-			pipe = filter.process(pipe, externalData);
+			pipe = filter.process(pipe, this._textures, externalData);
 		}
 		this._postFilter(pipe);
 	}
@@ -171,7 +172,8 @@ class VideoFilterType {
 	}
 
 	instantiate(w, h) {
-		return new VideoFilterInstance(this, createParameterPanel(this._name, this._filterParams), this.createKernel(w, h));
+		const { panelComponents, getValues } = createParameterPanel(this._name, this._filterParams);
+		return new VideoFilterInstance(this, this._filterParams, panelComponents, getValues, this.createKernel(w, h));
 	}
 
 	getCanvas() {
@@ -180,9 +182,18 @@ class VideoFilterType {
 }
 
 class VideoFilterInstance {
-	constructor(filterType, { panelComponents, getValues }, kernelFunc) {
+	/**
+	 * 
+	 * @param {*} filterType 
+	 * @param {*} filterParams 
+	 * @param {Object} panelComponents 
+	 * @param {() => [any]} getValues 
+	 * @param {*} kernelFunc 
+	 */
+	constructor(filterType, filterParams, panelComponents, getValues, kernelFunc) {
 		this._filterType = filterType;
 		this._kernelFunc = kernelFunc;
+		this._filterParams = filterParams;
 		this._panelComponents = panelComponents;
 		this.getParamValues = getValues;
 	}
@@ -191,16 +202,32 @@ class VideoFilterInstance {
 		return this._panelComponents.root;
 	}
 
-	process(pipe, otherData) {
-		const params = this.getParamValues().map((a) => {
-			if (a === true) {
-				return 1;
+	/**
+	 * 
+	 * @param {*} pipe 
+	 * @param {Map<String, {destinationCanvas: HTMLCanvasElement, destinationContext: CanvasRenderingContext2D, drawFunction: (destinationCanvas: HTMLCanvasElement, destinationCtx: CanvasRenderingContext2D, rawInput: HTMLCanvasElement, otherData: Object) => void}>} textures 
+	 * @param {Object} otherData 
+	 * @returns 
+	 */
+	process(pipe, textures, otherData) {
+		const rawParamValues = this.getParamValues();
+		const cleanedParamValues = new Array(rawParamValues.length);
+		for (let i = 0; i < this._filterParams.length; i++) {
+			const paramInfo = this._filterParams[i];
+			const paramValue = rawParamValues[i];
+
+			let cleaned = paramValue;
+			switch (paramInfo.type) {
+				case "boolean":
+					cleaned = paramValue ? 1 : 0;
+					break;
+				case "texture":
+					cleaned = textures.get(paramValue).destinationCanvas;
+					break;
 			}
-			if (a === false) {
-				return 0;
-			}
-			return a;
-		});
-		return this._kernelFunc(pipe, ...params);
+			cleanedParamValues[i] = cleaned;
+		}
+
+		return this._kernelFunc(pipe, ...cleanedParamValues);
 	}
 }

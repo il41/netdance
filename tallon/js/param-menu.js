@@ -65,6 +65,13 @@ const _createPanelElement = (headerText) => {
 /**
  * Given information about a collection of variables, creates a panel for editing those variables.
  * Also returns a function for retrieving the values of those variables.
+ * 
+ * @param {*} headerText 
+ * @param {*} params 
+ * @returns {{
+ * getValues: () => [any],
+ * panelComponents: {HTMLElement},
+ * }}
  */
 function createParameterPanel(headerText, params) {
 	// the object that contains the actual parameter values for dat.gui to interact with

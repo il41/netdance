@@ -21,6 +21,11 @@ function exampleMultipleFilters() {
 				return [lerp(a[0], b[0], x), lerp(a[1], b[1], x), lerp(a[2], b[2], x), lerp(a[3], b[3], x)];
 			}
 
+      // helper function for the shader
+			function lerp4_4(a, b, x) {
+				return [lerp(a[0], b[0], x[0]), lerp(a[1], b[1], x[1]), lerp(a[2], b[2], x[2]), lerp(a[3], b[3], x[3])];
+			}
+
       // the actual shader function (note that it's written in JS, not HLSL)
 			return gpu
 				.createKernel(function (frame, trackingData, redControl, greenControl, blueControl, invert) {

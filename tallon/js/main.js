@@ -1,8 +1,8 @@
 function testing() {
 	// a weird filter that lets you control red/green channels or invert everything
 	const videoElement = document.createElement("video");
-	// videoElement.src = "https://media.istockphoto.com/videos/hand-waving-bye-video-id150487553";
-	videoElement.src = "https://media.istockphoto.com/videos/sign-language-as-a-way-for-communication-video-id1131657616";
+	videoElement.src = "https://media.istockphoto.com/videos/hand-waving-bye-video-id150487553";
+	// videoElement.src = "https://media.istockphoto.com/videos/sign-language-as-a-way-for-communication-video-id1131657616";
 	videoElement.crossOrigin = "anonymous";
 	videoElement.controls = true;
 	videoElement.loop = true;
@@ -32,9 +32,10 @@ function testing() {
 		filterStack.registerExternalData("poseData", handData);
 
 		filterStack.addTextureGenerator("All", tgAll);
-		filterStack.addTextureGenerator("Blurry Dots", tgBlurryDots);
+		filterStack.addTextureGenerator("Trails", tgTrails);
 		filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
 
+		filterStack.addFilter(vfColor);
 		filterStack.addFilter(vfRGBLevels);
 		filterStack.addFilter(vfRGBLevels);
 

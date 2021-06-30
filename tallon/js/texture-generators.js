@@ -24,7 +24,7 @@ const tgDots = (canvas, ctx, input, other) => {
 	}
 };
 
-const tgBlurryDots = (canvas, ctx, input, other) => {
+const tgTrails = (canvas, ctx, input, other) => {
 	ctx.fillStyle = "#00000005";
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 

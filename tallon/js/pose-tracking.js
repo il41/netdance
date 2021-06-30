@@ -32,10 +32,16 @@ class VideoHandTracker {
 
 	setCallback(func) {
 		this._tracker.onResults((data) => {
+			if(data.multiHandedness === undefined){
+				return;
+			}
+			
 			const pointDataOnly = new Array(42).fill(_emptyMarker);
-
 			for (const handInfo of data.multiHandedness) {
 				const markers = data.multiHandLandmarks[handInfo.index];
+				if(markers === undefined){
+					continue;
+				}
 
 				if (handInfo.label === "Left") {
           // left hand data

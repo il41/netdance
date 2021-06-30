@@ -1,3 +1,5 @@
+const _emptyMarker = [-1,-1,-1];
+
 /**
  * Does hand tracking on a provided HTMLVideoElement.
  *
@@ -9,11 +11,8 @@
  * const video = document.getElementById("my-video-element");
  * const tracker = new VideoHandTracker(video);
  * tracker.setCallback(console.log);
- * tracker.start();
+ * tracker.start(); // note that the video doesn't need to be loaded first
  */
-
-const _emptyMarker = [-1,-1,-1];
-
 class VideoHandTracker {
 	constructor(videoElement) {
 		this._videoElement = videoElement;
@@ -30,6 +29,10 @@ class VideoHandTracker {
 		});
 	}
 
+	/**
+	 * 
+	 * @param {(data: Object, pointDataOnly: [[number, number, number]]) => void} func 
+	 */
 	setCallback(func) {
 		this._tracker.onResults((data) => {
 			if(data.multiHandedness === undefined){

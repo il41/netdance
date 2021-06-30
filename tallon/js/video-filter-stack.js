@@ -1,22 +1,46 @@
 const gpu = new GPU();
 const startTime = new Date().getTime();
 
+/**
+ * A VideoFilterStack provides a framework for parameterized, reorderable GPU-based effects on a video.
+ */
 class VideoFilterStack {
+	/**
+	 * @param {HTMLVideoElement} videoElement 
+	 */
 	constructor(videoElement) {
 		if (videoElement.readyState === 0) {
 			console.error("Cannot create VideoStackFilter from HTMLVideoElement that hasn't loaded its metadata yet!");
 		}
 
+		/**
+		 * @type {HTMLVideoElement}
+		 */
 		this._videoElement = videoElement;
+		/**
+		 * @type {number}
+		 */
 		this._width = videoElement.videoWidth;
+		/**
+		 * @type {number}
+		 */
 		this._height = videoElement.videoHeight;
 
+		/**
+		 * @type {boolean}
+		 */
 		this._requestedStop = false;
+		/**
+		 * @type {boolean}
+		 */
 		this._running = false;
 
-		this._filters = []; // list of filter instances (can contain duplicates)
-		// // keeps track of filters that have already been instantiated for this stack (so those instances can be reused)
-		// this._createdKernels = new Map(); // <filter type name, kernel function>
+		/**
+		 * List of filter instances
+		 * 
+		 * @type {[VideoFilterInstance]}
+		 */
+		this._filters = [];
 
 		// converts image data into pipeline form
 		this._preFilter = gpu
@@ -60,10 +84,16 @@ class VideoFilterStack {
 		this._menuComponents = createMenu("Filters", this._filters);
 	}
 
+	/**
+	 * @returns {HTMLCanvasElement} Returns a canvas that shows results of all active filters. This is the main "output" of the VideoFilterStack.
+	 */
 	getCanvas() {
 		return this._postFilter.canvas;
 	}
 
+	/**
+	 * @returns {Object} Returns a collection of HTMLElements that form the menu. The outermost one is `root`.
+	 */
 	getMenu() {
 		return this._menuComponents.root;
 	}
@@ -71,6 +101,7 @@ class VideoFilterStack {
 	/**
 	 * @param {String} name
 	 * @param {TextureGeneratorType} textureGenType
+	 * @returns {TextureGeneratorInstance} Returns the added instance of the provided texture generator
 	 */
 	addTextureGenerator(name, textureGenType) {
 		const texGen = textureGenType.instantiate(this._vidCanvas, this._externalData);
@@ -84,10 +115,20 @@ class VideoFilterStack {
 		}
 	}
 
+	/**
+	 * 
+	 * @param {String} name 
+	 * @param {any} data 
+	 */
 	registerExternalData(name, data) {
 		this._externalData.set(name, data);
 	}
 
+	/**
+	 * This function is for programmatically creating a filter instance. It should be mostly removed later.
+	 * @param {VideoFilterType} filterType 
+	 * @returns VideoFilterInstance
+	 */
 	addFilter(filterType) {
 		const filterInstance = filterType.instantiate(this._width, this._height, Array.from(this._textures.keys()));
 		this._filters.push(filterInstance);

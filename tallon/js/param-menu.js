@@ -225,14 +225,19 @@ function createColorInput(values, param) {
 
 	const collapsible = elem("div", ["collapsible"]);
 
+	// regular color input
+	const basicInput = elem("input", ["color"], { type: "color" });
+	outer.append(basicInput);
+
+	// expand button
 	const expandButton = elem("div", ["material-icons", "expand-button"], { innerText: "expand_less" });
 	expandButton.addEventListener("click", (e) => {
 		outer.classList.toggle("expanded");
 	});
 	outer.append(expandButton);
 
-	const inner = elem("div", [".color-inner"]);
-
+	// fancy color input
+	const inner = elem("div", ["color-inner"]);
 	const pickerComponentDeclarations = [
 		{
 			component: iro.ui.Box,
@@ -261,7 +266,7 @@ function createColorInput(values, param) {
 		});
 	}
 
-	const picker = new iro.ColorPicker(inner, {
+	const iroPicker = new iro.ColorPicker(inner, {
 		width: 200,
 		color: param.default,
 		display: "flex",
@@ -272,12 +277,21 @@ function createColorInput(values, param) {
 		borderColor: "#444",
 		layout: pickerComponentDeclarations,
 	});
-	picker.on(["color:change", "color:init"], (color) => {
-		values[param.name] = color.hex8String;
-	});
-
 	collapsible.append(inner);
 	outer.append(collapsible);
+
+	const changed = (val) => {
+		values[param.name] = val;
+		basicInput.value = val.slice(0, 7);
+		iroPicker.setColors([val]);
+	};
+	// events
+	basicInput.addEventListener("change", (e) => {
+		changed(e.target.value);
+	});
+	iroPicker.on(["color:change", "color:init"], (color) => {
+		changed(color.hex8String);
+	});
 
 	return outer;
 }

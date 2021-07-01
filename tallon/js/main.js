@@ -45,24 +45,29 @@ function main() {
 
 		const filterStack = new VideoFilterStack(videoElement);
 		container.append(filterStack.getCanvas());
+		container.append(filterStack._lastOutputCanvas);
 
-		// INFORMATION THAT YOU WANT TO PASS INTO TEXTURES/SHADERS
+		// INFORMATION THAT YOU WANT TO PASS INTO TEXTURES
 		filterStack.registerExternalData("lastPoseData", lastHandData);
 		filterStack.registerExternalData("poseData", handData);
 
 		// TEXTURE TYPES
 		filterStack.addTextureGenerator("Nothing", tgNothing);
 		filterStack.addTextureGenerator("Everything", tgEverything);
+		filterStack.addTextureGenerator("Input Video", tgRawInput);
 		filterStack.addTextureGenerator("Trails", tgTrails);
-		filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
-		filterStack.addTextureGenerator("Sprinkles", tgSprinkles);
-		filterStack.addTextureGenerator("Wireframe", tgWireframe);
+		// filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
+		// filterStack.addTextureGenerator("Sprinkles", tgSprinkles);
+		// filterStack.addTextureGenerator("Spiky Mess", tgSpikyMess);
+		// filterStack.addTextureGenerator("Polygon", tgPolygon);
 
 		// ACTIVE FILTERS (this method of adding them is temporary)
-		filterStack.addFilter(vfWobble);
-		filterStack.addFilter(vfColor);
+
+		// filterStack.addFilter(vfShape);
+		// filterStack.addFilter(vfWobble);
+		// filterStack.addFilter(vfColor);
 		filterStack.addFilter(vfRGBLevels);
-		filterStack.addFilter(vfRGBLevels);
+		// filterStack.addFilter(vfRGBLevels);
 
 		
 		filterStack.start();

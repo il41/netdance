@@ -6,7 +6,7 @@ const startTime = new Date().getTime();
  */
 class VideoFilterStack {
 	/**
-	 * @param {HTMLVideoElement} videoElement 
+	 * @param {HTMLVideoElement} videoElement
 	 */
 	constructor(videoElement) {
 		if (videoElement.readyState === 0) {
@@ -37,7 +37,7 @@ class VideoFilterStack {
 
 		/**
 		 * List of filter instances
-		 * 
+		 *
 		 * @type {[VideoFilterInstance]}
 		 */
 		this._filters = [];
@@ -74,6 +74,7 @@ class VideoFilterStack {
 		 * @type {Map<String, any>}
 		 */
 		this._externalData = new Map();
+		this._externalData.set("time", new Date().getTime() / 1000);
 
 		/**
 		 * images that are regenerated every frame for use in filters
@@ -116,9 +117,8 @@ class VideoFilterStack {
 	}
 
 	/**
-	 * 
-	 * @param {String} name 
-	 * @param {any} data 
+	 * @param {String} name
+	 * @param {any} data
 	 */
 	registerExternalData(name, data) {
 		this._externalData.set(name, data);
@@ -126,7 +126,7 @@ class VideoFilterStack {
 
 	/**
 	 * This function is for programmatically creating a filter instance. It should be mostly removed later.
-	 * @param {VideoFilterType} filterType 
+	 * @param {VideoFilterType} filterType
 	 * @returns VideoFilterInstance
 	 */
 	addFilter(filterType) {
@@ -146,6 +146,9 @@ class VideoFilterStack {
 			}
 
 			if (this._videoElement.readyState >= 3) {
+				// this is a bit of a hack to update the time, but it works
+				this._externalData.set("time", new Date().getTime() / 1000);
+
 				this._vidContext.drawImage(this._videoElement, 0, 0);
 				this._updateTextures();
 				this._process(this._vidCanvas, this._externalData);
@@ -232,6 +235,9 @@ class VideoFilterType {
 	}
 
 	getCanvas() {
+		// NOTE: ctx.drawImage(this._postFilter.canvas,0,0) DOES NOT WORK.
+		// this is because the filter's canvas is a webgl2 canvas that does not preserve its buffer.
+		// most of the canvas's functions are also undefined for some reason?
 		return this._kernel?.canvas;
 	}
 }
@@ -296,7 +302,7 @@ class VideoFilterInstance {
 					break;
 				case "enum":
 					if (paramInfo.source === "Textures") {
-						cleaned = textures.get(paramValue).canvas;
+						cleaned = textures.get(paramValue)?.canvas;
 						if (cleaned === undefined) {
 							console.error(`No texture exists with the name "${paramValue}"!`);
 						}

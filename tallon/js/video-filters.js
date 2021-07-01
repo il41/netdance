@@ -1,4 +1,25 @@
 /**
+ * A very minimal video filter that draws its shape texture
+ * @type {VideoFilterType}
+ */
+ const vfShape = new VideoFilterType(
+	"Just Shape",
+	[
+		{ name: "Shape", type: "enum", source: "Textures", default: "Trails" },
+	],
+	() => {
+		// the actual shader function
+		return gpu
+			.createKernel(function (frame, mask) {
+				const x = this.thread.x;
+				const y = this.thread.y;
+
+				return mask[y][x];
+			});
+	}
+);
+
+/**
  * A minimal video filter that fills its shape with a solid color.
  * @type {VideoFilterType}
  */
@@ -27,7 +48,7 @@ const vfColor = new VideoFilterType(
 			return [a3[0] * x, a3[1] * x, a3[2] * x];
 		}
 
-		// the actual shader function (note that it's written in JS, not HLSL)
+		// the actual shader function
 		return gpu
 			.createKernel(function (frame, mask, redControl, greenControl, blueControl, opacity) {
 				const x = this.thread.x;
@@ -68,7 +89,7 @@ const vfRGBLevels = new VideoFilterType(
 			return [lerp(a3[0], b3[0], x3[0]), lerp(a3[1], b3[1], x3[1]), lerp(a3[2], b3[2], x3[2]), 1];
 		}
 
-		// the actual shader function (note that it's written in JS, not HLSL)
+		// the actual shader function
 		return gpu
 			.createKernel(function (frame, mask, redControl, greenControl, blueControl, invert) {
 				const x = this.thread.x;
@@ -114,7 +135,7 @@ const vfWobble = new VideoFilterType(
 			return [a3[0] * x, a3[1] * x, a3[2] * x];
 		}
 
-		// the actual shader function (note that it's written in JS, not HLSL)
+		// the actual shader function
 		return gpu
 			.createKernel(function (frame, mask, time, speed, frequency, intensity) {
 				const x = this.thread.x;
@@ -123,10 +144,9 @@ const vfWobble = new VideoFilterType(
 				const h = this.constants.height;
 
 				const maskPixel = mask[y][x];
-				
+
 				const xFactor = Math.sin(time * speed + y * frequency) * w * intensity * maskPixel[0];
 				const yFactor = Math.cos(time * speed + x * frequency) * h * intensity * maskPixel[0];
-
 
 				const xWobble = Math.round(iclamp(x + xFactor, 0, w));
 				const yWobble = Math.round(iclamp(y + yFactor, 0, h));

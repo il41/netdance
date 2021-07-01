@@ -45,7 +45,6 @@ function main() {
 
 		const filterStack = new VideoFilterStack(videoElement);
 		container.append(filterStack.getCanvas());
-		container.append(filterStack._lastOutputCanvas);
 
 		// INFORMATION THAT YOU WANT TO PASS INTO TEXTURES
 		filterStack.registerExternalData("lastPoseData", lastHandData);

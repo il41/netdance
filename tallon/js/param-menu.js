@@ -84,8 +84,8 @@ function createParameterPanel(headerText, params) {
 	for (const param of params) {
 		values[param.name] = param.default;
 		orderedValueNames.push(param.name);
-		
-		if(param.hidden){
+
+		if (param.hidden) {
 			continue;
 		}
 		let inputElement = null;
@@ -98,6 +98,9 @@ function createParameterPanel(headerText, params) {
 				break;
 			case "enum":
 				inputElement = createEnumInput(values, param);
+				break;
+			case "color":
+				inputElement = createColorInput(values, param);
 				break;
 		}
 		if (inputElement !== null) {
@@ -206,13 +209,75 @@ function createEnumInput(values, param) {
 			innerText: optName,
 			value: optName,
 		});
-		if(optName === param.default){
+		if (optName === param.default) {
 			opt.selected = "selected";
 		}
 		input.append(opt);
 	}
 
 	outer.append(input);
+
+	return outer;
+}
+
+function createColorInput(values, param) {
+	const outer = elem("div", ["color-outer"]);
+
+	const collapsible = elem("div", ["collapsible"]);
+
+	const expandButton = elem("div", ["material-icons", "expand-button"], { innerText: "expand_less" });
+	expandButton.addEventListener("click", (e) => {
+		outer.classList.toggle("expanded");
+	});
+	outer.append(expandButton);
+
+	const inner = elem("div", [".color-inner"]);
+
+	const pickerComponentDeclarations = [
+		{
+			component: iro.ui.Box,
+		},
+		{
+			component: iro.ui.Wheel,
+		},
+		{
+			component: iro.ui.Slider,
+			options: { sliderType: "red" },
+		},
+		{
+			component: iro.ui.Slider,
+			options: { sliderType: "green" },
+		},
+		{
+			component: iro.ui.Slider,
+			options: { sliderType: "blue" },
+		},
+	];
+
+	if (param.alpha) {
+		pickerComponentDeclarations.push({
+			component: iro.ui.Slider,
+			options: { sliderType: "alpha" },
+		});
+	}
+
+	const picker = new iro.ColorPicker(inner, {
+		width: 200,
+		color: param.default,
+		display: "flex",
+		margin: 4,
+		padding: 2,
+		layoutDirection: "horizontal",
+		borderWidth: 1,
+		borderColor: "#444",
+		layout: pickerComponentDeclarations,
+	});
+	picker.on(["color:change", "color:init"], (color) => {
+		values[param.name] = color.hex8String;
+	});
+
+	collapsible.append(inner);
+	outer.append(collapsible);
 
 	return outer;
 }

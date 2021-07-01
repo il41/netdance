@@ -68,9 +68,7 @@ const vfRGBLevels = new VideoFilterType(
 	"RGB Levels",
 	[
 		{ name: "Shape", type: "enum", source: "Textures", default: "Everything" },
-		{ name: "Red", type: "number", min: 0, max: 2, default: 1 },
-		{ name: "Green", type: "number", min: 0, max: 2, default: 1 },
-		{ name: "Blue", type: "number", min: 0, max: 2, default: 1 },
+		{ name: "Color", type: "color", default: "#fff", alpha: true },
 		{ name: "Invert", type: "boolean", default: false },
 	],
 	() => {
@@ -91,7 +89,7 @@ const vfRGBLevels = new VideoFilterType(
 
 		// the actual shader function
 		return gpu
-			.createKernel(function (frame, mask, redControl, greenControl, blueControl, invert) {
+			.createKernel(function (frame, mask, color, invert) {
 				const x = this.thread.x;
 				const y = this.thread.y;
 				const pixel = frame[y][x];
@@ -100,8 +98,8 @@ const vfRGBLevels = new VideoFilterType(
 				return lerp3_3(
 					pixel,
 					lerp3(
-						[pixel[0] * redControl, pixel[1] * greenControl, pixel[2] * blueControl],
-						[1 - pixel[0] * redControl, 1 - pixel[1] * greenControl, 1 - pixel[2] * blueControl],
+						[pixel[0] * color[0], pixel[1] * color[1], pixel[2] * color[2]],
+						[1 - pixel[0] * color[0], 1 - pixel[1] * color[1], 1 - pixel[2] * color[2]],
 						invert
 					),
 					maskPixel

@@ -276,8 +276,9 @@ class VideoFilterInstance {
 	process(pipe, textures, otherData) {
 		const rawParamValues = this.getParamValues();
 
-		const d = new Date();
+		const time = new Date().getTime();
 
+		// process parameters before sending to shaders
 		const cleanedParamValues = new Array(rawParamValues.length);
 		for (let i = 0; i < this._filterParams.length; i++) {
 			const paramInfo = this._filterParams[i];
@@ -289,7 +290,7 @@ class VideoFilterInstance {
 					if (paramInfo.source !== undefined) {
 						switch (paramInfo.source) {
 							case "Time":
-								cleaned = (d.getTime() - startTime) / 1000;
+								cleaned = (time - startTime) / 1000;
 								break;
 							default:
 								console.error(`Unknown enum source "${paramInfo.source}"!`);
@@ -299,6 +300,9 @@ class VideoFilterInstance {
 					break;
 				case "boolean":
 					cleaned = paramValue ? 1 : 0;
+					break;
+				case "color":
+					cleaned = hexToRGBAFloats(paramValue);
 					break;
 				case "enum":
 					if (paramInfo.source === "Textures") {

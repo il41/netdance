@@ -27,10 +27,7 @@ const vfColor = new VideoFilterType(
 	"Color",
 	[
 		{ name: "Shape", type: "enum", source: "Textures", default: "Trails" },
-		{ name: "Red", type: "number", min: 0, max: 1, default: 1 },
-		{ name: "Green", type: "number", min: 0, max: 1, default: 0 },
-		{ name: "Blue", type: "number", min: 0, max: 1, default: 0 },
-		{ name: "Opacity", type: "number", min: 0, max: 1, default: 0.5 },
+		{ name: "Color", type: "color", default: "#fff8", alpha: true },
 	],
 	() => {
 		// linear interpolation between floats
@@ -50,11 +47,11 @@ const vfColor = new VideoFilterType(
 
 		// the actual shader function
 		return gpu
-			.createKernel(function (frame, mask, redControl, greenControl, blueControl, opacity) {
+			.createKernel(function (frame, mask, color) {
 				const x = this.thread.x;
 				const y = this.thread.y;
 
-				return lerp3_3(frame[y][x], [redControl, greenControl, blueControl], mult3(mask[y][x], opacity));
+				return lerp3_3(frame[y][x], color, mult3(mask[y][x], color[3]));
 			})
 			.setFunctions([lerp, lerp3_3, mult3]);
 	}
@@ -68,7 +65,7 @@ const vfRGBLevels = new VideoFilterType(
 	"RGB Levels",
 	[
 		{ name: "Shape", type: "enum", source: "Textures", default: "Everything" },
-		{ name: "Color", type: "color", default: "#fff", alpha: true },
+		{ name: "Color", type: "color", default: "#fff", alpha: false },
 		{ name: "Invert", type: "boolean", default: false },
 	],
 	() => {

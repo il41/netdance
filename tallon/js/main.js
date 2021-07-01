@@ -58,13 +58,13 @@ function main() {
 		// filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
 		// filterStack.addTextureGenerator("Sprinkles", tgSprinkles);
 		// filterStack.addTextureGenerator("Spiky Mess", tgSpikyMess);
-		// filterStack.addTextureGenerator("Polygon", tgPolygon);
+		filterStack.addTextureGenerator("Polygon", tgPolygon);
 
 		// ACTIVE FILTERS (this method of adding them is temporary)
 
 		// filterStack.addFilter(vfShape);
 		// filterStack.addFilter(vfWobble);
-		// filterStack.addFilter(vfColor);
+		filterStack.addFilter(vfColor);
 		filterStack.addFilter(vfRGBLevels);
 		// filterStack.addFilter(vfRGBLevels);
 

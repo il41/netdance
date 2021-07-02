@@ -1,7 +1,7 @@
-const _emptyMarker = [-1,-1,-1];
+const _emptyMarker = [-1, -1, -1];
 
 /**
- * Does hand tracking on a provided HTMLVideoElement.
+ * Does post tracking on a provided HTMLVideoElement.
  *
  * Starts tracking when the `start` method is called. Tracking results are sent to the provided callback function.
  *
@@ -13,14 +13,10 @@ const _emptyMarker = [-1,-1,-1];
  * tracker.setCallback(console.log);
  * tracker.start(); // note that the video doesn't need to be loaded first
  */
-class VideoHandTracker {
-	constructor(videoElement) {
+class _VideoMotionTracker {
+	constructor(videoElement, trackerCreator) {
 		this._videoElement = videoElement;
-		this._tracker = new Hands({
-			locateFile: (file) => {
-				return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-			},
-		});
+		this._tracker = trackerCreator();
 
 		this._tracker.setOptions({
 			maxNumHands: 2,
@@ -30,38 +26,12 @@ class VideoHandTracker {
 	}
 
 	/**
-	 * 
-	 * @param {(data: Object, pointDataOnly: [[number, number, number]]) => void} func 
+	 *
+	 * @param {(data: Object, pointDataOnly: [[number, number, number]]) => void} func
 	 */
 	setCallback(func) {
 		this._tracker.onResults((data) => {
-			if(data.multiHandedness === undefined){
-				return;
-			}
-			
-			const pointDataOnly = new Array(42).fill(_emptyMarker);
-			for (const handInfo of data.multiHandedness) {
-				const markers = data.multiHandLandmarks[handInfo.index];
-				if(markers === undefined){
-					continue;
-				}
-
-				if (handInfo.label === "Left") {
-          // left hand data
-					for (let i = 0; i < 21; i++) {
-						const marker = markers[i];
-						pointDataOnly[i] = [marker.x, marker.y, marker.z];
-					}
-				} else if (handInfo.label === "Right") {
-          // right hand data
-          for (let i = 0; i < 21; i++) {
-						const marker = markers[i];
-						pointDataOnly[i * 2] = [marker.x, marker.y, marker.z];
-					}
-				}
-			}
-
-			func(data, pointDataOnly);
+			func(data, this.extractPointData(data));
 		});
 	}
 
@@ -84,5 +54,56 @@ class VideoHandTracker {
 		};
 
 		window.requestAnimationFrame(updateVideo);
+	}
+}
+
+class VideoHandTracker extends _VideoMotionTracker {
+	constructor(videoElement) {
+		super(videoElement, () => {
+			const tracker = new Hands({
+				locateFile: (file) => {
+					return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+				},
+			});
+
+			tracker.setOptions({
+				maxNumHands: 2,
+				minDetectionConfidence: 0.5,
+				minTrackingConfidence: 0.5,
+			});
+
+			return tracker;
+		});
+	}
+
+	extractPointData(data) {
+		const pointDataOnly = new Array(42).fill(_emptyMarker);
+
+		if (data.multiHandedness === undefined) {
+			return pointDataOnly;
+		}
+
+		for (const handInfo of data.multiHandedness) {
+			const markers = data.multiHandLandmarks[handInfo.index];
+			if (markers === undefined) {
+				continue;
+			}
+
+			if (handInfo.label === "Left") {
+				// left hand data
+				for (let i = 0; i < 21; i++) {
+					const marker = markers[i];
+					pointDataOnly[i] = [marker.x, marker.y, marker.z];
+				}
+			} else if (handInfo.label === "Right") {
+				// right hand data
+				for (let i = 0; i < 21; i++) {
+					const marker = markers[i];
+					pointDataOnly[i * 2] = [marker.x, marker.y, marker.z];
+				}
+			}
+		}
+
+		return pointDataOnly;
 	}
 }

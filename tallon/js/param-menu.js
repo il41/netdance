@@ -267,7 +267,7 @@ function createColorInput(values, param) {
 	}
 
 	const iroPicker = new iro.ColorPicker(inner, {
-		width: 200,
+		width: 100,
 		color: param.default,
 		display: "flex",
 		margin: 4,

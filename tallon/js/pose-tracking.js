@@ -107,3 +107,41 @@ class VideoHandTracker extends _VideoMotionTracker {
 		return pointDataOnly;
 	}
 }
+
+class VideoBodyTracker extends _VideoMotionTracker {
+	constructor(videoElement) {
+		super(videoElement, () => {
+			const tracker = new Pose({
+				locateFile: (file) => {
+					return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+				},
+			});
+
+			tracker.setOptions({
+				modelComplexity: 1,
+				smoothLandmarks: true,
+				minDetectionConfidence: 0.5,
+				minTrackingConfidence: 0.5,
+			});
+
+			return tracker;
+		});
+	}
+
+	extractPointData(data) {
+		const pointDataOnly = new Array(33).fill(_emptyMarker);
+		// console.log(data.poseLandmarks);
+		if (data.poseLandmarks === undefined) {
+			return pointDataOnly;
+		}
+
+		for (let i = 0; i < data.poseLandmarks.length; i++) {
+			const marker = data.poseLandmarks[i];
+			if (marker.visibility > 0.7) {
+				pointDataOnly[i] = [marker.x, marker.y, marker.z];
+			}
+		}
+
+		return pointDataOnly;
+	}
+}

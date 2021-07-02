@@ -2,15 +2,15 @@ const container = document.getElementById("example-container");
 
 function main(videoElement) {
 	// variables used for routing hand tracking data to the VideoFilterStack
-	let lastHandData = new Array(42).fill([-1, -1, -1]);
-	let handData = new Array(42).fill([-1, -1, -1]);
+	let lastMotionData = new Array(42).fill([-1, -1, -1]);
+	let motionData = new Array(42).fill([-1, -1, -1]);
 
 	// the actual hand tracking happens here
-	const handTracker = new VideoHandTracker(videoElement);
+	const handTracker = new VideoBodyTracker(videoElement);
 	handTracker.setCallback((dat, pointDataOnly) => {
-		for (let i = 0; i < handData.length; i++) {
-			lastHandData[i] = handData[i];
-			handData[i] = pointDataOnly[i];
+		for (let i = 0; i < pointDataOnly.length; i++) {
+			lastMotionData[i] = motionData[i];
+			motionData[i] = pointDataOnly[i];
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,8 +34,8 @@ function main(videoElement) {
 		container.append(filterStack.getCanvas());
 
 		// INFORMATION THAT YOU WANT TO PASS INTO TEXTURES
-		filterStack.registerExternalData("lastPoseData", lastHandData);
-		filterStack.registerExternalData("poseData", handData);
+		filterStack.registerExternalData("lastMotionData", lastMotionData);
+		filterStack.registerExternalData("motionData", motionData);
 
 		// TEXTURE TYPES
 		filterStack.addTextureGenerator("Nothing", tgNothing);

@@ -30,11 +30,11 @@ const tgDots = new TextureGeneratorType({
 	drawFunc: (selfData, canvas, ctx, input, other) => {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-		const lastPoseData = other.get("lastPoseData");
-		const poseData = other.get("poseData");
-		for (let i = 0; i < poseData.length; i++) {
-			const [x1, y1, z1] = lastPoseData[i];
-			const [x2, y2, z2] = poseData[i];
+		const lastMotionData = other.get("lastMotionData");
+		const motionData = other.get("motionData");
+		for (let i = 0; i < motionData.length; i++) {
+			const [x1, y1, z1] = lastMotionData[i];
+			const [x2, y2, z2] = motionData[i];
 			if (x1 === -1 || x2 === -1) {
 				continue;
 			}
@@ -57,11 +57,11 @@ const tgTrails = new TextureGeneratorType({
 	drawFunc: (selfData, canvas, ctx, input, other) => {
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-		const lastPoseData = other.get("lastPoseData");
-		const poseData = other.get("poseData");
-		for (let i = 0; i < poseData.length; i++) {
-			const [x1, y1, z1] = lastPoseData[i];
-			const [x2, y2, z2] = poseData[i];
+		const lastMotionData = other.get("lastMotionData");
+		const motionData = other.get("motionData");
+		for (let i = 0; i < motionData.length; i++) {
+			const [x1, y1, z1] = lastMotionData[i];
+			const [x2, y2, z2] = motionData[i];
 			if (x1 === -1 || x2 === -1) {
 				continue;
 			}
@@ -85,11 +85,11 @@ const tgCrazyShapes = new TextureGeneratorType({
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 		const chaos = other.get("volume") ?? 0.1;
-		const lastPoseData = other.get("lastPoseData");
-		const poseData = other.get("poseData");
-		for (let i = 0; i < poseData.length; i++) {
-			const [x1, y1, z1] = lastPoseData[i];
-			const [x2, y2, z2] = poseData[i];
+		const lastMotionData = other.get("lastMotionData");
+		const motionData = other.get("motionData");
+		for (let i = 0; i < motionData.length; i++) {
+			const [x1, y1, z1] = lastMotionData[i];
+			const [x2, y2, z2] = motionData[i];
 			if (x1 === -1 || x2 === -1) {
 				continue;
 			}
@@ -110,10 +110,10 @@ const tgSprinkles = new TextureGeneratorType({
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 		const chaos = other.get("volume") ?? 0.1;
-		const poseData = other.get("poseData");
+		const motionData = other.get("motionData");
 		ctx.fillStyle = "#fff";
-		for (let i = 0; i < poseData.length; i++) {
-			const [x, y, z] = poseData[i];
+		for (let i = 0; i < motionData.length; i++) {
+			const [x, y, z] = motionData[i];
 			if (x === -1) {
 				continue;
 			}
@@ -143,11 +143,11 @@ const tgSpikyMess = new TextureGeneratorType({
 	drawFunc: (selfData, canvas, ctx, input, other) => {
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-		const poseDataScrambled = shuffleArray(other.get("poseData").slice());
+		const motionDataScrambled = shuffleArray(other.get("motionData").slice());
 
 		ctx.beginPath();
-		for (let i = 0; i < poseDataScrambled.length; i++) {
-			const [x, y, z] = poseDataScrambled[i];
+		for (let i = 0; i < motionDataScrambled.length; i++) {
+			const [x, y, z] = motionDataScrambled[i];
 			if (x === -1) {
 				continue;
 			}
@@ -185,12 +185,12 @@ const tgPolygon = new TextureGeneratorType({
 		if (time > 0.0 + selfData.lastTick) {
 			selfData.lastTick = time;
 
-			const poseData = other.get("poseData");
+			const motionData = other.get("motionData");
 
 			const count = 8;
 			for (let n = 0; n < count; n++) {
-				const i = (selfData.lastI + n) % poseData.length;
-				const [x, y, z] = poseData[i];
+				const i = (selfData.lastI + n) % motionData.length;
+				const [x, y, z] = motionData[i];
 
 				if (x !== -1) {
 					const particle = selfData.particles[i];
@@ -201,7 +201,7 @@ const tgPolygon = new TextureGeneratorType({
 				}
 			}
 
-			selfData.lastI = (selfData.lastI + count) % poseData.length;
+			selfData.lastI = (selfData.lastI + count) % motionData.length;
 
 			for (const particle of selfData.particles) {
 				if (particle.x !== -1) {

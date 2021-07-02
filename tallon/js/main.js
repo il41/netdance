@@ -1,17 +1,6 @@
 const container = document.getElementById("example-container");
 
-function main() {
-	// set up the source video element
-	const videoElement = document.createElement("video");
-	// videoElement.src = "https://media.istockphoto.com/videos/hand-waving-bye-video-id150487553";
-	videoElement.src = "https://media.istockphoto.com/videos/sign-language-as-a-way-for-communication-video-id1131657616";
-	videoElement.crossOrigin = "anonymous";
-	videoElement.controls = true;
-	videoElement.loop = true;
-
-	// add the source video element to the DOM for comparison purposes
-	container.append(videoElement);
-
+function main(videoElement) {
 	// variables used for routing hand tracking data to the VideoFilterStack
 	let lastHandData = new Array(42).fill([-1, -1, -1]);
 	let handData = new Array(42).fill([-1, -1, -1]);
@@ -33,10 +22,8 @@ function main() {
 			and later added to the filterStack using filterStack.registerExternalData
 		*/
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 	});
 	handTracker.startTracking();
-
 
 	// do filter stuff once the video is loaded
 	videoElement.onloadedmetadata = () => {
@@ -65,11 +52,10 @@ function main() {
 		// filterStack.addFilter(vfShape);
 		// filterStack.addFilter(vfWobble);
 		filterStack.addFilter(vfGradient);
-		filterStack.addFilter(vfColor);
+		// filterStack.addFilter(vfColor);
 		filterStack.addFilter(vfRGBLevels);
 		// filterStack.addFilter(vfRGBLevels);
 
-		
 		filterStack.start();
 
 		// add the menu to the DOM
@@ -77,4 +63,22 @@ function main() {
 	};
 }
 
-main();
+// getUserMedia().then((data) => {
+// 	if (data.hasVideo) {
+		const videoElement = document.createElement("video");
+		// videoElement.srcObject = data.stream;
+		// set up the source video element
+		// // videoElement.src = "https://media.istockphoto.com/videos/hand-waving-bye-video-id150487553";
+		// videoElement.src = "https://media.istockphoto.com/videos/wave-your-hands-in-the-air-video-id650558060";
+		// // videoElement.src = "https://media.istockphoto.com/videos/sign-language-as-a-way-for-communication-video-id1131657616";
+		videoElement.src = "https://media.istockphoto.com/videos/senior-men-dancing-in-front-of-the-laptop-video-id1196458672";
+		// videoElement.src = "./JolieLaide_LeftCam_720p.mp4";
+		videoElement.crossOrigin = "anonymous";
+		videoElement.controls = true;
+		videoElement.loop = true;
+
+		// add the source video element to the DOM for comparison purposes
+		container.append(videoElement);
+		main(videoElement);
+// 	}
+// });

@@ -108,6 +108,9 @@ class VideoHandTracker extends _VideoMotionTracker {
 	}
 }
 
+const reorderedBodyMarkers = [
+	29, 31, 27, 25, 23, 13, 15, 19, 21, 11, 9, 7, 3, 2, 1, 0, 4, 5, 6, 8, 10, 12, 22, 20, 18, 16, 14, 24, 26, 28, 32, 30,
+];
 class VideoBodyTracker extends _VideoMotionTracker {
 	constructor(videoElement) {
 		super(videoElement, () => {
@@ -136,9 +139,11 @@ class VideoBodyTracker extends _VideoMotionTracker {
 		}
 
 		for (let i = 0; i < data.poseLandmarks.length; i++) {
-			const marker = data.poseLandmarks[i];
-			if (marker.visibility > 0.7) {
-				pointDataOnly[i] = [marker.x, marker.y, marker.z];
+			const marker = data.poseLandmarks[reorderedBodyMarkers[i]];
+			if(marker !== undefined){
+				if (marker.visibility > 0.7) {
+					pointDataOnly[i] = [marker.x, marker.y, marker.z];
+				}
 			}
 		}
 

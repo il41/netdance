@@ -64,6 +64,7 @@ function main() {
 
 		// filterStack.addFilter(vfShape);
 		// filterStack.addFilter(vfWobble);
+		filterStack.addFilter(vfGradient);
 		filterStack.addFilter(vfColor);
 		filterStack.addFilter(vfRGBLevels);
 		// filterStack.addFilter(vfRGBLevels);

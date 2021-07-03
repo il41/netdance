@@ -215,3 +215,38 @@ const vfMotionBlur = new VideoFilterType(
 			.setFunctions([lerp, lerp3_3, mult3]);
 	}
 );
+
+/**
+ * A video filter that mixes the current frame with the last output frame.
+ * @type {VideoFilterType}
+ */
+const vfZoomBlur = new VideoFilterType(
+	"Zoom Blur",
+	[
+		{ name: "Last Frame", hidden: true, type: "enum", source: "Textures", default: "Last Output Frame" },
+		{ name: "Shape", type: "enum", source: "Textures", default: "Last Output Frame" },
+		{ name: "Intensity", type: "number", min: 0, max: 1, default: 0.75 },
+		{ name: "Scale", type: "number", min: 0.8, max: 1.2, default: 0.95 },
+	],
+	() => {
+		return gpu
+			.createKernel(function (frame, lastFrame, mask, amount, scale) {
+				const x = this.thread.x;
+				const y = this.thread.y;
+				const w = this.constants.width;
+				const h = this.constants.height;
+				const xOffset = w / 2;
+				const yOffset = h / 2;
+
+				const x2 = ((x - xOffset) * scale + xOffset) % w;
+				const y2 = ((y - yOffset) * scale + yOffset) % h;
+
+				return lerp3_3(
+					frame[y][x],
+					lastFrame[y2][x2],
+					mult3(mask[y2][x2], amount)
+				);
+			})
+			.setFunctions([lerp, lerp3_3, mult3]);
+	}
+);

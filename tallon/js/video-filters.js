@@ -193,3 +193,25 @@ const vfWobble = new VideoFilterType(
 			.setFunctions([iclamp]);
 	}
 );
+
+/**
+ * A video filter that mixes the current frame with the last output frame.
+ * @type {VideoFilterType}
+ */
+const vfMotionBlur = new VideoFilterType(
+	"Motion Blur",
+	[
+		{ name: "Last Frame", hidden: true, type: "enum", source: "Textures", default: "Last Output Frame" },
+		{ name: "Shape", type: "enum", source: "Textures", default: "Everything" },
+		{ name: "Amount", type: "number", min: 0, max: 0.99, default: 0.5 },
+	],
+	() => {
+		return gpu
+			.createKernel(function (frame, lastFrame, mask, amount) {
+				const x = this.thread.x;
+				const y = this.thread.y;
+				return lerp3_3(frame[y][x], lastFrame[y][x], mult3(mask[y][x], amount));
+			})
+			.setFunctions([lerp, lerp3_3, mult3]);
+	}
+);

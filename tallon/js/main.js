@@ -65,10 +65,12 @@ function main(videoElement) {
 		// INFORMATION THAT YOU WANT TO PASS INTO TEXTURES
 		filterStack.registerExternalData("lastMotionData", lastMotionData);
 		filterStack.registerExternalData("motionData", motionData);
+		filterStack.registerExternalData("lastOutputFrame", filterStack.getCanvas());
 
 		// TEXTURE TYPES
 		filterStack.addTextureGenerator("Nothing", tgNothing);
 		filterStack.addTextureGenerator("Everything", tgEverything);
+		filterStack.addTextureGenerator("Last Output Frame", tgLastOutputFrame);
 		filterStack.addTextureGenerator("Input Video", tgRawInput);
 		filterStack.addTextureGenerator("Trails", tgTrails);
 		filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
@@ -82,7 +84,8 @@ function main(videoElement) {
 		// filterStack.addFilter(vfWobble);
 		filterStack.addFilter(vfGradient);
 		// filterStack.addFilter(vfColor);
-		filterStack.addFilter(vfRGBLevels);
+		filterStack.addFilter(vfMotionBlur);
+		// filterStack.addFilter(vfRGBLevels);
 		// filterStack.addFilter(vfRGBLevels);
 
 		filterStack.start();

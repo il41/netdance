@@ -6,6 +6,13 @@ const tgNothing = new TextureGeneratorType({
 	drawFunc: (selfData, canvas, ctx, input, other) => {},
 });
 
+const tgLastOutputFrame = new TextureGeneratorType({
+	initFunc: (selfData, canvas, ctx, input, other) => {},
+	drawFunc: (selfData, canvas, ctx, input, other) => {
+		ctx.drawImage(other.get("lastOutputFrame"), 0, 0);
+	},
+});
+
 const tgEverything = new TextureGeneratorType({
 	initFunc: (selfData, canvas, ctx, input, other) => {
 		ctx.fillStyle = "#fff";

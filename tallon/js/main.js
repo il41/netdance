@@ -84,7 +84,7 @@ function main(videoElement) {
 		// filterStack.addFilter(vfWobble);
 		filterStack.addFilter(vfGradient);
 		// filterStack.addFilter(vfColor);
-		// filterStack.addFilter(vfMotionBlur);
+		filterStack.addFilter(vfMotionBlur);
 		filterStack.addFilter(vfZoomBlur);
 
 		// filterStack.addFilter(vfRGBLevels);

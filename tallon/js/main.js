@@ -71,9 +71,9 @@ function main(videoElement) {
 		filterStack.addTextureGenerator("Everything", tgEverything);
 		filterStack.addTextureGenerator("Input Video", tgRawInput);
 		filterStack.addTextureGenerator("Trails", tgTrails);
-		// filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
-		// filterStack.addTextureGenerator("Sprinkles", tgSprinkles);
-		// filterStack.addTextureGenerator("Spiky Mess", tgSpikyMess);
+		filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
+		filterStack.addTextureGenerator("Sprinkles", tgSprinkles);
+		filterStack.addTextureGenerator("Spiky Mess", tgSpikyMess);
 		filterStack.addTextureGenerator("Polygon", tgPolygon);
 
 		// ACTIVE FILTERS (this method of adding them is temporary)

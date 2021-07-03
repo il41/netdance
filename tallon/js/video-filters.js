@@ -86,7 +86,7 @@ const vfColor = new VideoFilterType(
 const vfGradient = new VideoFilterType(
 	"Gradient",
 	[
-		{ name: "Shape", type: "enum", source: "Textures", default: "Everything" },
+		{ name: "Shape", type: "enum", source: "Textures", default: "Polygon" },
 		{ name: "Time", type: "number", source: "Time", hidden: true },
 		{ name: "Speed", type: "number", min: 0, max: 10, default: 0.5, step: 0.1 },
 		{ name: "Color 1", type: "color", default: "#ffdb57", alpha: true },

@@ -17,6 +17,8 @@ class _VideoMotionTracker {
 	constructor(videoElement, trackerCreator) {
 		this._videoElement = videoElement;
 		this._tracker = trackerCreator();
+		this._isTracking = false;
+		this._stopRequested = false;
 
 		this._tracker.setOptions({
 			maxNumHands: 2,
@@ -36,8 +38,19 @@ class _VideoMotionTracker {
 	}
 
 	startTracking() {
+		if(this._isTracking){
+			return;
+		}
+		this._isTracking = true;
+
 		let lastVideoTime = 0;
 		const updateVideo = () => {
+			if(this._stopRequested){
+				this._isTracking = false;
+				this._stopRequested = false;
+				return;
+			}
+			
 			let onFrameResult = null;
 			if (!this._videoElement.paused && lastVideoTime !== this._videoElement.currentTime) {
 				lastVideoTime = this._videoElement.currentTime;
@@ -54,6 +67,20 @@ class _VideoMotionTracker {
 		};
 
 		window.requestAnimationFrame(updateVideo);
+	}
+	
+	/**
+	 * 
+	 * @returns {boolean} if the tracker is currently active
+	 */
+	isTracking(){
+		return this._isTracking;
+	}
+
+	stopTracking() {
+		if(this._isTracking){
+			this._stopRequested = true;
+		}
 	}
 }
 

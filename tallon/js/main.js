@@ -1,13 +1,22 @@
-const container = document.getElementById("example-container");
+const container = document.getElementById("main-container");
 
 function main(videoElement) {
+	/**
+	 * false: body, true: hands
+	 */
+	let activeTracker = false;
+
 	// variables used for routing hand tracking data to the VideoFilterStack
+	// hand tracking has 42 markers, and body tracking has 33; here we just use the larger
 	let lastMotionData = new Array(42).fill([-1, -1, -1]);
 	let motionData = new Array(42).fill([-1, -1, -1]);
 
-	// the actual hand tracking happens here
-	const handTracker = new VideoBodyTracker(videoElement);
-	handTracker.setCallback((dat, pointDataOnly) => {
+	// the actual tracking happens here
+	const handTracker = new VideoHandTracker(videoElement);
+	const bodyTracker = new VideoBodyTracker(videoElement);
+
+	// this function is called whenever either tracker is updated
+	const trackerCallback = (dat, pointDataOnly) => {
 		for (let i = 0; i < pointDataOnly.length; i++) {
 			lastMotionData[i] = motionData[i];
 			motionData[i] = pointDataOnly[i];
@@ -22,8 +31,28 @@ function main(videoElement) {
 			and later added to the filterStack using filterStack.registerExternalData
 		*/
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	};
+
+	handTracker.setCallback(trackerCallback);
+	bodyTracker.setCallback(trackerCallback);
+
+	const updateTrackingSource = () => {
+		if (activeTracker) {
+			bodyTracker.stopTracking();
+			handTracker.startTracking();
+		} else {
+			handTracker.stopTracking();
+			bodyTracker.startTracking();
+		}
+	};
+	updateTrackingSource();
+
+	const trackingModeSwitch = document.getElementById("tracking-mode-switch");
+	trackingModeSwitch.checked = activeTracker;
+	trackingModeSwitch.addEventListener("change", (e) => {
+		activeTracker = e.target.checked ? true : false;
+		updateTrackingSource();
 	});
-	handTracker.startTracking();
 
 	// do filter stuff once the video is loaded
 	videoElement.onloadedmetadata = () => {
@@ -65,20 +94,20 @@ function main(videoElement) {
 
 // getUserMedia().then((data) => {
 // 	if (data.hasVideo) {
-		const videoElement = document.createElement("video");
-		// videoElement.srcObject = data.stream;
-		// set up the source video element
-		// // videoElement.src = "https://media.istockphoto.com/videos/hand-waving-bye-video-id150487553";
-		// videoElement.src = "https://media.istockphoto.com/videos/wave-your-hands-in-the-air-video-id650558060";
-		// // videoElement.src = "https://media.istockphoto.com/videos/sign-language-as-a-way-for-communication-video-id1131657616";
-		videoElement.src = "https://media.istockphoto.com/videos/senior-men-dancing-in-front-of-the-laptop-video-id1196458672";
-		// videoElement.src = "./JolieLaide_LeftCam_720p.mp4";
-		videoElement.crossOrigin = "anonymous";
-		videoElement.controls = true;
-		videoElement.loop = true;
+const videoElement = document.createElement("video");
+// videoElement.srcObject = data.stream;
+// set up the source video element
+// // videoElement.src = "https://media.istockphoto.com/videos/hand-waving-bye-video-id150487553";
+// videoElement.src = "https://media.istockphoto.com/videos/wave-your-hands-in-the-air-video-id650558060";
+// // videoElement.src = "https://media.istockphoto.com/videos/sign-language-as-a-way-for-communication-video-id1131657616";
+videoElement.src = "https://media.istockphoto.com/videos/senior-men-dancing-in-front-of-the-laptop-video-id1196458672";
+// videoElement.src = "./JolieLaide_LeftCam_720p.mp4";
+videoElement.crossOrigin = "anonymous";
+videoElement.controls = true;
+videoElement.loop = true;
 
-		// add the source video element to the DOM for comparison purposes
-		container.append(videoElement);
-		main(videoElement);
+// add the source video element to the DOM for comparison purposes
+container.append(videoElement);
+main(videoElement);
 // 	}
 // });

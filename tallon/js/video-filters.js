@@ -203,7 +203,7 @@ const vfMotionBlur = new VideoFilterType(
 	[
 		{ name: "Last Frame", hidden: true, type: "enum", source: "Textures", default: "Last Output Frame" },
 		{ name: "Shape", type: "enum", source: "Textures", default: "Last Output Frame" },
-		{ name: "Amount", type: "number", min: 0, max: 0.99, default: 0.5 },
+		{ name: "Intensity", type: "number", min: 0, max: 0.99, default: 0.5 },
 	],
 	() => {
 		return gpu

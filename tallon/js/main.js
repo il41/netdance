@@ -84,16 +84,16 @@ function main(videoElement) {
 		// filterStack.addFilter(vfWobble);
 		filterStack.addFilter(vfGradient);
 		// filterStack.addFilter(vfColor);
-		filterStack.addFilter(vfMotionBlur);
+		// filterStack.addFilter(vfMotionBlur);
 		filterStack.addFilter(vfZoomBlur);
 
-		// filterStack.addFilter(vfRGBLevels);
+		filterStack.addFilter(vfRGBLevels);
 		// filterStack.addFilter(vfRGBLevels);
 
 		filterStack.start();
 
 		// add the menu to the DOM
-		container.append(filterStack.getMenu());
+		container.append(filterStack.getFilterMenuRoot());
 	};
 }
 

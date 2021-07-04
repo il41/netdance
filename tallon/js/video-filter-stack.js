@@ -82,7 +82,14 @@ class VideoFilterStack {
 		 */
 		this._textures = new Map();
 
-		this._menuComponents = createMenu("Filters", this._filters);
+		this._menu = new ParameterMenu("Filters", (inst) => {
+			const t = inst.getType();
+			return {
+				paramsInfo: t.getParamsParams(),
+				name: t.getName(),
+				other: this._externalData,
+			}
+		});
 	}
 
 	/**
@@ -93,10 +100,10 @@ class VideoFilterStack {
 	}
 
 	/**
-	 * @returns {Object} Returns a collection of HTMLElements that form the menu. The outermost one is `root`.
+	 * @returns {HTMLElement}
 	 */
-	getMenu() {
-		return this._menuComponents.root;
+	getFilterMenuRoot() {
+		return this._menu.getRoot();
 	}
 
 	/**
@@ -110,8 +117,18 @@ class VideoFilterStack {
 		return texGen;
 	}
 
+	/**
+	 *
+	 * @param {VideoFilterType} filterType
+	 */
+	addFilter(filterType) {
+		const filter = new VideoFilterInstance(filterType, this._width, this._height);
+		const panel = this._menu.addItem(filter);
+		filter.setParamValueGetter(panel.getValues);
+	}
+
 	_updateTextures() {
-		for (const [textureName, texGen] of this._textures) {
+		for (const [, texGen] of this._textures) {
 			texGen.draw(this._externalData);
 		}
 	}
@@ -122,19 +139,6 @@ class VideoFilterStack {
 	 */
 	registerExternalData(name, data) {
 		this._externalData.set(name, data);
-	}
-
-	/**
-	 * This function is for programmatically creating a filter instance. It should be mostly removed later.
-	 * @param {VideoFilterType} filterType
-	 * @returns VideoFilterInstance
-	 */
-	addFilter(filterType) {
-		const filterInstance = filterType.instantiate(this._width, this._height, Array.from(this._textures.keys()));
-		this._filters.push(filterInstance);
-
-		this._menuComponents.list.append(filterInstance.getGuiRoot());
-		return filterInstance;
 	}
 
 	start() {
@@ -204,13 +208,18 @@ class VideoFilterType {
 	 * );
 	 */
 	constructor(name, filterParams, kernelGenerationFunc) {
-		this._filterParams = filterParams;
+		this._filterParamsParams = filterParams;
 		this._name = name;
 		this._kernelGenerationFunc = kernelGenerationFunc;
+		// this.processParamsParams();
 	}
 
 	getName() {
 		return this._name;
+	}
+
+	getParamsParams() {
+		return this._filterParamsParams;
 	}
 
 	createKernel(w, h) {
@@ -220,19 +229,17 @@ class VideoFilterType {
 		});
 	}
 
-	instantiate(w, h, textureNames) {
-		for (const paramInfo of this._filterParams) {
-			if (paramInfo.type === "enum" && paramInfo.options === undefined) {
-				if (paramInfo.source === "Textures") {
-					paramInfo.options = textureNames;
-				} else {
-					console.error(`Unknown enum source "${paramInfo.source}"!`);
-				}
-			}
-		}
-		const { panelComponents, getValues } = createParameterPanel(this._name, this._filterParams);
-		return new VideoFilterInstance(this, this._filterParams, panelComponents, getValues, this.createKernel(w, h));
-	}
+	// processParamsParams() {
+	// 	for (const paramInfo of this._filterParamsParams) {
+	// 		if (paramInfo.type === "enum" && paramInfo.options === undefined) {
+	// 			if (paramInfo.source === "Textures") {
+	// 				paramInfo.options = textureNames;
+	// 			} else {
+	// 				console.error(`Unknown enum source "${paramInfo.source}"!`);
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	getCanvas() {
 		// NOTE: ctx.drawImage(this._postFilter.canvas,0,0) DOES NOT WORK.
@@ -254,20 +261,21 @@ class VideoFilterInstance {
 	 * @param {() => [any]} getValues
 	 * @param {*} kernelFunc
 	 */
-	constructor(filterType, filterParams, panelComponents, getValues, kernelFunc) {
+	constructor(filterType, w, h) {
 		this._filterType = filterType;
-		this._kernelFunc = kernelFunc;
-		this._filterParams = filterParams;
-		this._panelComponents = panelComponents;
-		this.getParamValues = getValues;
+		this._kernelFunc = filterType.createKernel(w, h);
+		this.getParamValues = null;
 	}
 
-	getGuiRoot() {
-		return this._panelComponents.root;
+	setParamValueGetter(getter) {
+		this.getParamValues = getter;
+	}
+
+	getType() {
+		return this._filterType;
 	}
 
 	/**
-	 *
 	 * @param {*} pipe
 	 * @param {Map<String, TextureGeneratorInstance} textures
 	 * @param {Object} otherData

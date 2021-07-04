@@ -76,9 +76,28 @@
 }
 
 .panel-header {
-	padding: 4px;
 	border-bottom: 2px solid var(--edge-color);
+
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.panel-title {
+	padding: 4px;
 	font-size: larger;
+}
+
+.panel-header .delete-icon {
+	color: #da8385;
+	user-select: none;
+	transition: 0.2s all;
+	cursor: pointer;
+}
+
+.panel-header .delete-icon:hover {
+	color: #ff5258;
+	text-shadow: 0px 0px 4px #ff9752;
 }
 
 .panel-body {

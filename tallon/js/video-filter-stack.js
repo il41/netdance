@@ -35,13 +35,6 @@ class VideoFilterStack {
 		 */
 		this._running = false;
 
-		/**
-		 * List of filter instances
-		 *
-		 * @type {[VideoFilterInstance]}
-		 */
-		this._filters = [];
-
 		// converts image data into pipeline form
 		this._preFilter = gpu
 			.createKernel(function (frame) {
@@ -92,6 +85,13 @@ class VideoFilterStack {
 			}
 		});
 		this._menu.registerSourcingData("Textures", this._textureNameList);
+
+		/**
+		 * List of filter instances
+		 *
+		 * @type {{item: VideoFilterInstance, panel: ParamPanel}}
+		 */
+		 this._filters = this._menu.getItemsList();
 	}
 
 	/**
@@ -177,7 +177,7 @@ class VideoFilterStack {
 	_process(imageData, externalData) {
 		let pipe = this._preFilter(imageData);
 		for (const filter of this._filters) {
-			pipe = filter.process(pipe, this._textures, externalData);
+			pipe = filter.item.process(pipe, this._textures, externalData);
 		}
 		this._postFilter(pipe);
 	}
@@ -259,11 +259,9 @@ class VideoFilterType {
 class VideoFilterInstance {
 	/**
 	 *
-	 * @param {*} filterType
-	 * @param {*} filterParams
-	 * @param {Object} panelComponents
-	 * @param {() => [any]} getValues
-	 * @param {*} kernelFunc
+	 * @param {VideoFilterType} filterType
+	 * @param {number} w width
+	 * @param {number} h height
 	 */
 	constructor(filterType, w, h) {
 		this._filterType = filterType;
@@ -292,8 +290,9 @@ class VideoFilterInstance {
 
 		// process parameters before sending to shaders
 		const cleanedParamValues = new Array(rawParamValues.length);
-		for (let i = 0; i < this._filterParams.length; i++) {
-			const paramInfo = this._filterParams[i];
+		const paramsParams = this._filterType.getParamsParams();
+		for (let i = 0; i < paramsParams.length; i++) {
+			const paramInfo = paramsParams[i];
 			const paramValue = rawParamValues[i];
 
 			let cleaned = paramValue;

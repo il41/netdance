@@ -48,6 +48,10 @@ class ParameterMenu {
 		return this._components.root;
 	}
 
+	getItemsList(){
+		return this._items;
+	}
+
 	registerSourcingData(name, data) {
 		this._sourcingData.set(name, data);
 	}

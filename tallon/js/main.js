@@ -70,13 +70,13 @@ function main(videoElement) {
 		// TEXTURE TYPES
 		filterStack.addTextureGenerator("Nothing", tgNothing);
 		filterStack.addTextureGenerator("Everything", tgEverything);
-		filterStack.addTextureGenerator("Last Output Frame", tgLastOutputFrame);
 		filterStack.addTextureGenerator("Input Video", tgRawInput);
+		filterStack.addTextureGenerator("Polygon", tgPolygon);
 		filterStack.addTextureGenerator("Trails", tgTrails);
 		filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
-		filterStack.addTextureGenerator("Sprinkles", tgSprinkles);
 		filterStack.addTextureGenerator("Spiky Mess", tgSpikyMess);
-
+		filterStack.addTextureGenerator("Sprinkles", tgSprinkles);
+		filterStack.addTextureGenerator("Last Output Frame", tgLastOutputFrame);
 		// ACTIVE FILTERS (this method of adding them is temporary)
 
 		// filterStack.addFilter(vfShape);
@@ -93,10 +93,6 @@ function main(videoElement) {
 
 		// add the menu to the DOM
 		container.append(filterStack.getFilterMenuRoot());
-
-		window.setTimeout(() => {
-			filterStack.addTextureGenerator("Polygon", tgPolygon);
-		}, 1000);
 	};
 }
 

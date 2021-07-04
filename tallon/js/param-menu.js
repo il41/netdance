@@ -33,6 +33,12 @@ class ParameterMenu {
 				}
 			},
 		});
+
+		/**
+		 * data used for inputs with dynamic ranges (ie: enums with options that can be added/removed at runtime)
+		 * @type {Map<String, any>}
+		 */
+		this._sourcingData = new Map();
 	}
 
 	/**
@@ -40,6 +46,20 @@ class ParameterMenu {
 	 */
 	getRoot() {
 		return this._components.root;
+	}
+
+	registerSourcingData(name, data) {
+		this._sourcingData.set(name, data);
+	}
+
+	getSourcingData(name) {
+		return this._sourcingData.get(name);
+	}
+
+	sourcingDataChanged(sourceName, changes){
+		for(const items of this._items){
+			items.panel.sourcingDataChanged(sourceName, changes);
+		}
 	}
 
 	/**
@@ -60,13 +80,13 @@ let panelIdCounter = 0;
 
 class ParamPanel {
 	constructor(menu, name, paramsInfo, other = {}) {
+		this._menu = menu;
 		this._name = name;
 		this._id = panelIdCounter++;
-		this._menu = menu;
 		/**
-		 * @type {Map<String, HTMLElement>}
+		 * @type {Map<String, {label: HTMLElement, container: HTMLElement, input: ParamInput}>}
 		 */
-		this._inputElements = new Map();
+		this._inputs = new Map();
 
 		/**
 		 * The object that contains the actual parameter values for dat.gui to interact with
@@ -93,7 +113,7 @@ class ParamPanel {
 		};
 		this._components.root.append(this._components.edge);
 		this._components.edge.append(this._components.dragIcon);
-		
+
 		this._components.root.append(this._components.contents);
 
 		this._components.contents.append(this._components.header);
@@ -114,30 +134,30 @@ class ParamPanel {
 			if (paramInfo.hidden) {
 				continue;
 			}
-			let inputElement = null;
+			let input = null;
 			switch (paramInfo.type) {
 				case "number":
-					inputElement = new RangeInput(this._values, paramInfo);
+					input = new RangeInput(this, this._values, paramInfo);
 					break;
 				case "boolean":
-					inputElement = new CheckboxInput(this._values, paramInfo);
+					input = new CheckboxInput(this, this._values, paramInfo);
 					break;
 				case "enum":
-					inputElement = new EnumInput(this._values, paramInfo);
+					input = new EnumInput(this, this._values, paramInfo);
 					break;
 				case "color":
-					inputElement = new ColorInput(this._values, paramInfo);
+					input = new ColorInput(this, this._values, paramInfo);
 					break;
 			}
-			if (inputElement !== null) {
+			if (input !== null) {
 				const paramLabel = elem("div", ["param-label"], { innerText: paramInfo.name });
 				this._components.body.append(paramLabel);
 
 				const paramBody = elem("div", ["param-body"]);
-				paramBody.append(inputElement.getRootElement());
+				paramBody.append(input.getRootElement());
 				this._components.body.append(paramBody);
 
-				this._inputElements.set(paramInfo.name, { inputLabel: paramLabel, inputBody: paramBody });
+				this._inputs.set(paramInfo.name, { label: paramLabel, container: paramBody, input: input });
 			}
 		}
 	}
@@ -153,10 +173,35 @@ class ParamPanel {
 	getValues = () => {
 		return this._orderedValueNames.map((valName) => this._values[valName]);
 	};
+
+	/**
+	 * 
+	 * @returns {ParameterMenu}
+	 */
+	getMenu(){
+		return this._menu;
+	}
+
+	sourcingDataChanged(sourceName, changes){
+		for(const [,inp] of this._inputs){
+			inp.input.onSourcingDataChanged(sourceName, changes)
+		}
+	}
 }
 
 class ParamInput {
-	constructor(values, param) {
+	/**
+	 * 
+	 * @param {ParamPanel} panel 
+	 * @param {Object} values 
+	 * @param {Object} paramParams 
+	 */
+	constructor(panel, values, paramParams) {
+		/**
+		 * @type {ParamPanel}
+		 */
+		this._panel = panel;
+		this._paramParams = paramParams;
 		this._components = {};
 	}
 
@@ -164,45 +209,51 @@ class ParamInput {
 		return this._components.root;
 	}
 
-	onSourceChanged(sourceName, newValue) {}
+	onSourcingDataChanged(sourceName, changes) {}
 }
 
 class RangeInput extends ParamInput {
-	constructor(values, param) {
-		super(values, param);
+	/**
+	 * 
+	 * @param {ParamPanel} panel 
+	 * @param {Object} values 
+	 * @param {Object} paramParams 
+	 */
+	constructor(panel, values, paramParams) {
+		super(panel, values, paramParams);
 
 		this._components.root = elem("div", ["range"]);
 
 		// number input
 		this._components.numberInput = elem("input", ["number"], {
 			type: "number",
-			min: param.min,
-			max: param.max,
-			value: param.default ?? 0,
-			step: param.step || 0.01,
+			min: paramParams.min,
+			max: paramParams.max,
+			value: paramParams.default ?? 0,
+			step: paramParams.step || 0.01,
 		});
 		this._components.root.append(this._components.numberInput);
 
 		this._components.sliderInput = elem("input", ["slider"], {
 			type: "range",
-			min: param.min ?? 0,
-			max: param.max ?? 1,
-			step: param.step || 0.01,
+			min: paramParams.min ?? 0,
+			max: paramParams.max ?? 1,
+			step: paramParams.step || 0.01,
 		});
-		this._components.sliderInput.value = param.default; // this has to happen after step/min/max are set
+		this._components.sliderInput.value = paramParams.default; // this has to happen after step/min/max are set
 		this._components.root.append(this._components.sliderInput);
 
 		const changeEvent = (e) => {
 			// the parse is needed, don't question it
 			let val = parseFloat(e.target.value);
 
-			if (param.hardMin) {
-				val = Math.max(param.min ?? 0, val);
+			if (paramParams.hardMin) {
+				val = Math.max(paramParams.min ?? 0, val);
 			}
-			if (param.hardMax) {
-				val = Math.min(param.max ?? 1, val);
+			if (paramParams.hardMax) {
+				val = Math.min(paramParams.max ?? 1, val);
 			}
-			values[param.name] = val;
+			values[paramParams.name] = val;
 			this._components.numberInput.value = val;
 			this._components.sliderInput.value = val;
 		};
@@ -213,18 +264,24 @@ class RangeInput extends ParamInput {
 }
 
 class CheckboxInput extends ParamInput {
-	constructor(values, param) {
-		super(values, param);
+	/**
+	 * 
+	 * @param {ParamPanel} panel 
+	 * @param {Object} values 
+	 * @param {Object} paramParams 
+	 */
+	constructor(panel, values, paramParams) {
+		super(panel, values, paramParams);
 
 		this._components.root = elem("div", ["checkbox-outer"]);
 
 		this._components.checkboxInput = elem("input", ["checkbox"], {
 			type: "checkbox",
-			checked: param.value,
+			checked: paramParams.value,
 		});
 
 		this._components.checkboxInput.addEventListener("change", (e) => {
-			values[param.name] = e.target.checked ? true : false;
+			values[paramParams.name] = e.target.checked ? true : false;
 		});
 		this._components.root.append(this._components.checkboxInput);
 
@@ -242,45 +299,82 @@ class CheckboxInput extends ParamInput {
 }
 
 class EnumInput extends ParamInput {
-	constructor(values, param) {
-		super(values, param);
+	/**
+	 * 
+	 * @param {ParamPanel} panel 
+	 * @param {Object} values 
+	 * @param {Object} paramParams 
+	 */
+	constructor(panel, values, paramParams) {
+		super(panel, values, paramParams);
 
 		this._components.root = elem("div", ["select-outer"]);
 
 		this._components.selectInput = elem("select", ["select"]);
 
 		this._components.selectInput.addEventListener("change", (e) => {
-			values[param.name] = e.target.value;
+			values[paramParams.name] = e.target.value;
 		});
 
-		if (param.options === undefined) {
+		
+		const optionNames = paramParams.options ?? panel.getMenu().getSourcingData(paramParams.source);
+		if (optionNames === undefined) {
 			console.error(`Enum input has no provided enum options!`);
-		}
-
-		param.options = ["horse"];
-
-		this._components.options = new Map();
-		for (const optName of param.options) {
-			const opt = elem("option", ["option"], {
-				innerText: optName,
-				value: optName,
-			});
-
-			this._components.options.set(optName, opt);
-
-			if (optName === param.default) {
-				opt.selected = "selected";
+		}else{
+			this._components.options = new Map();
+			for (const optName of optionNames) {
+				this.addOption(optName);
 			}
-			this._components.selectInput.append(opt);
 		}
+
 
 		this._components.root.append(this._components.selectInput);
+	}
+
+	addOption(optName) {
+		const opt = elem("option", ["option"], {
+			innerText: optName,
+			value: optName,
+		});
+		if (optName === this._paramParams.default) {
+			opt.selected = "selected";
+		}
+		this._components.selectInput.append(opt);
+
+		this._components.options.set(optName, opt);
+	}
+
+	removeOption(optName) {
+		/**
+		 * @type {HTMLElement}
+		 */
+		const element = this._components.options.get(optName);
+		this._components.options.delete(optName);
+		element.remove();
+	}
+
+	onSourcingDataChanged(sourceName, changes) {
+		if (sourceName !== this._paramParams.source) {
+			return;
+		}
+
+		if (changes.added !== undefined) {
+			for (const optName of changes.added) {
+				this.addOption(optName);
+			}
+		}
+
+		if (changes.removed !== undefined) {
+			for (const optName of changes.removed) {
+				this.removeOption(optName);
+			}
+		}
 	}
 }
 
 class ColorInput extends ParamInput {
-	constructor(values, param) {
-		super(values, param);
+	constructor(panel, values, paramParams) {
+		super(panel, values, paramParams);
 
 		this._components.root = elem("div", ["color-outer"]);
 
@@ -320,7 +414,7 @@ class ColorInput extends ParamInput {
 			},
 		];
 
-		if (param.alpha) {
+		if (paramParams.alpha) {
 			pickerComponentDeclarations.push({
 				component: iro.ui.Slider,
 				options: { sliderType: "alpha" },
@@ -329,7 +423,7 @@ class ColorInput extends ParamInput {
 
 		this._iroPicker = new iro.ColorPicker(this._components.collapsibleInner, {
 			width: 100,
-			color: param.default,
+			color: paramParams.default,
 			display: "flex",
 			margin: 4,
 			padding: 2,
@@ -342,7 +436,7 @@ class ColorInput extends ParamInput {
 		this._components.root.append(this._components.collapsible);
 
 		const changed = (val) => {
-			values[param.name] = val;
+			values[paramParams.name] = val;
 			this._components.basicInput.value = val.slice(0, 7);
 			this._iroPicker.setColors([val]);
 		};

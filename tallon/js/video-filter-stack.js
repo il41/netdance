@@ -81,6 +81,7 @@ class VideoFilterStack {
 		 * @type {Map<String, TextureGeneratorInstance>}
 		 */
 		this._textures = new Map();
+		this._textureNameList = [];
 
 		this._menu = new ParameterMenu("Filters", (inst) => {
 			const t = inst.getType();
@@ -90,6 +91,7 @@ class VideoFilterStack {
 				other: this._externalData,
 			}
 		});
+		this._menu.registerSourcingData("Textures", this._textureNameList);
 	}
 
 	/**
@@ -114,6 +116,8 @@ class VideoFilterStack {
 	addTextureGenerator(name, textureGenType) {
 		const texGen = textureGenType.instantiate(this._vidCanvas, this._externalData);
 		this._textures.set(name, texGen);
+		this._textureNameList.push(name);
+		this._menu.sourcingDataChanged("Textures", {added: [name]});
 		return texGen;
 	}
 

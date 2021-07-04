@@ -76,7 +76,6 @@ function main(videoElement) {
 		filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
 		filterStack.addTextureGenerator("Sprinkles", tgSprinkles);
 		filterStack.addTextureGenerator("Spiky Mess", tgSpikyMess);
-		filterStack.addTextureGenerator("Polygon", tgPolygon);
 
 		// ACTIVE FILTERS (this method of adding them is temporary)
 
@@ -94,6 +93,10 @@ function main(videoElement) {
 
 		// add the menu to the DOM
 		container.append(filterStack.getFilterMenuRoot());
+
+		window.setTimeout(() => {
+			filterStack.addTextureGenerator("Polygon", tgPolygon);
+		}, 1000);
 	};
 }
 

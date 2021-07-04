@@ -81,7 +81,9 @@ class VideoFilterStack {
 			return {
 				paramsInfo: t.getParamsParams(),
 				name: t.getName(),
-				other: this._externalData,
+				otherPanelArgs: {
+					deletable: true,
+				},
 			}
 		});
 		this._menu.registerSourcingData("Textures", this._textureNameList);

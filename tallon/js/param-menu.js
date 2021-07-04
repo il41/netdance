@@ -1,7 +1,7 @@
 class ParameterMenu {
 	/**
 	 * @param {String} name The displayed name of the menu
-	 * @param {(item: any) => {name: String, paramsInfo: Object, other: Object | undefined}} itemToPanelParamsFunc A function that takes an item and extracts from it the necessary parameters for creating a menu panel
+	 * @param {(item: any) => {name: String, paramsInfo: Object, otherPanelArgs: Object | undefined}} itemToPanelParamsFunc A function that takes an item and extracts from it the necessary parameters for creating a menu panel
 	 */
 	constructor(name, itemToPanelParamsFunc) {
 		this._name = name;
@@ -73,7 +73,7 @@ class ParameterMenu {
 	 */
 	addItem(item) {
 		const panelParams = this._itemToPanelParamsFunc(item);
-		const panel = new ParamPanel(this, panelParams.name, panelParams.paramsInfo, panelParams.other);
+		const panel = new ParamPanel(this, panelParams.name, panelParams.paramsInfo, panelParams.otherPanelArgs);
 		this._items.push({ item, panel });
 		this._components.panelsContainer.append(panel.getRootElement());
 		return panel;
@@ -83,7 +83,7 @@ class ParameterMenu {
 let panelIdCounter = 0;
 
 class ParamPanel {
-	constructor(menu, name, paramsInfo, other = {}) {
+	constructor(menu, name, paramsInfo, otherPanelArgs = {}) {
 		this._menu = menu;
 		this._name = name;
 		this._id = panelIdCounter++;
@@ -125,7 +125,7 @@ class ParamPanel {
 
 		this._components.contents.append(this._components.body);
 
-		if (other.deletable === true) {
+		if (otherPanelArgs.deletable === true) {
 			const deleteIcon = elem("span", ["delete-icon", "material-icons"], { innerText: "clear" });
 			this._components.header.append(deleteIcon);
 		}

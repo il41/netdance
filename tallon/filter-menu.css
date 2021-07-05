@@ -117,6 +117,9 @@
 	/* background-color: #666; */
 	/* border-radius: 8px; */
 	padding: 8px;
+}
+
+.panel-list:empty {
 	min-height: 200px;
 }
 

@@ -7,8 +7,9 @@ const startTime = new Date().getTime();
 class VideoFilterStack {
 	/**
 	 * @param {HTMLVideoElement} videoElement
+	 * @param {[VideoFilterType]} filterTypes
 	 */
-	constructor(videoElement) {
+	constructor(videoElement, filterTypes) {
 		if (videoElement.readyState === 0) {
 			console.error("Cannot create VideoStackFilter from HTMLVideoElement that hasn't loaded its metadata yet!");
 		}
@@ -34,13 +35,6 @@ class VideoFilterStack {
 		 * @type {boolean}
 		 */
 		this._running = false;
-
-		/**
-		 * List of filter instances
-		 *
-		 * @type {[VideoFilterInstance]}
-		 */
-		this._filters = [];
 
 		// converts image data into pipeline form
 		this._preFilter = gpu
@@ -81,8 +75,35 @@ class VideoFilterStack {
 		 * @type {Map<String, TextureGeneratorInstance>}
 		 */
 		this._textures = new Map();
+		this._textureNameList = [];
 
-		this._menuComponents = createMenu("Filters", this._filters);
+		this._filterTypes = new Map();
+		for(const type of filterTypes){
+			this._filterTypes.set(type.getName(), type);
+		}
+
+		this._menu = new ParameterMenu("Filters", (inst) => {
+			const t = inst.getType();
+			return {
+				paramsInfo: t.getParamsParams(),
+				name: t.getName(),
+				otherPanelArgs: {
+					deletable: true,
+				},
+			}
+		}, filterTypes.map((t) => t.getName()), {
+			addMenuUsed: (e, menu, option) => {
+				this.addFilter(this._filterTypes.get(option));
+			},
+		});
+		this._menu.registerSourcingData("Textures", this._textureNameList);
+
+		/**
+		 * List of filter instances
+		 *
+		 * @type {{item: VideoFilterInstance, panel: ParamPanel}}
+		 */
+		 this._filters = this._menu.getItemsList();
 	}
 
 	/**
@@ -93,10 +114,10 @@ class VideoFilterStack {
 	}
 
 	/**
-	 * @returns {Object} Returns a collection of HTMLElements that form the menu. The outermost one is `root`.
+	 * @returns {HTMLElement}
 	 */
-	getMenu() {
-		return this._menuComponents.root;
+	getFilterMenuRoot() {
+		return this._menu.getRoot();
 	}
 
 	/**
@@ -107,11 +128,23 @@ class VideoFilterStack {
 	addTextureGenerator(name, textureGenType) {
 		const texGen = textureGenType.instantiate(this._vidCanvas, this._externalData);
 		this._textures.set(name, texGen);
+		this._textureNameList.push(name);
+		this._menu.sourcingDataChanged("Textures", {added: [name]});
 		return texGen;
 	}
 
+	/**
+	 *
+	 * @param {VideoFilterType} filterType
+	 */
+	addFilter(filterType) {
+		const filter = new VideoFilterInstance(filterType, this._width, this._height);
+		const panel = this._menu.addItem(filter);
+		filter.setParamValueGetter(panel.getValues);
+	}
+
 	_updateTextures() {
-		for (const [textureName, texGen] of this._textures) {
+		for (const [, texGen] of this._textures) {
 			texGen.draw(this._externalData);
 		}
 	}
@@ -122,19 +155,6 @@ class VideoFilterStack {
 	 */
 	registerExternalData(name, data) {
 		this._externalData.set(name, data);
-	}
-
-	/**
-	 * This function is for programmatically creating a filter instance. It should be mostly removed later.
-	 * @param {VideoFilterType} filterType
-	 * @returns VideoFilterInstance
-	 */
-	addFilter(filterType) {
-		const filterInstance = filterType.instantiate(this._width, this._height, Array.from(this._textures.keys()));
-		this._filters.push(filterInstance);
-
-		this._menuComponents.list.append(filterInstance.getGuiRoot());
-		return filterInstance;
 	}
 
 	start() {
@@ -169,7 +189,7 @@ class VideoFilterStack {
 	_process(imageData, externalData) {
 		let pipe = this._preFilter(imageData);
 		for (const filter of this._filters) {
-			pipe = filter.process(pipe, this._textures, externalData);
+			pipe = filter.item.process(pipe, this._textures, externalData);
 		}
 		this._postFilter(pipe);
 	}
@@ -204,13 +224,18 @@ class VideoFilterType {
 	 * );
 	 */
 	constructor(name, filterParams, kernelGenerationFunc) {
-		this._filterParams = filterParams;
+		this._filterParamsParams = filterParams;
 		this._name = name;
 		this._kernelGenerationFunc = kernelGenerationFunc;
+		// this.processParamsParams();
 	}
 
 	getName() {
 		return this._name;
+	}
+
+	getParamsParams() {
+		return this._filterParamsParams;
 	}
 
 	createKernel(w, h) {
@@ -220,19 +245,17 @@ class VideoFilterType {
 		});
 	}
 
-	instantiate(w, h, textureNames) {
-		for (const paramInfo of this._filterParams) {
-			if (paramInfo.type === "enum" && paramInfo.options === undefined) {
-				if (paramInfo.source === "Textures") {
-					paramInfo.options = textureNames;
-				} else {
-					console.error(`Unknown enum source "${paramInfo.source}"!`);
-				}
-			}
-		}
-		const { panelComponents, getValues } = createParameterPanel(this._name, this._filterParams);
-		return new VideoFilterInstance(this, this._filterParams, panelComponents, getValues, this.createKernel(w, h));
-	}
+	// processParamsParams() {
+	// 	for (const paramInfo of this._filterParamsParams) {
+	// 		if (paramInfo.type === "enum" && paramInfo.options === undefined) {
+	// 			if (paramInfo.source === "Textures") {
+	// 				paramInfo.options = textureNames;
+	// 			} else {
+	// 				console.error(`Unknown enum source "${paramInfo.source}"!`);
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	getCanvas() {
 		// NOTE: ctx.drawImage(this._postFilter.canvas,0,0) DOES NOT WORK.
@@ -248,26 +271,25 @@ class VideoFilterType {
 class VideoFilterInstance {
 	/**
 	 *
-	 * @param {*} filterType
-	 * @param {*} filterParams
-	 * @param {Object} panelComponents
-	 * @param {() => [any]} getValues
-	 * @param {*} kernelFunc
+	 * @param {VideoFilterType} filterType
+	 * @param {number} w width
+	 * @param {number} h height
 	 */
-	constructor(filterType, filterParams, panelComponents, getValues, kernelFunc) {
+	constructor(filterType, w, h) {
 		this._filterType = filterType;
-		this._kernelFunc = kernelFunc;
-		this._filterParams = filterParams;
-		this._panelComponents = panelComponents;
-		this.getParamValues = getValues;
+		this._kernelFunc = filterType.createKernel(w, h);
+		this.getParamValues = null;
 	}
 
-	getGuiRoot() {
-		return this._panelComponents.root;
+	setParamValueGetter(getter) {
+		this.getParamValues = getter;
+	}
+
+	getType() {
+		return this._filterType;
 	}
 
 	/**
-	 *
 	 * @param {*} pipe
 	 * @param {Map<String, TextureGeneratorInstance} textures
 	 * @param {Object} otherData
@@ -280,8 +302,9 @@ class VideoFilterInstance {
 
 		// process parameters before sending to shaders
 		const cleanedParamValues = new Array(rawParamValues.length);
-		for (let i = 0; i < this._filterParams.length; i++) {
-			const paramInfo = this._filterParams[i];
+		const paramsParams = this._filterType.getParamsParams();
+		for (let i = 0; i < paramsParams.length; i++) {
+			const paramInfo = paramsParams[i];
 			const paramValue = rawParamValues[i];
 
 			let cleaned = paramValue;

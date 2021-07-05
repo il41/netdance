@@ -7,8 +7,9 @@ const startTime = new Date().getTime();
 class VideoFilterStack {
 	/**
 	 * @param {HTMLVideoElement} videoElement
+	 * @param {[VideoFilterType]} filterTypes
 	 */
-	constructor(videoElement) {
+	constructor(videoElement, filterTypes) {
 		if (videoElement.readyState === 0) {
 			console.error("Cannot create VideoStackFilter from HTMLVideoElement that hasn't loaded its metadata yet!");
 		}
@@ -76,6 +77,11 @@ class VideoFilterStack {
 		this._textures = new Map();
 		this._textureNameList = [];
 
+		this._filterTypes = new Map();
+		for(const type of filterTypes){
+			this._filterTypes.set(type.getName(), type);
+		}
+
 		this._menu = new ParameterMenu("Filters", (inst) => {
 			const t = inst.getType();
 			return {
@@ -85,6 +91,10 @@ class VideoFilterStack {
 					deletable: true,
 				},
 			}
+		}, filterTypes.map((t) => t.getName()), {
+			addMenuUsed: (e, menu, option) => {
+				this.addFilter(this._filterTypes.get(option));
+			},
 		});
 		this._menu.registerSourcingData("Textures", this._textureNameList);
 

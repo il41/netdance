@@ -59,7 +59,15 @@ function main(videoElement) {
 		// auto-play as soon as possible? (this is important to have if using webcam input)
 		// videoElement.play();
 
-		const filterStack = new VideoFilterStack(videoElement);
+		const filterStack = new VideoFilterStack(videoElement, [
+			vfShape,
+			vfWobble,
+			vfGradient,
+			vfColor,
+			vfMotionBlur,
+			vfZoomBlur,
+			vfRGBLevels,
+		]);
 		container.append(filterStack.getCanvas());
 
 		// INFORMATION THAT YOU WANT TO PASS INTO TEXTURES
@@ -78,16 +86,6 @@ function main(videoElement) {
 		filterStack.addTextureGenerator("Sprinkles", tgSprinkles);
 		filterStack.addTextureGenerator("Last Output Frame", tgLastOutputFrame);
 		// ACTIVE FILTERS (this method of adding them is temporary)
-
-		// filterStack.addFilter(vfShape);
-		// filterStack.addFilter(vfWobble);
-		filterStack.addFilter(vfGradient);
-		// filterStack.addFilter(vfColor);
-		// filterStack.addFilter(vfMotionBlur);
-		filterStack.addFilter(vfZoomBlur);
-
-		filterStack.addFilter(vfRGBLevels);
-		// filterStack.addFilter(vfRGBLevels);
 
 		filterStack.start();
 

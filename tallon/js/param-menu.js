@@ -2,32 +2,60 @@ class ParameterMenu {
 	/**
 	 * @param {String} name The displayed name of the menu
 	 * @param {(item: any) => {name: String, paramsInfo: Object, otherPanelArgs: Object | undefined}} itemToPanelParamsFunc A function that takes an item and extracts from it the necessary parameters for creating a menu panel
-	 * @param {{onAddButtonPressed: (e: MouseEvent, menu: ParameterMenu) => void}} callbacks
+	 * @param {{addMenuUsed: (e: MouseEvent, menu: ParameterMenu, pickedOption: String) => void}} callbacks
 	 */
-	constructor(name, itemToPanelParamsFunc, callbacks={}) {
+	constructor(name, itemToPanelParamsFunc, addMenuOptions=[], callbacks={}) {
 		this._name = name;
 		this._itemToPanelParamsFunc = itemToPanelParamsFunc;
-		this._onAddButtonPressed = callbacks.onAddButtonPressed;
 
 		/**
 		 * @type {[{item: any, panel: ParamPanel}]}
 		 */
 		this._itemPanelPairs = [];
-
+		
 		this._components = {
 			root: elem("div", ["menu"]),
 			header: elem("div", ["menu-header"], { innerText: name }),
-			addButton: elem("button", ["add-button"], {innerText: "Add Filter"}),
+			addButtonContainer: elem("div", ["add-button-container"]),
+			addButton: elem("div", ["add-button"], {tabIndex: 0}),
+			addButtonHeader: elem("div", ["add-button-header"], {innerText: "Add Filter"}),
+			addMenu: elem("div", ["add-menu"]),
+			addMenuHeader: elem("div", ["add-menu-header"]),
+			addMenuList: elem("div", ["add-menu-list"]),
+			addMenuOptions: [],
 			// addIcon: elem("span", ["add-icon", "material-icons"], { innerText: "add_circle_outline" }),
 			panelsContainer: elem("div", ["panel-list"]),
 		};
-		this._components.root.append(this._components.header);
-		this._components.root.append(this._components.panelsContainer);
+		const comps = this._components;
+		
+		if(addMenuOptions.length === 1){
+			comps.addButton.addEventListener("click", (e) => {
+				callbacks.addMenuUsed(e, this, addMenuOptions[0]);
+			});
+		}else if(addMenuOptions.length > 1){
+			comps.addButton.classList.add("expandable");
+			for(const optionName of addMenuOptions){
+				const optionElem = elem("div", ["add-menu-option"], {innerText: optionName});
+				optionElem.addEventListener("click", (e) => {
+					callbacks.addMenuUsed(e, this, optionName);
+				});
+				comps.addMenuList.append(optionElem);
+			}
+		}
+		
+		comps.root.append(comps.header);
+		comps.root.append(comps.panelsContainer);
 
-		this._components.header.append(this._components.addButton);
-		this._components.addButton.addEventListener("click", (e) => this._onAddButtonPressed(e, this));
+		comps.header.append(comps.addButtonContainer);
+		comps.addButtonContainer.append(comps.addButton);
+		comps.addButton.append(comps.addButtonHeader);
+		comps.addButton.append(comps.addMenu);
+		comps.addMenu.append(comps.addMenuHeader);
+		comps.addMenu.append(comps.addMenuList);
 
-		this._sortable = Sortable.create(this._components.panelsContainer, {
+		// comps.addButton.addEventListener("click", (e) => this._onAddButtonPressed(e, this));
+
+		this._sortable = Sortable.create(comps.panelsContainer, {
 			animation: 150,
 			draggable: ".panel",
 			handle: ".panel-edge",

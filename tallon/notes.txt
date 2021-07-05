@@ -2,7 +2,6 @@
 
 
 things i need to do:
-- body pose tracking 
 - webcam/video input toggling
 - collapsible filter menu / filters
 - filter adding/removing/resetting

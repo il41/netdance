@@ -2,23 +2,30 @@ class ParameterMenu {
 	/**
 	 * @param {String} name The displayed name of the menu
 	 * @param {(item: any) => {name: String, paramsInfo: Object, otherPanelArgs: Object | undefined}} itemToPanelParamsFunc A function that takes an item and extracts from it the necessary parameters for creating a menu panel
+	 * @param {{onAddButtonPressed: (e: MouseEvent, menu: ParameterMenu) => void}} callbacks
 	 */
-	constructor(name, itemToPanelParamsFunc) {
+	constructor(name, itemToPanelParamsFunc, callbacks={}) {
 		this._name = name;
 		this._itemToPanelParamsFunc = itemToPanelParamsFunc;
+		this._onAddButtonPressed = callbacks.onAddButtonPressed;
 
 		/**
 		 * @type {[{item: any, panel: ParamPanel}]}
 		 */
-		this._items = [];
+		this._itemPanelPairs = [];
 
 		this._components = {
 			root: elem("div", ["menu"]),
 			header: elem("div", ["menu-header"], { innerText: name }),
+			addButton: elem("button", ["add-button"], {innerText: "Add Filter"}),
+			// addIcon: elem("span", ["add-icon", "material-icons"], { innerText: "add_circle_outline" }),
 			panelsContainer: elem("div", ["panel-list"]),
 		};
 		this._components.root.append(this._components.header);
 		this._components.root.append(this._components.panelsContainer);
+
+		this._components.header.append(this._components.addButton);
+		this._components.addButton.addEventListener("click", (e) => this._onAddButtonPressed(e, this));
 
 		this._sortable = Sortable.create(this._components.panelsContainer, {
 			animation: 150,
@@ -27,9 +34,9 @@ class ParameterMenu {
 			onUpdate: (e) => {
 				// sort occured entirely within this list
 				if (e.from === e.to) {
-					const item = this._items[e.oldIndex];
-					this._items[e.oldIndex] = this._items[e.newIndex];
-					this._items[e.newIndex] = item;
+					const item = this._itemPanelPairs[e.oldIndex];
+					this._itemPanelPairs[e.oldIndex] = this._itemPanelPairs[e.newIndex];
+					this._itemPanelPairs[e.newIndex] = item;
 				}
 			},
 		});
@@ -49,7 +56,7 @@ class ParameterMenu {
 	}
 
 	getItemsList(){
-		return this._items;
+		return this._itemPanelPairs;
 	}
 
 	registerSourcingData(name, data) {
@@ -61,7 +68,7 @@ class ParameterMenu {
 	}
 
 	sourcingDataChanged(sourceName, changes){
-		for(const items of this._items){
+		for(const items of this._itemPanelPairs){
 			items.panel.sourcingDataChanged(sourceName, changes);
 		}
 	}
@@ -73,18 +80,37 @@ class ParameterMenu {
 	 */
 	addItem(item) {
 		const panelParams = this._itemToPanelParamsFunc(item);
-		const panel = new ParamPanel(this, panelParams.name, panelParams.paramsInfo, panelParams.otherPanelArgs);
-		this._items.push({ item, panel });
+		const panel = new ParamPanel(this, item, panelParams.name, panelParams.paramsInfo, panelParams.otherPanelArgs);
+		this._itemPanelPairs.push({ item, panel });
 		this._components.panelsContainer.append(panel.getRootElement());
 		return panel;
+	}
+
+	removeIndex(index) {
+		const itemAndPanel = this._itemPanelPairs[index];
+		this._itemPanelPairs.splice(index, 1);
+		itemAndPanel.panel.getRootElement().remove();
+		return itemAndPanel;
+	}
+
+	removeItem(item) {
+		const i = this._itemPanelPairs.findIndex((pair) => pair.item === item);
+		if(i !== -1){
+			return this.removeIndex(i);
+		}
+		return null;
 	}
 }
 
 let panelIdCounter = 0;
 
 class ParamPanel {
-	constructor(menu, name, paramsInfo, otherPanelArgs = {}) {
+	constructor(menu, item, name, paramsInfo, otherPanelArgs = {}) {
+		/**
+		 * @type {ParameterMenu}
+		 */
 		this._menu = menu;
+		this._item = item;
 		this._name = name;
 		this._id = panelIdCounter++;
 		/**
@@ -128,6 +154,9 @@ class ParamPanel {
 		if (otherPanelArgs.deletable === true) {
 			const deleteIcon = elem("span", ["delete-icon", "material-icons"], { innerText: "clear" });
 			this._components.header.append(deleteIcon);
+			deleteIcon.addEventListener("click", (e) => {
+				this._menu.removeItem(this._item);
+			});
 		}
 
 		// create input elements

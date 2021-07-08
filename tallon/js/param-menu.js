@@ -4,7 +4,7 @@ class ParameterMenu {
 	 * @param {(item: any) => {name: String, paramsInfo: Object, otherPanelArgs: Object | undefined}} itemToPanelParamsFunc A function that takes an item and extracts from it the necessary parameters for creating a menu panel
 	 * @param {{addMenuUsed: (e: MouseEvent, menu: ParameterMenu, pickedOption: String) => void}} callbacks
 	 */
-	constructor(name, itemToPanelParamsFunc, addMenuOptions=[], callbacks={}) {
+	constructor(name, itemToPanelParamsFunc, sortable, addMenuOptions = [], callbacks = {}) {
 		this._name = name;
 		this._itemToPanelParamsFunc = itemToPanelParamsFunc;
 
@@ -12,13 +12,13 @@ class ParameterMenu {
 		 * @type {[{item: any, panel: ParamPanel}]}
 		 */
 		this._itemPanelPairs = [];
-		
+
 		this._components = {
 			root: elem("div", ["menu"]),
 			header: elem("div", ["menu-header"], { innerText: name }),
 			addButtonContainer: elem("div", ["add-button-container"]),
-			addButton: elem("div", ["add-button"], {tabIndex: 0}),
-			addButtonHeader: elem("div", ["add-button-header"], {innerText: "Add Filter"}),
+			addButton: elem("div", ["add-button"], { tabIndex: 0 }),
+			addButtonHeader: elem("div", ["add-button-header"], { innerText: "Add Filter" }),
 			addMenu: elem("div", ["add-menu"]),
 			addMenuHeader: elem("div", ["add-menu-header"]),
 			addMenuList: elem("div", ["add-menu-list"]),
@@ -27,22 +27,22 @@ class ParameterMenu {
 			panelsContainer: elem("div", ["panel-list"]),
 		};
 		const comps = this._components;
-		
-		if(addMenuOptions.length === 1){
+
+		if (addMenuOptions.length === 1) {
 			comps.addButton.addEventListener("click", (e) => {
 				callbacks.addMenuUsed(e, this, addMenuOptions[0]);
 			});
-		}else if(addMenuOptions.length > 1){
+		} else if (addMenuOptions.length > 1) {
 			comps.addButton.classList.add("expandable");
-			for(const optionName of addMenuOptions){
-				const optionElem = elem("div", ["add-menu-option"], {innerText: optionName});
+			for (const optionName of addMenuOptions) {
+				const optionElem = elem("div", ["add-menu-option"], { innerText: optionName });
 				optionElem.addEventListener("click", (e) => {
 					callbacks.addMenuUsed(e, this, optionName);
 				});
 				comps.addMenuList.append(optionElem);
 			}
 		}
-		
+
 		comps.root.append(comps.header);
 		comps.root.append(comps.panelsContainer);
 
@@ -55,19 +55,22 @@ class ParameterMenu {
 
 		// comps.addButton.addEventListener("click", (e) => this._onAddButtonPressed(e, this));
 
-		this._sortable = Sortable.create(comps.panelsContainer, {
-			animation: 150,
-			draggable: ".panel",
-			handle: ".panel-edge",
-			onUpdate: (e) => {
-				// sort occured entirely within this list
-				if (e.from === e.to) {
-					const item = this._itemPanelPairs[e.oldIndex];
-					this._itemPanelPairs[e.oldIndex] = this._itemPanelPairs[e.newIndex];
-					this._itemPanelPairs[e.newIndex] = item;
-				}
-			},
-		});
+		this._isSortable = sortable;
+		if (sortable) {
+			this._sortHandler = Sortable.create(comps.panelsContainer, {
+				animation: 150,
+				draggable: ".panel",
+				handle: ".panel-edge",
+				onUpdate: (e) => {
+					// sort occured entirely within this list
+					if (e.from === e.to) {
+						const item = this._itemPanelPairs[e.oldIndex];
+						this._itemPanelPairs[e.oldIndex] = this._itemPanelPairs[e.newIndex];
+						this._itemPanelPairs[e.newIndex] = item;
+					}
+				},
+			});
+		}
 
 		/**
 		 * data used for inputs with dynamic ranges (ie: enums with options that can be added/removed at runtime)
@@ -83,7 +86,11 @@ class ParameterMenu {
 		return this._components.root;
 	}
 
-	getItemsList(){
+	isSortable() {
+		return this._isSortable;
+	}
+
+	getItemsList() {
 		return this._itemPanelPairs;
 	}
 
@@ -95,8 +102,8 @@ class ParameterMenu {
 		return this._sourcingData.get(name);
 	}
 
-	sourcingDataChanged(sourceName, changes){
-		for(const items of this._itemPanelPairs){
+	sourcingDataChanged(sourceName, changes) {
+		for (const items of this._itemPanelPairs) {
 			items.panel.sourcingDataChanged(sourceName, changes);
 		}
 	}
@@ -123,7 +130,7 @@ class ParameterMenu {
 
 	removeItem(item) {
 		const i = this._itemPanelPairs.findIndex((pair) => pair.item === item);
-		if(i !== -1){
+		if (i !== -1) {
 			return this.removeIndex(i);
 		}
 		return null;
@@ -161,16 +168,19 @@ class ParamPanel {
 		// set up base gui elements
 		this._components = {
 			root: elem("div", ["panel"]),
-			edge: elem("div", ["panel-edge"]),
-			dragIcon: elem("span", ["drag-icon", "material-icons"], { innerText: "drag_indicator" }),
 			contents: elem("div", ["panel-contents"]),
 			header: elem("div", ["panel-header"]),
 			title: elem("div", ["panel-title"], { innerText: this._name }),
 			deleteIcon: null,
 			body: elem("div", ["panel-body"]),
 		};
-		this._components.root.append(this._components.edge);
-		this._components.edge.append(this._components.dragIcon);
+		
+		if (this._menu.isSortable()) {
+			this._components.edge = elem("div", ["panel-edge"]);
+			this._components.dragIcon = elem("span", ["drag-icon", "material-icons"], { innerText: "drag_indicator" });
+			this._components.root.append(this._components.edge);
+			this._components.edge.append(this._components.dragIcon);
+		}
 
 		this._components.root.append(this._components.contents);
 
@@ -236,26 +246,26 @@ class ParamPanel {
 	};
 
 	/**
-	 * 
+	 *
 	 * @returns {ParameterMenu}
 	 */
-	getMenu(){
+	getMenu() {
 		return this._menu;
 	}
 
-	sourcingDataChanged(sourceName, changes){
-		for(const [,inp] of this._inputs){
-			inp.input.onSourcingDataChanged(sourceName, changes)
+	sourcingDataChanged(sourceName, changes) {
+		for (const [, inp] of this._inputs) {
+			inp.input.onSourcingDataChanged(sourceName, changes);
 		}
 	}
 }
 
 class ParamInput {
 	/**
-	 * 
-	 * @param {ParamPanel} panel 
-	 * @param {Object} values 
-	 * @param {Object} paramParams 
+	 *
+	 * @param {ParamPanel} panel
+	 * @param {Object} values
+	 * @param {Object} paramParams
 	 */
 	constructor(panel, values, paramParams) {
 		/**
@@ -275,10 +285,10 @@ class ParamInput {
 
 class RangeInput extends ParamInput {
 	/**
-	 * 
-	 * @param {ParamPanel} panel 
-	 * @param {Object} values 
-	 * @param {Object} paramParams 
+	 *
+	 * @param {ParamPanel} panel
+	 * @param {Object} values
+	 * @param {Object} paramParams
 	 */
 	constructor(panel, values, paramParams) {
 		super(panel, values, paramParams);
@@ -326,10 +336,10 @@ class RangeInput extends ParamInput {
 
 class CheckboxInput extends ParamInput {
 	/**
-	 * 
-	 * @param {ParamPanel} panel 
-	 * @param {Object} values 
-	 * @param {Object} paramParams 
+	 *
+	 * @param {ParamPanel} panel
+	 * @param {Object} values
+	 * @param {Object} paramParams
 	 */
 	constructor(panel, values, paramParams) {
 		super(panel, values, paramParams);
@@ -361,10 +371,10 @@ class CheckboxInput extends ParamInput {
 
 class EnumInput extends ParamInput {
 	/**
-	 * 
-	 * @param {ParamPanel} panel 
-	 * @param {Object} values 
-	 * @param {Object} paramParams 
+	 *
+	 * @param {ParamPanel} panel
+	 * @param {Object} values
+	 * @param {Object} paramParams
 	 */
 	constructor(panel, values, paramParams) {
 		super(panel, values, paramParams);
@@ -377,17 +387,15 @@ class EnumInput extends ParamInput {
 			values[paramParams.name] = e.target.value;
 		});
 
-		
 		const optionNames = paramParams.options ?? panel.getMenu().getSourcingData(paramParams.source);
 		if (optionNames === undefined) {
 			console.error(`Enum input has no provided enum options!`);
-		}else{
+		} else {
 			this._components.options = new Map();
 			for (const optName of optionNames) {
 				this.addOption(optName);
 			}
 		}
-
 
 		this._components.root.append(this._components.selectInput);
 	}

@@ -47,13 +47,19 @@ class TextureGeneratorInstance {
 		
 		this.externalData = externalDataObj;
 		
+		this.getParamValues = null;
+
 		this.updateDimensions();
+	}
+
+	setParamValueGetter(getter) {
+		this.getParamValues = getter;
 	}
 
 	updateDimensions() {
 		this._canvas.width = this._sourceCanvas.width;
 		this._canvas.height = this._sourceCanvas.height;
-		
+
 		this.initFunc(this.selfData, this._canvas, this.ctx, this._sourceCanvas, this.externalData);
 	}
 

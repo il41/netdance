@@ -78,7 +78,7 @@ class VideoFilterStack {
 			this._filterTypes.set(type.getName(), type);
 		}
 
-		this._menu = new ParameterMenu(
+		this._filterMenu = new ParameterMenu(
 			"Filters",
 			(inst) => {
 				const t = inst.getType();
@@ -90,6 +90,7 @@ class VideoFilterStack {
 					},
 				};
 			},
+			true,
 			filterTypes.map((t) => t.getName()),
 			{
 				addMenuUsed: (e, menu, option) => {
@@ -97,14 +98,14 @@ class VideoFilterStack {
 				},
 			}
 		);
-		this._menu.registerSourcingData("Textures", this._textureNameList);
+		this._filterMenu.registerSourcingData("Textures", this._textureNameList);
 
 		/**
 		 * List of filter instances
 		 *
 		 * @type {{item: VideoFilterInstance, panel: ParamPanel}}
 		 */
-		this._filters = this._menu.getItemsList();
+		this._filters = this._filterMenu.getItemsList();
 	}
 
 	/**
@@ -163,7 +164,7 @@ class VideoFilterStack {
 	 * @returns {HTMLElement}
 	 */
 	getFilterMenuRoot() {
-		return this._menu.getRoot();
+		return this._filterMenu.getRoot();
 	}
 
 	/**
@@ -175,7 +176,7 @@ class VideoFilterStack {
 		const texGen = textureGenType.instantiate(this._vidCanvas, this._externalData);
 		this._textures.set(name, texGen);
 		this._textureNameList.push(name);
-		this._menu.sourcingDataChanged("Textures", { added: [name] });
+		this._filterMenu.sourcingDataChanged("Textures", { added: [name] });
 		return texGen;
 	}
 
@@ -186,7 +187,7 @@ class VideoFilterStack {
 	addFilter(filterType) {
 		const filter = new VideoFilterInstance(filterType);
 		filter.setDimensions(this._width, this._height);
-		const panel = this._menu.addItem(filter);
+		const panel = this._filterMenu.addItem(filter);
 		filter.setParamValueGetter(panel.getValues);
 	}
 
@@ -398,7 +399,7 @@ class VideoFilterInstance {
 					break;
 				case "enum":
 					if (paramInfo.source === "Textures") {
-						cleaned = textures.get(paramValue)?._canvas;
+						cleaned = textures.get(paramValue)?.canvas;
 						if (cleaned === undefined) {
 							console.error(`No texture exists with the name "${paramValue}"!`);
 						}

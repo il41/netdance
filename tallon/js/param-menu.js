@@ -4,7 +4,7 @@ class ParameterMenu {
 	 * @param {(item: any) => {name: String, paramsInfo: Object, otherPanelArgs: Object | undefined}} itemToPanelParamsFunc A function that takes an item and extracts from it the necessary parameters for creating a menu panel
 	 * @param {{addMenuUsed: (e: MouseEvent, menu: ParameterMenu, pickedOption: String) => void}} callbacks
 	 */
-	constructor(name, itemToPanelParamsFunc, sortable, addMenuOptions = [], callbacks = {}) {
+	constructor(name, itemToPanelParamsFunc, sortable, addButtonText, addMenuOptions = [], callbacks = {}) {
 		this._name = name;
 		this._itemToPanelParamsFunc = itemToPanelParamsFunc;
 
@@ -16,42 +16,54 @@ class ParameterMenu {
 		this._components = {
 			root: elem("div", ["menu"]),
 			header: elem("div", ["menu-header"], { innerText: name }),
-			addButtonContainer: elem("div", ["add-button-container"]),
-			addButton: elem("div", ["add-button"], { tabIndex: 0 }),
-			addButtonHeader: elem("div", ["add-button-header"], { innerText: "Add Filter" }),
-			addMenu: elem("div", ["add-menu"]),
-			addMenuHeader: elem("div", ["add-menu-header"]),
-			addMenuList: elem("div", ["add-menu-list"]),
-			addMenuOptions: [],
 			// addIcon: elem("span", ["add-icon", "material-icons"], { innerText: "add_circle_outline" }),
 			panelsContainer: elem("div", ["panel-list"]),
 		};
+
 		const comps = this._components;
 
-		if (addMenuOptions.length === 1) {
-			comps.addButton.addEventListener("click", (e) => {
-				callbacks.addMenuUsed(e, this, addMenuOptions[0]);
+		if (addMenuOptions.length > 0) {
+			// add button, but no menu
+			Object.assign(comps, {
+				addButtonContainer: elem("div", ["add-button-container"]),
+				addButton: elem("div", ["add-button"], { tabIndex: 0 }),
+				addButtonHeader: elem("div", ["add-button-header"], { innerText: addButtonText }),
 			});
-		} else if (addMenuOptions.length > 1) {
-			comps.addButton.classList.add("expandable");
-			for (const optionName of addMenuOptions) {
-				const optionElem = elem("div", ["add-menu-option"], { innerText: optionName });
-				optionElem.addEventListener("click", (e) => {
-					callbacks.addMenuUsed(e, this, optionName);
+
+			comps.header.append(comps.addButtonContainer);
+			comps.addButtonContainer.append(comps.addButton);
+			comps.addButton.append(comps.addButtonHeader);
+
+			if (addMenuOptions.length === 1) {
+				comps.addButton.addEventListener("click", (e) => {
+					callbacks.addMenuUsed(e, this, addMenuOptions[0]);
 				});
-				comps.addMenuList.append(optionElem);
+			} else {
+				// add button with menu
+				Object.assign(comps, {
+					addMenu: elem("div", ["add-menu"]),
+					addMenuHeader: elem("div", ["add-menu-header"]),
+					addMenuList: elem("div", ["add-menu-list"]),
+					addMenuOptions: [],
+				});
+				
+				comps.addButton.classList.add("expandable");
+				comps.addButton.append(comps.addMenu);
+				comps.addMenu.append(comps.addMenuHeader);
+				comps.addMenu.append(comps.addMenuList);
+
+				for (const optionName of addMenuOptions) {
+					const optionElem = elem("div", ["add-menu-option"], { innerText: optionName });
+					optionElem.addEventListener("click", (e) => {
+						callbacks.addMenuUsed(e, this, optionName);
+					});
+					comps.addMenuList.append(optionElem);
+				}
 			}
 		}
 
 		comps.root.append(comps.header);
 		comps.root.append(comps.panelsContainer);
-
-		comps.header.append(comps.addButtonContainer);
-		comps.addButtonContainer.append(comps.addButton);
-		comps.addButton.append(comps.addButtonHeader);
-		comps.addButton.append(comps.addMenu);
-		comps.addMenu.append(comps.addMenuHeader);
-		comps.addMenu.append(comps.addMenuList);
 
 		// comps.addButton.addEventListener("click", (e) => this._onAddButtonPressed(e, this));
 
@@ -174,7 +186,7 @@ class ParamPanel {
 			deleteIcon: null,
 			body: elem("div", ["panel-body"]),
 		};
-		
+
 		if (this._menu.isSortable()) {
 			this._components.edge = elem("div", ["panel-edge"]);
 			this._components.dragIcon = elem("span", ["drag-icon", "material-icons"], { innerText: "drag_indicator" });
@@ -241,7 +253,11 @@ class ParamPanel {
 		return this._components.root;
 	}
 
-	getValues = () => {
+	getValuesUnordered = () => {
+		return this._values;
+	};
+
+	getValuesOrdered = () => {
 		return this._orderedValueNames.map((valName) => this._values[valName]);
 	};
 

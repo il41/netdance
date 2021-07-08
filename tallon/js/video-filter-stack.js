@@ -8,7 +8,7 @@ class VideoFilterStack {
 	/**
 	 * @param {VideoFilterType} filterTypes
 	 */
-	constructor(filterTypes) {
+	constructor(textureTypes, filterTypes) {
 		this._dimensionsSet = false;
 
 		/**
@@ -41,9 +41,9 @@ class VideoFilterStack {
 			})
 			.setDynamicOutput(true)
 			.setPipeline(true);
-			
-			// updates the canvas using the pipeline result
-			this._postFilter = gpu
+
+		// updates the canvas using the pipeline result
+		this._postFilter = gpu
 			.createKernel(function (frame) {
 				const pixel = frame[this.thread.y][this.thread.x];
 				this.color(pixel[0], pixel[1], pixel[2], pixel[3]);
@@ -91,6 +91,7 @@ class VideoFilterStack {
 				};
 			},
 			true,
+			"Add Filter",
 			filterTypes.map((t) => t.getName()),
 			{
 				addMenuUsed: (e, menu, option) => {
@@ -99,6 +100,33 @@ class VideoFilterStack {
 			}
 		);
 		this._filterMenu.registerSourcingData("Textures", this._textureNameList);
+
+		this._textureTypes = new Map();
+		for (const type of textureTypes) {
+			this._textureTypes.set(type.getName(), type);
+		}
+
+		this._textureMenu = new ParameterMenu(
+			"Textures",
+			(inst) => {
+				const t = inst.getType();
+				return {
+					paramsInfo: t.getParamsParams(),
+					name: t.getName(),
+					otherPanelArgs: {
+						deletable: false,
+					},
+				};
+			},
+			false,
+			"Add Texture",
+			[],
+			{}
+		);
+
+		for (const type of textureTypes) {
+			this.addTextureGenerator(type.getName(), type);
+		}
 
 		/**
 		 * List of filter instances
@@ -109,19 +137,19 @@ class VideoFilterStack {
 	}
 
 	/**
-	 * 
-	 * @param {number} w 
-	 * @param {number} h 
+	 *
+	 * @param {number} w
+	 * @param {number} h
 	 */
-	 setDimensions(w,h){
+	setDimensions(w, h) {
 		this._width = w;
 		this._height = h;
 		this._dimensionsSet = true;
 		this._dimensionsUpdated();
 	}
 
-	_dimensionsUpdated(){
-		if(!this._dimensionsSet){
+	_dimensionsUpdated() {
+		if (!this._dimensionsSet) {
 			console.error("Video filter stack dimensions have not been set yet!");
 			return;
 		}
@@ -132,7 +160,7 @@ class VideoFilterStack {
 		this._preFilter.setOutput([this._width, this._height]);
 		this._postFilter.setOutput([this._width, this._height]);
 
-		for(const f of this._filters){
+		for (const f of this._filters) {
 			/**
 			 * @type {VideoFilterInstance}
 			 */
@@ -140,7 +168,7 @@ class VideoFilterStack {
 			filter.setDimensions(this._width, this._height);
 		}
 
-		for(const texGen of this._textures.values()){
+		for (const texGen of this._textures.values()) {
 			texGen.updateDimensions();
 		}
 	}
@@ -163,6 +191,13 @@ class VideoFilterStack {
 	/**
 	 * @returns {HTMLElement}
 	 */
+	getTextureMenuRoot() {
+		return this._textureMenu.getRoot();
+	}
+
+	/**
+	 * @returns {HTMLElement}
+	 */
 	getFilterMenuRoot() {
 		return this._filterMenu.getRoot();
 	}
@@ -177,6 +212,12 @@ class VideoFilterStack {
 		this._textures.set(name, texGen);
 		this._textureNameList.push(name);
 		this._filterMenu.sourcingDataChanged("Textures", { added: [name] });
+
+		const panel = this._textureMenu.addItem(texGen);
+		texGen.setParamValueGetter(panel.getValuesUnordered);
+
+		texGen.updateDimensions();
+
 		return texGen;
 	}
 
@@ -188,12 +229,12 @@ class VideoFilterStack {
 		const filter = new VideoFilterInstance(filterType);
 		filter.setDimensions(this._width, this._height);
 		const panel = this._filterMenu.addItem(filter);
-		filter.setParamValueGetter(panel.getValues);
+		filter.setParamValueGetter(panel.getValuesOrdered);
 	}
 
 	_updateTextures() {
 		for (const [, texGen] of this._textures) {
-			texGen.draw(this._externalData);
+			texGen.draw();
 		}
 	}
 
@@ -336,11 +377,11 @@ class VideoFilterInstance {
 	}
 
 	/**
-	 * 
-	 * @param {number} w 
-	 * @param {number} h 
+	 *
+	 * @param {number} w
+	 * @param {number} h
 	 */
-	setDimensions(w,h){
+	setDimensions(w, h) {
 		this._kernelFunc.setOutput([w, h]).setConstants({
 			width: w,
 			height: h,
@@ -363,7 +404,7 @@ class VideoFilterInstance {
 	 * @returns
 	 */
 	process(pipe, textures, otherData) {
-		if(!this._dimensionsSet){
+		if (!this._dimensionsSet) {
 			console.error("Cannot use kernel before dimensions have been set!");
 		}
 		const rawParamValues = this.getParamValues();
@@ -399,10 +440,11 @@ class VideoFilterInstance {
 					break;
 				case "enum":
 					if (paramInfo.source === "Textures") {
-						cleaned = textures.get(paramValue)?.canvas;
-						if (cleaned === undefined) {
+						const texGen = textures.get(paramValue);
+						if (texGen === undefined) {
 							console.error(`No texture exists with the name "${paramValue}"!`);
 						}
+						cleaned = texGen.getCanvas();
 					}
 					break;
 			}

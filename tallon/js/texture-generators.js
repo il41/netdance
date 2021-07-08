@@ -43,29 +43,29 @@ const tgTrails = new TextureGeneratorType(
 			selfData.updateThickness = (force) => {
 				const varName = "Thickness";
 				const newVal = params[varName];
-				if(force || newVal !== selfData[varName]){
+				if (force || newVal !== selfData[varName]) {
 					selfData[varName] = newVal;
 					ctx.lineWidth = Math.floor(Math.min(canvas.width, canvas.height) * 0.01 * newVal);
 				}
-			}
+			};
 			selfData.updateThickness(true);
 
-			// change Fade when parameter changes
+			// change fade when parameter changes
 			selfData.updateFade = (force) => {
 				const varName = "Fade";
 				const newVal = params[varName];
-				if(force || newVal !== selfData[varName]){
+				if (force || newVal !== selfData[varName]) {
 					selfData[varName] = newVal;
 					ctx.fillStyle = `rgb(0, 0, 0, ${newVal})`;
 				}
-			}
+			};
 			selfData.updateFade(true);
 		},
 		drawFunc: (selfData, canvas, ctx, input, params, other) => {
-			ctx.fillRect(0, 0, canvas.width, canvas.height);
-
 			selfData.updateFade(false);
 			selfData.updateThickness(false);
+
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 			// ctx.globalAlpha = 1;
 			const lastMotionData = other.get("lastMotionData");
@@ -85,33 +85,62 @@ const tgTrails = new TextureGeneratorType(
 	}
 );
 
-const tgCrazyShapes = new TextureGeneratorType("Crazy Shapes", [], {
-	initFunc: (selfData, canvas, ctx, input, params, other) => {
-		ctx.fillStyle = "#00000010";
+const tgChaoticRectangles = new TextureGeneratorType(
+	"Chaotic Rectangles",
+	[
+		{ name: "Thickness", type: "number", min: 0.1, max: 10, default: 5, step: 0.1 },
+		{ name: "Fade", type: "number", min: 0, max: 1, default: 0.06, step: 0.01 },
+	],
+	{
+		initFunc: (selfData, canvas, ctx, input, params, other) => {
+			ctx.strokeStyle = "#fff";
+			ctx.lineCap = "square";
 
-		ctx.strokeStyle = "#fff";
-		ctx.lineCap = "square";
-		ctx.lineWidth = Math.floor(Math.min(canvas.width, canvas.height) / 5);
-	},
-	drawFunc: (selfData, canvas, ctx, input, params, other) => {
-		ctx.fillRect(0, 0, canvas.width, canvas.height);
+			// change thickness when parameter changes
+			selfData.updateThickness = (force) => {
+				const varName = "Thickness";
+				const newVal = params[varName];
+				if (force || newVal !== selfData[varName]) {
+					selfData[varName] = newVal;
+					ctx.lineWidth = Math.floor(Math.min(canvas.width, canvas.height) * 0.01 * newVal);
+				}
+			};
+			selfData.updateThickness(true);
 
-		const chaos = other.get("volume") ?? 0.1;
-		const lastMotionData = other.get("lastMotionData");
-		const motionData = other.get("motionData");
-		for (let i = 0; i < motionData.length; i++) {
-			const [x1, y1, z1] = lastMotionData[i];
-			const [x2, y2, z2] = motionData[i];
-			if (x1 === -1 || x2 === -1) {
-				continue;
+			// change Fade when parameter changes
+			selfData.updateFade = (force) => {
+				const varName = "Fade";
+				const newVal = params[varName];
+				if (force || newVal !== selfData[varName]) {
+					selfData[varName] = newVal;
+					ctx.fillStyle = `rgb(0, 0, 0, ${newVal})`;
+				}
+			};
+			selfData.updateFade(true);
+		},
+		drawFunc: (selfData, canvas, ctx, input, params, other) => {
+			selfData.updateThickness(false);
+			selfData.updateFade(false);
+
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+			const chaos = other.get("volume") ?? 0.1;
+			const lastMotionData = other.get("lastMotionData");
+			const motionData = other.get("motionData");
+			for (let i = 0; i < motionData.length; i++) {
+				const [x1, y1, z1] = lastMotionData[i];
+				const [x2, y2, z2] = motionData[i];
+				if (x1 === -1 || x2 === -1) {
+					continue;
+				}
+				ctx.beginPath();
+				ctx.moveTo(Math.floor((x1 + randNP(chaos)) * canvas.width), Math.floor((y1 + randNP(chaos)) * canvas.height));
+				ctx.lineTo(Math.floor((x2 + randNP(chaos)) * canvas.width), Math.floor((y2 + randNP(chaos)) * canvas.height));
+				ctx.stroke();
 			}
-			ctx.beginPath();
-			ctx.moveTo(Math.floor((x1 + randNP(chaos)) * canvas.width), Math.floor((y1 + randNP(chaos)) * canvas.height));
-			ctx.lineTo(Math.floor((x2 + randNP(chaos)) * canvas.width), Math.floor((y2 + randNP(chaos)) * canvas.height));
-			ctx.stroke();
-		}
-	},
-});
+		},
+	}
+);
 
 const tgSprinkles = new TextureGeneratorType("Sprinkles", [], {
 	initFunc: (selfData, canvas, ctx, input, params, other) => {

@@ -36,7 +36,7 @@ function main() {
 		tgRawInput,
 		tgPolygon,
 		tgTrails,
-		tgCrazyShapes,
+		tgChaoticRectangles,
 		tgSpikyMess,
 		tgSprinkles,
 		tgLastOutputFrame,

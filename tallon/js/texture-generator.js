@@ -3,8 +3,8 @@ class TextureGeneratorType {
 	 * @param {String} name
 	 * @param {Object} paramParams
 	 * @param {{
-	 *  init: (selfData: Object, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, input: HTMLCanvasElement, other: Object) => void,
-	 *  draw: (selfData: Object, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, input: HTMLCanvasElement, other: Object) => void
+	 *  init: (selfData: Object, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, input: HTMLCanvasElement, params: Object, other: Object) => void,
+	 *  draw: (selfData: Object, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, input: HTMLCanvasElement, params: Object, other: Object) => void,
 	 * }} param0
 	 */
 	constructor(name, paramParams, { initFunc, drawFunc }) {

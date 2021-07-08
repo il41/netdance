@@ -1,10 +1,44 @@
 const container = document.getElementById("main-container");
 
-function main(videoElement) {
+function main() {
 	/**
 	 * false: body, true: hands
 	 */
 	let activeTracker = false;
+
+	/**
+	 * false: video, true: webcam
+	 */
+	let activeVideoSource = false;
+
+	/**
+	 * a video element that contains the prerecorded dance video. null until later
+	 * @type {HTMLVideoElement}
+	 */
+	let recordedVideo = null;
+
+	/**
+	 * a video element that contains the webcam input. null until webcam is enabled by user
+	 * @type {HTMLVideoElement}
+	 */
+	let webcamVideo = null;
+
+	/**
+	 * handles all the visual effects stuff
+	 * @type {VideoFilterStack}
+	 */
+	/**
+	 * @type {VideoFilterStack}
+	 */
+	 const filterStack = new VideoFilterStack([
+		vfShape,
+		vfWobble,
+		vfGradient,
+		vfColor,
+		vfMotionBlur,
+		vfZoomBlur,
+		vfRGBLevels,
+	]);
 
 	// variables used for routing hand tracking data to the VideoFilterStack
 	// hand tracking has 42 markers, and body tracking has 33; here we just use the larger
@@ -12,8 +46,8 @@ function main(videoElement) {
 	let motionData = new Array(42).fill([-1, -1, -1]);
 
 	// the actual tracking happens here
-	const handTracker = new VideoHandTracker(videoElement);
-	const bodyTracker = new VideoBodyTracker(videoElement);
+	const handTracker = new VideoHandTracker();
+	const bodyTracker = new VideoBodyTracker();
 
 	// this function is called whenever either tracker is updated
 	const trackerCallback = (dat, pointDataOnly) => {
@@ -32,11 +66,10 @@ function main(videoElement) {
 		*/
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	};
-
 	handTracker.setCallback(trackerCallback);
 	bodyTracker.setCallback(trackerCallback);
 
-	const updateTrackingSource = () => {
+	const updateTrackingMode = () => {
 		if (activeTracker) {
 			bodyTracker.stopTracking();
 			handTracker.startTracking();
@@ -45,71 +78,116 @@ function main(videoElement) {
 			bodyTracker.startTracking();
 		}
 	};
-	updateTrackingSource();
+	updateTrackingMode();
 
+	// allow changing tracking mode via an html checkbox
 	const trackingModeSwitch = document.getElementById("tracking-mode-switch");
 	trackingModeSwitch.checked = activeTracker;
 	trackingModeSwitch.addEventListener("change", (e) => {
 		activeTracker = e.target.checked ? true : false;
-		updateTrackingSource();
+		updateTrackingMode();
 	});
 
-	// do filter stuff once the video is loaded
-	videoElement.onloadedmetadata = () => {
-		// auto-play as soon as possible? (this is important to have if using webcam input)
-		// videoElement.play();
+	/**
+	 * Get prerecorded video and do stuff once it's loaded (or right away if it's already loaded)
+	 * @param {(video: HTMLVideoElement) => void} callback
+	 * @returns
+	 */
+	const requestRecordedVideo = (callback) => {
+		if (recordedVideo !== null) {
+			callback(recordedVideo);
+			return;
+		}
 
-		const filterStack = new VideoFilterStack(videoElement, [
-			vfShape,
-			vfWobble,
-			vfGradient,
-			vfColor,
-			vfMotionBlur,
-			vfZoomBlur,
-			vfRGBLevels,
-		]);
-		container.append(filterStack.getCanvas());
+		recordedVideo = document.createElement("video");
+		recordedVideo.src = "./Left-720p.mp4";
+		recordedVideo.crossOrigin = "anonymous";
+		recordedVideo.controls = true;
+		recordedVideo.loop = true;
 
-		// INFORMATION THAT YOU WANT TO PASS INTO TEXTURES
-		filterStack.registerExternalData("lastMotionData", lastMotionData);
-		filterStack.registerExternalData("motionData", motionData);
-		filterStack.registerExternalData("lastOutputFrame", filterStack.getCanvas());
-
-		// TEXTURE TYPES
-		filterStack.addTextureGenerator("Nothing", tgNothing);
-		filterStack.addTextureGenerator("Everything", tgEverything);
-		filterStack.addTextureGenerator("Input Video", tgRawInput);
-		filterStack.addTextureGenerator("Polygon", tgPolygon);
-		filterStack.addTextureGenerator("Trails", tgTrails);
-		filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
-		filterStack.addTextureGenerator("Spiky Mess", tgSpikyMess);
-		filterStack.addTextureGenerator("Sprinkles", tgSprinkles);
-		filterStack.addTextureGenerator("Last Output Frame", tgLastOutputFrame);
-		// ACTIVE FILTERS (this method of adding them is temporary)
-
-		filterStack.start();
-
-		// add the menu to the DOM
-		container.append(filterStack.getFilterMenuRoot());
+		recordedVideo.onloadedmetadata = () => {
+			callback(recordedVideo);
+		};
 	};
+
+	/**
+	 * Get webcam video and do stuff once it's loaded (or right away if it's already loaded)
+	 * @param {(video: HTMLVideoElement) => void} callback
+	 * @returns
+	 */
+	const requestWebcamVideo = (callback) => {
+		if (webcamVideo !== null) {
+			callback(webcamVideo);
+			return;
+		}
+
+		getUserMedia().then((data) => {
+			if (data.hasVideo) {
+				webcamVideo = document.createElement("video");
+				webcamVideo.srcObject = data.stream;
+				webcamVideo.onloadedmetadata = () => {
+					callback(webcamVideo);
+				};
+			}
+		});
+	};
+
+	const updateSourceVideo = () => {
+		/**
+		 * 
+		 * @param {HTMLVideoElement} requestedVid 
+		 */
+		const callback = (requestedVid) => {
+			filterStack.setSourceVideo(requestedVid);
+			handTracker.setSourceVideo(requestedVid);
+			bodyTracker.setSourceVideo(requestedVid);
+			requestedVid.play();
+		}
+
+		if (activeVideoSource) {
+			if(recordedVideo !== null){
+				recordedVideo.pause();
+			}
+			requestWebcamVideo(callback);
+		} else {
+			if(webcamVideo !== null){
+				webcamVideo.pause();
+			}
+			requestRecordedVideo(callback);
+		}
+	};
+
+	// allow changing source video via an html checkbox
+	const sourceVideoSwitch = document.getElementById("source-video-switch");
+	sourceVideoSwitch.checked = activeTracker;
+	sourceVideoSwitch.addEventListener("change", (e) => {
+		activeVideoSource = e.target.checked ? true : false;
+		updateSourceVideo();
+	});
+
+	// add the output canvas & menu to the DOM
+	container.append(filterStack.getFilterMenuRoot());
+	container.append(filterStack.getCanvas());
+
+	// INFORMATION THAT YOU WANT TO PASS INTO TEXTURES
+	filterStack.registerExternalData("lastMotionData", lastMotionData);
+	filterStack.registerExternalData("motionData", motionData);
+	filterStack.registerExternalData("lastOutputFrame", filterStack.getCanvas());
+
+	// TEXTURE TYPES
+	filterStack.addTextureGenerator("Nothing", tgNothing);
+	filterStack.addTextureGenerator("Everything", tgEverything);
+	filterStack.addTextureGenerator("Input Video", tgRawInput);
+	filterStack.addTextureGenerator("Polygon", tgPolygon);
+	filterStack.addTextureGenerator("Trails", tgTrails);
+	filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
+	filterStack.addTextureGenerator("Spiky Mess", tgSpikyMess);
+	filterStack.addTextureGenerator("Sprinkles", tgSprinkles);
+	filterStack.addTextureGenerator("Last Output Frame", tgLastOutputFrame);
+
+	filterStack.start();
+
+	updateSourceVideo();
 }
 
-// getUserMedia().then((data) => {
-// 	if (data.hasVideo) {
-const videoElement = document.createElement("video");
-// videoElement.srcObject = data.stream;
-// set up the source video element
-// // videoElement.src = "https://media.istockphoto.com/videos/hand-waving-bye-video-id150487553";
-// videoElement.src = "https://media.istockphoto.com/videos/wave-your-hands-in-the-air-video-id650558060";
-// // videoElement.src = "https://media.istockphoto.com/videos/sign-language-as-a-way-for-communication-video-id1131657616";
-videoElement.src = "https://media.istockphoto.com/videos/senior-men-dancing-in-front-of-the-laptop-video-id1196458672";
-// videoElement.src = "./JolieLaide_LeftCam_720p.mp4";
-videoElement.crossOrigin = "anonymous";
-videoElement.controls = true;
-videoElement.loop = true;
-
-// add the source video element to the DOM for comparison purposes
-container.append(videoElement);
-main(videoElement);
-// 	}
-// });
+main();

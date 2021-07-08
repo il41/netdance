@@ -8,14 +8,15 @@ const _emptyMarker = [-1, -1, -1];
  * Use `setCallback` to set the callback function.
  *
  * @example
- * const video = document.getElementById("my-video-element");
  * const tracker = new VideoHandTracker(video);
+ * tracker.setSourceVideo(document.getElementById("my-video-element"));
  * tracker.setCallback(console.log);
  * tracker.start(); // note that the video doesn't need to be loaded first
  */
 class _VideoMotionTracker {
-	constructor(videoElement, trackerCreator) {
-		this._videoElement = videoElement;
+	constructor(trackerCreator) {
+		this._videoElement = null;
+
 		this._tracker = trackerCreator();
 		this._isTracking = false;
 		this._stopRequested = false;
@@ -25,6 +26,13 @@ class _VideoMotionTracker {
 			minDetectionConfidence: 0.5,
 			minTrackingConfidence: 0.5,
 		});
+	}
+
+	/**
+	 * @param {HTMLVideoElement} vid 
+	 */
+	setSourceVideo(vid){
+		this._videoElement = vid;
 	}
 
 	/**
@@ -48,6 +56,11 @@ class _VideoMotionTracker {
 			if(this._stopRequested){
 				this._isTracking = false;
 				this._stopRequested = false;
+				return;
+			}
+
+			if(this._videoElement === null){
+				window.requestAnimationFrame(updateVideo);
 				return;
 			}
 			
@@ -85,8 +98,8 @@ class _VideoMotionTracker {
 }
 
 class VideoHandTracker extends _VideoMotionTracker {
-	constructor(videoElement) {
-		super(videoElement, () => {
+	constructor() {
+		super(() => {
 			const tracker = new Hands({
 				locateFile: (file) => {
 					return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
@@ -139,8 +152,8 @@ const reorderedBodyMarkers = [
 	29, 31, 27, 25, 23, 13, 15, 19, 21, 11, 9, 7, 3, 2, 1, 0, 4, 5, 6, 8, 10, 12, 22, 20, 18, 16, 14, 24, 26, 28, 32, 30,
 ];
 class VideoBodyTracker extends _VideoMotionTracker {
-	constructor(videoElement) {
-		super(videoElement, () => {
+	constructor() {
+		super(() => {
 			const tracker = new Pose({
 				locateFile: (file) => {
 					return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;

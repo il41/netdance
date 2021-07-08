@@ -142,15 +142,30 @@ const tgChaoticRectangles = new TextureGeneratorType(
 	}
 );
 
-const tgSprinkles = new TextureGeneratorType("Sprinkles", [], {
+const tgSprinkles = new TextureGeneratorType("Sprinkles", [
+	{ name: "Size", type: "number", min: 0.2, max: 2, default: 0.4, step: 0.1 },
+	{ name: "Randomness", type: "number", min: 0, max: 0.2, default: 0.02, step: 0.01 },
+	{ name: "Fade", type: "number", min: 0, max: 1, default: 0.03, step: 0.01 },
+], {
 	initFunc: (selfData, canvas, ctx, input, params, other) => {
-		selfData.rad = Math.floor(Math.min(canvas.width, canvas.height) / 100);
+		// change size when parameter changes
+		selfData.updateSize = (force) => {
+			const varName = "Size";
+			const newVal = params[varName];
+			if (force || newVal !== selfData[varName]) {
+				selfData[varName] = newVal;
+				selfData.radius = Math.floor(Math.min(canvas.width, canvas.height) * 0.01 * newVal);
+			}
+		};
+		selfData.updateSize(true);
 	},
 	drawFunc: (selfData, canvas, ctx, input, params, other) => {
-		ctx.fillStyle = "#00000008";
+		selfData.updateSize(false);
+
+		ctx.fillStyle = `rgba(0,0,0,${params["Fade"]})`;
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-		const chaos = other.get("volume") ?? 0.1;
+		const chaos = other.get("volume") ?? params["Randomness"];
 		const motionData = other.get("motionData");
 		ctx.fillStyle = "#fff";
 		for (let i = 0; i < motionData.length; i++) {
@@ -163,7 +178,7 @@ const tgSprinkles = new TextureGeneratorType("Sprinkles", [], {
 				ctx.arc(
 					Math.floor((x + randNP(chaos)) * canvas.width),
 					Math.floor((y + randNP(chaos)) * canvas.height),
-					selfData.rad,
+					selfData.radius,
 					0,
 					7
 				);

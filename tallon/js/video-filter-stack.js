@@ -211,7 +211,7 @@ class VideoFilterStack {
 		const texGen = textureGenType.instantiate(this._vidCanvas, this._externalData);
 		this._textures.set(name, texGen);
 		this._textureNameList.push(name);
-		this._filterMenu.sourcingDataChanged("Textures", { added: [name] });
+		this._filterMenu.sourcingDataChanged("Shapes", { added: [name] });
 
 		if (textureGenType.getParamsParams().length === 0) {
 			texGen.setParamValueGetter(() => ({}));

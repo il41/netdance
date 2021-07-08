@@ -1,0 +1,446 @@
+/* ~~~~~~~~~~~ */
+/* Filter Menu */
+/* ~~~~~~~~~~~ */
+
+.menu {
+	background-color: #aaa;
+
+	padding: 8px;
+	/* border-radius: 8px; */
+	overflow: hidden;
+	font-family: "Exo 2", sans-serif;
+
+	overflow: visible;
+}
+
+.menu-header {
+	color: #222;
+	font-size: x-large;
+	padding-bottom: 8px;
+	display: flex;
+	align-items: stretch;
+
+	justify-content: space-between;
+}
+
+.add-button-container {
+	position: relative;
+	width: 100px;
+}
+
+.add-button {
+	box-sizing: border-box;
+	/* border-radius: 10px; */
+
+	background-color: #20a950;
+	border-bottom: 2px solid #108138;
+
+	overflow: hidden;
+	transition: 0.2s;
+	width: 100%;
+	height: 30px;
+
+	appearance: none;
+	outline: none;
+
+	font-size: medium;
+	color: #fff;
+
+	position: absolute;
+	right: 0px;
+
+	justify-content: flex-start;
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+}
+
+.add-button:hover,
+.add-button:focus {
+	background-color: #23c75c;
+	border-bottom: 2px solid #16b44e;
+}
+
+.add-button.expandable:hover,
+.add-button.expandable:focus {
+	box-shadow: 1px 1px 4px #0006;
+	width: 150px;
+	height: 200px;
+	transition-delay: 0.1s;
+	transition-property: width, height;
+}
+
+.add-button-header {
+	height: 30px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	user-select: none;
+	
+	cursor: pointer;
+}
+
+.add-menu {
+	width: 100%;
+	height: calc(100% - 30px);
+	background-color: #eee;
+}
+
+.add-menu-list {
+	overflow-y: scroll;
+}
+
+.add-menu-option {
+	color: #222;
+	padding-left: 4px;
+	height: 20px;
+	user-select: none;
+	background-color: #eee;
+
+	transition: 0.6s all;
+	cursor: pointer;
+}
+
+.add-menu-option:hover,
+.add-menu-option:focus {
+	transition: 0.2s all;
+	background-color: #ccc;
+	padding-left: 8px;
+}
+
+.add-menu-option:not(:last-of-type) {
+	border-bottom: 1px solid #ccc;
+}
+
+.panel-list {
+	border: 1px dashed #444;
+	/* background-color: #666; */
+	/* border-radius: 8px; */
+	padding: 8px;
+}
+
+.panel-list:empty {
+	min-height: 200px;
+}
+
+/* ~~~~~~~~~~~ */
+/* Filter Item */
+/* ~~~~~~~~~~~ */
+
+.panel {
+	--background-color: #ddd;
+	--edge-color: #c8c8c8;
+
+	background-color: var(--background-color);
+	color: #666;
+
+	/* border-radius: 8px; */
+	overflow: hidden;
+
+	display: flex;
+	min-height: 50px;
+	border-bottom: 2px solid #444;
+}
+
+.panel:not(:last-of-type) {
+	margin-bottom: 6px;
+}
+
+.panel-edge {
+	flex: 0 0 0;
+	width: 30px;
+	background-color: var(--background-color);
+	border-right: 2px solid var(--edge-color);
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	user-select: none;
+}
+
+.panel-edge {
+	cursor: grab;
+}
+
+.panel-edge:active {
+	cursor: grabbing;
+}
+
+.panel-contents {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	/* border: 1px dashed darkgreen; */
+}
+
+.panel-header {
+	border-bottom: 2px solid var(--edge-color);
+
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.panel-title {
+	padding: 4px;
+	font-size: larger;
+}
+
+.panel-header .delete-icon {
+	color: #da8385;
+	user-select: none;
+	transition: 0.2s all;
+	cursor: pointer;
+}
+
+.panel-header .delete-icon:hover {
+	color: #ff5258;
+	text-shadow: 0px 0px 4px #ff9752;
+}
+
+.panel-body {
+	/* padding: 6px; */
+	display: grid;
+	grid-auto-columns: 0fr 0fr;
+	grid-auto-flow: row;
+	align-items: center;
+	row-gap: 4px;
+	padding: 10px;
+	overflow-x: scroll;
+}
+
+/* ~~~~~~~~~~~~~~~~ */
+/* Filter Parameter */
+/* ~~~~~~~~~~~~~~~~ */
+
+.param-label {
+	white-space: nowrap;
+	grid-column: 1;
+	text-align: right;
+	padding: 4px;
+	align-self: flex-start;
+	justify-self: end;
+
+	color: #444;
+	font-weight: lighter;
+	font-size: small;
+	/* border: 1px dashed cornflowerblue; */
+}
+
+.param-body {
+	grid-column: 2;
+	padding: 0px;
+	/* border: 1px dashed blue; */
+	--single-height: 20px;
+	justify-self: start;
+	font-size: medium;
+
+	--focus-color: #5dccff;
+}
+
+/* ~~~~~~~~~~~ */
+/* Range Input */
+/* ~~~~~~~~~~~ */
+
+.param-body .range {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+}
+
+.param-body .number {
+	appearance: none;
+	-webkit-appearance: none;
+	border: none;
+	outline: none;
+	height: var(--single-height);
+	margin: 0px;
+
+	padding: 0px;
+	padding-left: 4px;
+	font-size: small;
+}
+
+.param-body .slider {
+	margin: 0px;
+	padding: 0px;
+
+	appearance: none;
+	-webkit-appearance: none;
+
+	--slider-height: var(--single-height);
+	background-color: #ccc;
+	--lower-color: #888;
+	--grabber-color: #666;
+
+	outline: none;
+	cursor: pointer;
+	overflow: hidden;
+	height: var(--slider-height);
+}
+
+/* commas won't work here; neither will the :is selector */
+.param-body .slider::-moz-range-thumb {
+	-webkit-appearance: none;
+	width: 2px;
+	background: var(--grabber-color);
+	box-shadow: -100vw 0 0 100vw var(--lower-color);
+	height: var(--slider-height);
+}
+.param-body .slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 2px;
+	background: var(--grabber-color);
+	box-shadow: -100vw 0 0 100vw var(--lower-color);
+	height: var(--slider-height);
+}
+
+.param-body .slider:focus::-webkit-slider-thumb {
+	--grabber-color: #222;
+	border: 2px solid var(--focus-color);
+	width: 6px;
+}
+.param-body .slider:focus::-moz-range-thumb {
+	--grabber-color: #222;
+	border: 2px solid var(--focus-color);
+	width: 8px;
+}
+.param-body .slider:focus {
+	--lower-color: #666;
+}
+
+/* ~~~~~~~~~~~~~~ */
+/* Checkbox Input */
+/* ~~~~~~~~~~~~~~ */
+
+.param-body .checkbox {
+	/* visibility: hidden; */
+	opacity: 0;
+	position: fixed;
+}
+
+.param-body .checkbox-outer {
+	padding: 0px;
+	margin: 0px;
+
+	height: var(--single-height);
+	width: calc(2 * var(--single-height));
+	display: flex;
+}
+
+.param-body .checkbox-display {
+	width: 100%;
+	height: 100%;
+
+	border-radius: var(--single-height);
+	overflow: hidden;
+
+	transition: all 0.1s ease-in-out;
+}
+
+.param-body .checkbox-outer:active .checkbox-display:active {
+	background-color: #91aa8e;
+}
+
+.param-body .checkbox:not(:checked) + .checkbox-display {
+	background-color: #888;
+}
+
+.param-body .checkbox:checked + .checkbox-display {
+	background-color: #22ec08;
+}
+
+.param-body .checkbox-display-dot {
+	--margin: 2px;
+	--border: 2px;
+	margin: var(--margin);
+	height: calc(100% - (2 * (var(--margin) + var(--border))));
+	width: calc(50% - (2 * (var(--margin) + var(--border))));
+	border-radius: calc(var(--single-height) - (2 * (var(--margin) + var(--border))));
+	border: var(--border) solid #fff;
+	background-color: #fff;
+	transition: all 0.1s ease-in-out;
+}
+
+.param-body .checkbox:checked + .checkbox-display > .checkbox-display-dot {
+	margin-left: calc(50% + var(--margin));
+}
+
+.param-body .checkbox-outer:active .checkbox-display-dot {
+	width: calc(60%);
+}
+
+.param-body .checkbox:checked + .checkbox-display:active > .checkbox-display-dot {
+	margin-left: calc(30% + var(--margin) - 2 * var(--border));
+}
+
+.param-body .checkbox:focus + .checkbox-display {
+	background-color: #666;
+}
+
+.param-body .checkbox:checked:focus + .checkbox-display {
+	background-color: #1bc405;
+}
+
+.param-body .checkbox:focus + .checkbox-display > .checkbox-display-dot {
+	background-color: var(--focus-color);
+}
+
+/* ~~~~~~~~~~~~~~~ */
+/* Selection Input */
+/* ~~~~~~~~~~~~~~~ */
+
+.param-body .select {
+	background-color: #fff;
+	appearance: none;
+	outline: none;
+	height: var(--single-height);
+	border: 1px solid #888;
+	border-radius: 6px;
+	text-align-last: center;
+	text-align: center;
+	align-items: center;
+	width: 150px;
+}
+
+.param-body .select:focus {
+	border-color: var(--focus-color);
+	box-shadow: 0px 0px 4px var(--focus-color);
+}
+
+.param-body .color-outer {
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+}
+
+.param-body .color-outer .expand-button {
+	user-select: none;
+	cursor: pointer;
+	transition: 0.4s;
+}
+
+.param-body .color-outer.expanded .expand-button {
+	transform: rotate(180deg);
+}
+
+.param-body .color-inner {
+	border: 1px solid #888;
+	border-radius: 8px;
+	background-color: #ccc;
+	padding: 4px;
+}
+
+.param-body .color-outer .collapsible {
+	transition: 0.2s;
+	overflow: hidden;
+	width: 100%;
+	height: 100%;
+}
+
+.param-body .color-outer:not(.expanded) .collapsible {
+	width: 0px;
+	height: 0px;
+}

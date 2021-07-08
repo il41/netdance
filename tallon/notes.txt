@@ -1,0 +1,9 @@
+- for the provided dance video, we should bake the tracking data; it's a huge waste of processing power to calculate it constantly.
+
+
+things i need to do:
+- webcam/video input toggling
+- collapsible filter menu / filters
+- filter adding/removing/resetting
+- fluid sim
+- clear canvas button

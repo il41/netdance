@@ -31,7 +31,6 @@ function main() {
 	 * @type {VideoFilterStack}
 	 */
 	 const filterStack = new VideoFilterStack([
-		tgNothing,
 		tgEverything,
 		tgRawInput,
 		tgPolygon,

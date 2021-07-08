@@ -213,8 +213,12 @@ class VideoFilterStack {
 		this._textureNameList.push(name);
 		this._filterMenu.sourcingDataChanged("Textures", { added: [name] });
 
-		const panel = this._textureMenu.addItem(texGen);
-		texGen.setParamValueGetter(panel.getValuesUnordered);
+		if (textureGenType.getParamsParams().length === 0) {
+			texGen.setParamValueGetter(() => ({}));
+		} else {
+			const panel = this._textureMenu.addItem(texGen);
+			texGen.setParamValueGetter(panel.getValuesUnordered);
+		}
 
 		texGen.updateDimensions();
 

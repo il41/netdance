@@ -1,11 +1,3 @@
-const tgNothing = new TextureGeneratorType("Nothing", [], {
-	initFunc: (selfData, canvas, ctx, input, params, other) => {
-		ctx.fillStyle = "#000";
-		ctx.fillRect(0, 0, canvas.width, canvas.height);
-	},
-	drawFunc: (selfData, canvas, ctx, input, params, other) => {},
-});
-
 const tgLastOutputFrame = new TextureGeneratorType("Last Output Frame", [], {
 	initFunc: (selfData, canvas, ctx, input, params, other) => {},
 	drawFunc: (selfData, canvas, ctx, input, params, other) => {

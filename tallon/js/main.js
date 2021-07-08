@@ -37,7 +37,7 @@ function main() {
 		tgPolygon,
 		tgTrails,
 		tgChaoticRectangles,
-		tgSpikyMess,
+		tgSpikyMesh,
 		tgSprinkles,
 		tgLastOutputFrame,
 	 ], [

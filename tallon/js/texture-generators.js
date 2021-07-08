@@ -246,70 +246,112 @@ const tgSpikyMesh = new TextureGeneratorType(
 	}
 );
 
-const tgPolygon = new TextureGeneratorType("Polygon", [], {
-	initFunc: (selfData, canvas, ctx, input, params, other) => {
-		selfData.particles = new Array(42);
-		selfData.lastTick = 0;
-		selfData.lastI = 0;
-		// create the particles' initial states
-		for (let i = 0; i < selfData.particles.length; i++) {
-			selfData.particles[i] = {
-				visible: false,
-				x: -1,
-				y: -1,
-				vx: 0,
-				vy: 0,
+const tgPolygon = new TextureGeneratorType(
+	"Polygon",
+	[
+		{ name: "Drift", type: "number", min: 0, max: 2, default: 1, step: 0.1 },
+		{ name: "Thickness", type: "number", min: 0.1, max: 10, default: 0.5, step: 0.1 },
+		{ name: "Fade", type: "number", min: 0, max: 1, default: 1, step: 0.01 },
+	],
+	{
+		initFunc: (selfData, canvas, ctx, input, params, other) => {
+			selfData.particles = new Array(42);
+			selfData.lastTick = 0;
+			selfData.lastI = 0;
+			// create the particles' initial states
+			for (let i = 0; i < selfData.particles.length; i++) {
+				selfData.particles[i] = {
+					visible: false,
+					x: -1,
+					y: -1,
+					vx: 0,
+					vy: 0,
+				};
+			}
+
+			ctx.strokeStyle = "#fff";
+
+			// change drift when parameter changes
+			selfData.updateDrift = (force) => {
+				const varName = "Drift";
+				const newVal = params[varName];
+				if (force || newVal !== selfData[varName]) {
+					selfData[varName] = newVal;
+					selfData.velocityFactor = Math.max(canvas.width, canvas.height) * 0.01 * newVal;
+				}
 			};
-		}
+			selfData.updateDrift(true);
 
-		ctx.strokeStyle = "#fff";
-		ctx.lineWidth = Math.floor(Math.min(canvas.width, canvas.height) / 100);
+			// change thickness when parameter changes
+			selfData.updateThickness = (force) => {
+				const varName = "Thickness";
+				const newVal = params[varName];
+				if (force || newVal !== selfData[varName]) {
+					selfData[varName] = newVal;
+					ctx.lineWidth = Math.floor(Math.min(canvas.width, canvas.height) * 0.01 * newVal);
+				}
+			};
+			selfData.updateThickness(true);
 
-		selfData.velocityFactor = Math.max(canvas.width, canvas.height) / 100;
-	},
-	drawFunc: (selfData, canvas, ctx, input, params, other) => {
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
+			// change Fade when parameter changes
+			selfData.updateFade = (force) => {
+				const varName = "Fade";
+				const newVal = params[varName];
+				if (force || newVal !== selfData[varName]) {
+					selfData[varName] = newVal;
+					ctx.fillStyle = `rgb(0, 0, 0, ${newVal})`;
+				}
+			};
+			selfData.updateFade(true);
+		},
+		drawFunc: (selfData, canvas, ctx, input, params, other) => {
+			selfData.updateDrift(false);
+			selfData.updateThickness(false);
+			selfData.updateFade(false);
 
-		const time = other.get("time");
-		if (time > 0.0 + selfData.lastTick) {
-			selfData.lastTick = time;
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-			const motionData = other.get("motionData");
+			const time = other.get("time");
+			if (time > 0.0 + selfData.lastTick) {
+				selfData.lastTick = time;
 
-			const count = 8;
-			for (let n = 0; n < count; n++) {
-				const i = (selfData.lastI + n) % motionData.length;
-				const [x, y, z] = motionData[i];
+				const motionData = other.get("motionData");
 
-				if (x !== -1) {
+				const count = 8;
+				for (let n = 0; n < count; n++) {
+					const i = (selfData.lastI + n) % motionData.length;
+					const [x, y] = motionData[i];
+
 					const particle = selfData.particles[i];
-					particle.vx = randNP(selfData.velocityFactor);
-					particle.vy = randNP(selfData.velocityFactor);
-					particle.x = x * canvas.width;
-					particle.y = y * canvas.height;
+					if (x !== -1) {
+						particle.vx = randNP(selfData.velocityFactor);
+						particle.vy = randNP(selfData.velocityFactor);
+						particle.x = x * canvas.width;
+						particle.y = y * canvas.height;
+					}
+				}
+
+				selfData.lastI = (selfData.lastI + count) % motionData.length;
+
+				for (const particle of selfData.particles) {
+					if (particle.x !== -1) {
+						particle.vx *= 0.9;
+						particle.vy *= 0.9;
+						particle.x += particle.vx;
+						particle.y += particle.vy;
+					}
 				}
 			}
 
-			selfData.lastI = (selfData.lastI + count) % motionData.length;
-
+			ctx.beginPath();
 			for (const particle of selfData.particles) {
-				if (particle.x !== -1) {
-					particle.vx *= 0.9;
-					particle.vy *= 0.9;
-					particle.x += particle.vx;
-					particle.y += particle.vy;
+				if (particle.x === -1) {
+					continue;
 				}
+				ctx.lineTo(Math.floor(particle.x), Math.floor(particle.y));
 			}
-		}
-
-		ctx.beginPath();
-		for (const particle of selfData.particles) {
-			if (particle.x === -1) {
-				continue;
-			}
-			ctx.lineTo(Math.floor(particle.x), Math.floor(particle.y));
-		}
-		ctx.closePath();
-		ctx.stroke();
-	},
-});
+			ctx.closePath();
+			ctx.stroke();
+		},
+	}
+);

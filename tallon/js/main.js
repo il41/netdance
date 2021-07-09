@@ -31,6 +31,15 @@ function main() {
 	 * @type {VideoFilterStack}
 	 */
 	 const filterStack = new VideoFilterStack([
+		tgEverything,
+		tgRawInput,
+		tgPolygon,
+		tgTrails,
+		tgChaoticRectangles,
+		tgSpikyMesh,
+		tgSprinkles,
+		tgLastOutputFrame,
+	 ], [
 		vfShape,
 		vfWobble,
 		vfGradient,
@@ -166,6 +175,7 @@ function main() {
 	});
 
 	// add the output canvas & menu to the DOM
+	container.append(filterStack.getTextureMenuRoot());
 	container.append(filterStack.getFilterMenuRoot());
 	container.append(filterStack.getCanvas());
 
@@ -173,17 +183,6 @@ function main() {
 	filterStack.registerExternalData("lastMotionData", lastMotionData);
 	filterStack.registerExternalData("motionData", motionData);
 	filterStack.registerExternalData("lastOutputFrame", filterStack.getCanvas());
-
-	// TEXTURE TYPES
-	filterStack.addTextureGenerator("Nothing", tgNothing);
-	filterStack.addTextureGenerator("Everything", tgEverything);
-	filterStack.addTextureGenerator("Input Video", tgRawInput);
-	filterStack.addTextureGenerator("Polygon", tgPolygon);
-	filterStack.addTextureGenerator("Trails", tgTrails);
-	filterStack.addTextureGenerator("Crazy Shapes", tgCrazyShapes);
-	filterStack.addTextureGenerator("Spiky Mess", tgSpikyMess);
-	filterStack.addTextureGenerator("Sprinkles", tgSprinkles);
-	filterStack.addTextureGenerator("Last Output Frame", tgLastOutputFrame);
 
 	filterStack.start();
 

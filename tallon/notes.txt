@@ -2,8 +2,7 @@
 
 
 things i need to do:
-- webcam/video input toggling
 - collapsible filter menu / filters
-- filter adding/removing/resetting
+- filter resetting
 - fluid sim
 - clear canvas button

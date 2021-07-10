@@ -14,8 +14,35 @@ const _emptyMarker = [-1, -1, -1];
  * tracker.start(); // note that the video doesn't need to be loaded first
  */
 class _VideoMotionTracker {
-	constructor(trackerCreator) {
+	constructor(trackerCreator, markerCount) {
+		/**
+		 * @type {number}
+		 * number of tracking markers
+		 */
+		this._markerCount = markerCount;
+		/**
+		 * @type {number}
+		 * length of 1 row of stored data
+		 */
+		this._storeChunkSize = markerCount * 3;
+
 		this._videoElement = null;
+		this._currentSourceName = null;
+		/**
+		 * @type {Map<String, Float32Array>}
+		 */
+		this._storedData = new Map();
+		/**
+		 * @type {null | Float32Array}
+		 */
+		this._activeStore = null;
+		this._lastStoreTimeIndex = 0;
+		/**
+		 * @type {number}
+		 * index offset for accessing cached data; positive numbers mean the tracking data is "from the future"
+		 */
+		this._storeGranularity = 10;
+		this._storeOffset = 20;
 
 		this._tracker = trackerCreator();
 		this._isTracking = false;
@@ -26,13 +53,35 @@ class _VideoMotionTracker {
 			minDetectionConfidence: 0.5,
 			minTrackingConfidence: 0.5,
 		});
+
+		this._callback = Function.prototype;
 	}
 
 	/**
-	 * @param {HTMLVideoElement} vid 
+	 *
+	 * @param {String} sourceName
+	 * @param {Float32Array} data For body tracking: Every 97th number (including 0) is the time stamp. The 96 numbers that follow are the 32 x/y/z coordinates.
 	 */
-	setSourceVideo(vid){
+	storeData(sourceName, data) {
+		this._storedData.set(sourceName, data);
+		if (sourceName === this._currentSourceName) {
+			this._activeStore = data;
+			console.log(data.length);
+		}
+	}
+
+	/**
+	 * @param {HTMLVideoElement} vid
+	 * @param {String} sourceName
+	 */
+	setSourceVideo(vid, sourceName = null) {
 		this._videoElement = vid;
+		this._currentSourceName = sourceName;
+		const stored = this._storedData.get(this._currentSourceName);
+		
+		if (stored !== undefined) {
+			this._activeStore = stored;
+		}
 	}
 
 	/**
@@ -40,37 +89,58 @@ class _VideoMotionTracker {
 	 * @param {(data: Object, pointDataOnly: [[number, number, number]]) => void} func
 	 */
 	setCallback(func) {
+		this._callback = func;
 		this._tracker.onResults((data) => {
-			func(data, this.extractPointData(data));
+			this._callback(data, this.extractPointData(data));
 		});
 	}
 
 	startTracking() {
-		if(this._isTracking){
+		if (this._isTracking) {
 			return;
 		}
 		this._isTracking = true;
 
 		let lastVideoTime = 0;
 		const updateVideo = () => {
-			if(this._stopRequested){
+			if (this._stopRequested) {
 				this._isTracking = false;
 				this._stopRequested = false;
 				return;
 			}
 
-			if(this._videoElement === null){
+			if (this._videoElement === null) {
 				window.requestAnimationFrame(updateVideo);
 				return;
 			}
-			
+
 			let onFrameResult = null;
-			if (!this._videoElement.paused && lastVideoTime !== this._videoElement.currentTime) {
+			const vidTime = this._videoElement.currentTime;
+			if (!this._videoElement.paused && lastVideoTime !== vidTime) {
 				lastVideoTime = this._videoElement.currentTime;
 
-				onFrameResult = this._tracker.send({
-					image: this._videoElement,
-				});
+				if (this._activeStore !== null) {
+					const chunkI = (Math.floor(vidTime * this._storeGranularity) + this._storeOffset) * this._storeChunkSize;
+					const chunk = this._activeStore.subarray(
+						chunkI,
+						chunkI + this._storeChunkSize
+					);
+					let avg = 0;
+					const processedChunk = new Array(this._markerCount);
+					for (let i = 0; i < this._markerCount; i++) {
+						const i3 = i * 3;
+						processedChunk[i] = [chunk[i3], chunk[i3 + 1], chunk[i3 + 2]];
+						avg += chunk[i3] + chunk[i3 + 1] + chunk[i3 + 2];
+					}
+					
+					// console.log(processedChunk);
+
+					this._callback(null, processedChunk);
+				} else {
+					onFrameResult = this._tracker.send({
+						image: this._videoElement,
+					});
+				}
 			}
 			if (onFrameResult === null) {
 				window.requestAnimationFrame(updateVideo);
@@ -81,17 +151,17 @@ class _VideoMotionTracker {
 
 		window.requestAnimationFrame(updateVideo);
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @returns {boolean} if the tracker is currently active
 	 */
-	isTracking(){
+	isTracking() {
 		return this._isTracking;
 	}
 
 	stopTracking() {
-		if(this._isTracking){
+		if (this._isTracking) {
 			this._stopRequested = true;
 		}
 	}
@@ -113,7 +183,7 @@ class VideoHandTracker extends _VideoMotionTracker {
 			});
 
 			return tracker;
-		});
+		}, 42);
 	}
 
 	extractPointData(data) {
@@ -168,7 +238,7 @@ class VideoBodyTracker extends _VideoMotionTracker {
 			});
 
 			return tracker;
-		});
+		}, 33);
 	}
 
 	extractPointData(data) {
@@ -180,7 +250,7 @@ class VideoBodyTracker extends _VideoMotionTracker {
 
 		for (let i = 0; i < data.poseLandmarks.length; i++) {
 			const marker = data.poseLandmarks[reorderedBodyMarkers[i]];
-			if(marker !== undefined){
+			if (marker !== undefined) {
 				if (marker.visibility > 0.7) {
 					pointDataOnly[i] = [marker.x, marker.y, marker.z];
 				}

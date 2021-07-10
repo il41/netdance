@@ -30,24 +30,10 @@ function main() {
 	/**
 	 * @type {VideoFilterStack}
 	 */
-	 const filterStack = new VideoFilterStack([
-		tgEverything,
-		tgRawInput,
-		tgPolygon,
-		tgTrails,
-		tgChaoticRectangles,
-		tgSpikyMesh,
-		tgSprinkles,
-		tgLastOutputFrame,
-	 ], [
-		vfShape,
-		vfWobble,
-		vfGradient,
-		vfColor,
-		vfMotionBlur,
-		vfZoomBlur,
-		vfRGBLevels,
-	]);
+	const filterStack = new VideoFilterStack(
+		[tgEverything, tgRawInput, tgPolygon, tgTrails, tgChaoticRectangles, tgSpikyMesh, tgSprinkles, tgLastOutputFrame],
+		[vfShape, vfWobble, vfGradient, vfColor, vfMotionBlur, vfZoomBlur, vfRGBLevels]
+	);
 
 	// variables used for routing hand tracking data to the VideoFilterStack
 	// hand tracking has 42 markers, and body tracking has 33; here we just use the larger
@@ -57,6 +43,8 @@ function main() {
 	// the actual tracking happens here
 	const handTracker = new VideoHandTracker();
 	const bodyTracker = new VideoBodyTracker();
+
+	bodyTracker.storeData("Left", trackingDataBodyLeft);
 
 	// this function is called whenever either tracker is updated
 	const trackerCallback = (dat, pointDataOnly) => {
@@ -113,7 +101,8 @@ function main() {
 		recordedVideo.crossOrigin = "anonymous";
 		recordedVideo.controls = true;
 		recordedVideo.loop = true;
-
+		recordedVideo.style.width = "20%";
+		container.append(recordedVideo);
 		recordedVideo.onloadedmetadata = () => {
 			callback(recordedVideo);
 		};
@@ -143,26 +132,26 @@ function main() {
 
 	const updateSourceVideo = () => {
 		/**
-		 * 
-		 * @param {HTMLVideoElement} requestedVid 
+		 *
+		 * @param {HTMLVideoElement} requestedVid
 		 */
-		const callback = (requestedVid) => {
+		const callback = (requestedVid, sourceName) => {
 			filterStack.setSourceVideo(requestedVid);
-			handTracker.setSourceVideo(requestedVid);
-			bodyTracker.setSourceVideo(requestedVid);
+			handTracker.setSourceVideo(requestedVid, sourceName);
+			bodyTracker.setSourceVideo(requestedVid, sourceName);
 			requestedVid.play();
-		}
+		};
 
 		if (activeVideoSource) {
-			if(recordedVideo !== null){
+			if (recordedVideo !== null) {
 				recordedVideo.pause();
 			}
-			requestWebcamVideo(callback);
+			requestWebcamVideo((vid) => callback(vid, "Webcam"));
 		} else {
-			if(webcamVideo !== null){
+			if (webcamVideo !== null) {
 				webcamVideo.pause();
 			}
-			requestRecordedVideo(callback);
+			requestRecordedVideo((vid) => callback(vid, "Left"));
 		}
 	};
 
@@ -184,9 +173,12 @@ function main() {
 	filterStack.registerExternalData("motionData", motionData);
 	filterStack.registerExternalData("lastOutputFrame", filterStack.getCanvas());
 
+	filterStack.addFilter(vfGradient);
+
 	filterStack.start();
 
 	updateSourceVideo();
 }
 
 main();
+// console.log(trackingDataBodyLeft.length);

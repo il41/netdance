@@ -89,6 +89,7 @@ const vfGradient = new VideoFilterType(
 		{ name: "Shape", type: "enum", source: "Textures", default: "Polygon" },
 		{ name: "Time", type: "number", source: "Time", hidden: true },
 		{ name: "Speed", type: "number", min: 0, max: 10, default: 0.5, step: 0.1 },
+		{ name: "Scale", type: "number", min: 1, max: 20, default: 1, step: 1 },
 		{ name: "Color 1", type: "color", default: "#ffdb57", alpha: true },
 		{ name: "Color 2", type: "color", default: "#9dff8a", alpha: true },
 		{ name: "Color 3", type: "color", default: "#ff66c7", alpha: true },
@@ -96,7 +97,7 @@ const vfGradient = new VideoFilterType(
 	],
 	() => {
 		return gpu
-			.createKernel(function (frame, mask, time, speed, color1, color2, color3, color4) {
+			.createKernel(function (frame, mask, time, speed, scale, color1, color2, color3, color4) {
 				// integer coords
 				const x = this.thread.x;
 				const y = this.thread.y;
@@ -106,7 +107,7 @@ const vfGradient = new VideoFilterType(
 				const fy = y / this.constants.height;
 
 				// rotated float coords
-				const rotfx = rotate(fx - 0.5, fy - 0.5, time * speed)[0];
+				const rotfx = rotate(fx - 0.5, fy - 0.5, time * speed)[0] * scale;
 
 				// why? gpu.js is weird, that's why
 				const color1a = [color1[0], color1[1], color1[2], color1[3]];

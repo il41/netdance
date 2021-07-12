@@ -107,7 +107,7 @@ class VideoFilterStack {
 		}
 
 		this._textureMenu = new ParameterMenu(
-			"Textures",
+			"Shapes",
 			(inst) => {
 				const t = inst.getType();
 				return {
@@ -119,7 +119,7 @@ class VideoFilterStack {
 				};
 			},
 			false,
-			"Add Texture",
+			"Add Shape",
 			[],
 			{}
 		);

@@ -139,7 +139,7 @@ function main() {
 			filterStack.setSourceVideo(requestedVid);
 			handTracker.setSourceVideo(requestedVid, sourceName);
 			bodyTracker.setSourceVideo(requestedVid, sourceName);
-			requestedVid.play();
+			// requestedVid.play();
 		};
 
 		if (activeVideoSource) {
@@ -175,7 +175,7 @@ function main() {
 
 	filterStack.addFilter(vfGradient);
 
-	filterStack.start();
+	// filterStack.start();
 
 	updateSourceVideo();
 }

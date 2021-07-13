@@ -1,6 +1,6 @@
-/* ~~~~~~~~~~~ */
-/* Filter Menu */
-/* ~~~~~~~~~~~ */
+/* ~~~~ */
+/* Menu */
+/* ~~~~ */
 
 .menu {
 	background-color: #aaa;
@@ -19,13 +19,12 @@
 	padding-bottom: 8px;
 	display: flex;
 	align-items: stretch;
-
-	justify-content: space-between;
 }
 
 .add-button-container {
 	position: relative;
 	width: 100px;
+	margin-left: auto;
 }
 
 .add-button {
@@ -76,7 +75,7 @@
 	justify-content: center;
 	align-items: center;
 	user-select: none;
-	
+
 	cursor: pointer;
 }
 
@@ -123,9 +122,9 @@
 	min-height: 200px;
 }
 
-/* ~~~~~~~~~~~ */
-/* Filter Item */
-/* ~~~~~~~~~~~ */
+/* ~~~~~ */
+/* Panel */
+/* ~~~~~ */
 
 .panel {
 	--background-color: #ddd;
@@ -138,7 +137,6 @@
 	overflow: hidden;
 
 	display: flex;
-	min-height: 50px;
 	border-bottom: 2px solid #444;
 }
 
@@ -170,6 +168,8 @@
 .panel-contents {
 	display: flex;
 	flex-direction: column;
+	min-height: 50px;
+	justify-content: center;
 	width: 100%;
 	/* border: 1px dashed darkgreen; */
 }
@@ -178,8 +178,14 @@
 	border-bottom: 2px solid var(--edge-color);
 
 	display: flex;
-	justify-content: space-between;
 	align-items: center;
+	padding-left: 4px;
+}
+
+.panel-header-right {
+	margin-left: auto;
+	display: flex;
+	justify-content: flex-end;
 }
 
 .panel-title {
@@ -187,10 +193,27 @@
 	font-size: larger;
 }
 
+.panel-header .expand-icon {
+	user-select: none;
+	transition: 0.1s all;
+	cursor: pointer;
+}
+
+.panel-header .expand-icon:hover,
+.panel.expanded .panel-header .expand-icon:hover {
+	/* color: #eee; */
+	text-shadow: 0px 0px 4px #000000;
+}
+
+.panel.expanded .panel-header .expand-icon {
+	color: #fff;
+	text-shadow: 0px 0px 2px #000000;
+}
+
 .panel-header .delete-icon {
 	color: #da8385;
 	user-select: none;
-	transition: 0.2s all;
+	transition: 0.1s all;
 	cursor: pointer;
 }
 
@@ -199,7 +222,17 @@
 	text-shadow: 0px 0px 4px #ff9752;
 }
 
+.panel:not(.expanded) .panel-header {
+	border-bottom-width: 0px;
+}
+
+.panel:not(.expanded) .panel-body {
+	height: 0px;
+	display: none;
+}
+
 .panel-body {
+	transition: all 0.2s;
 	/* padding: 6px; */
 	display: grid;
 	grid-auto-columns: 0fr 0fr;
@@ -210,9 +243,9 @@
 	overflow-x: scroll;
 }
 
-/* ~~~~~~~~~~~~~~~~ */
-/* Filter Parameter */
-/* ~~~~~~~~~~~~~~~~ */
+/* ~~~~~~~~~ */
+/* Parameter */
+/* ~~~~~~~~~ */
 
 .param-label {
 	white-space: nowrap;

@@ -182,32 +182,43 @@ class ParamPanel {
 			root: elem("div", ["panel"]),
 			contents: elem("div", ["panel-contents"]),
 			header: elem("div", ["panel-header"]),
+			headerRight: elem("div", ["panel-header-right"]),
 			title: elem("div", ["panel-title"], { innerText: this._name }),
 			deleteIcon: null,
 			body: elem("div", ["panel-body"]),
+			expandIcon: elem("span", ["expand-icon", "material-icons"], {innerText: "tune"}),
 		};
 
+		const comps = this._components;
+
 		if (this._menu.isSortable()) {
-			this._components.edge = elem("div", ["panel-edge"]);
-			this._components.dragIcon = elem("span", ["drag-icon", "material-icons"], { innerText: "drag_indicator" });
-			this._components.root.append(this._components.edge);
-			this._components.edge.append(this._components.dragIcon);
+			comps.edge = elem("div", ["panel-edge"]);
+			comps.dragIcon = elem("span", ["drag-icon", "material-icons"], { innerText: "drag_indicator" });
+			comps.root.append(comps.edge);
+			comps.edge.append(comps.dragIcon);
 		}
 
-		this._components.root.append(this._components.contents);
+		comps.root.append(comps.contents);
 
-		this._components.contents.append(this._components.header);
-		this._components.header.append(this._components.title);
+		comps.contents.append(comps.header);
+		comps.header.append(comps.expandIcon);
+		comps.header.append(comps.title);
+		comps.header.append(comps.headerRight);
 
-		this._components.contents.append(this._components.body);
+		comps.contents.append(comps.body);
 
 		if (otherPanelArgs.deletable === true) {
 			const deleteIcon = elem("span", ["delete-icon", "material-icons"], { innerText: "clear" });
-			this._components.header.append(deleteIcon);
+			comps.headerRight.append(deleteIcon);
 			deleteIcon.addEventListener("click", (e) => {
 				this._menu.removeItem(this._item);
 			});
 		}
+
+		// create expand icon
+		comps.expandIcon.addEventListener("click", (e) => {
+			comps.root.classList.toggle("expanded");
+		});
 
 		// create input elements
 		for (const paramInfo of paramsInfo) {
@@ -234,11 +245,11 @@ class ParamPanel {
 			}
 			if (input !== null) {
 				const paramLabel = elem("div", ["param-label"], { innerText: paramInfo.name });
-				this._components.body.append(paramLabel);
+				comps.body.append(paramLabel);
 
 				const paramBody = elem("div", ["param-body"]);
 				paramBody.append(input.getRootElement());
-				this._components.body.append(paramBody);
+				comps.body.append(paramBody);
 
 				this._inputs.set(paramInfo.name, { label: paramLabel, container: paramBody, input: input });
 			}

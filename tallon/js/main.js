@@ -53,6 +53,7 @@ function main() {
 	// hand tracking has 42 markers, and body tracking has 33; here we just use the larger
 	let lastMotionData = new Array(42).fill([-1, -1, -1]);
 	let motionData = new Array(42).fill([-1, -1, -1]);
+	let smoothMotionData = new Array(42).fill([-1, -1, -1]);
 
 	// the actual tracking happens here
 	const handTracker = new VideoHandTracker();
@@ -65,6 +66,26 @@ function main() {
 			motionData[i] = pointDataOnly[i];
 		}
 
+		//vector smoothing algorithms (between smooth and spring)
+		for (var i = 0; i < motionData.length; i++) {
+			let smooth=true;
+			let drag = 0.55;
+			let strength = 0.1;
+			let vel = new Vector2D(0,0);
+			let vec = new Vector2D(motionData[i][0],motionData[i][1]);
+			let oldVec = new Vector2D(lastMotionData[i][0],lastMotionData[i][1]);
+			if(smooth){
+				//lerp
+				vec = oldVec.lerp(vec,0.5);
+			} else {
+				//spring
+				vel = vel.multiply(drag);
+				vel = vel.add(force);
+				vec = vec.add(vel);
+			}
+			smoothMotionData[i][0]=vec.x;
+			smoothMotionData[i][1]=vec.y;
+		}
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		/*
 			If you want to do math on the tracking data, this would be the place to do so.
@@ -143,8 +164,8 @@ function main() {
 
 	const updateSourceVideo = () => {
 		/**
-		 * 
-		 * @param {HTMLVideoElement} requestedVid 
+		 *
+		 * @param {HTMLVideoElement} requestedVid
 		 */
 		const callback = (requestedVid) => {
 			filterStack.setSourceVideo(requestedVid);
@@ -182,6 +203,7 @@ function main() {
 	// INFORMATION THAT YOU WANT TO PASS INTO TEXTURES
 	filterStack.registerExternalData("lastMotionData", lastMotionData);
 	filterStack.registerExternalData("motionData", motionData);
+	filterStack.registerExternalData("smoothMotionData", smoothMotionData);
 	filterStack.registerExternalData("lastOutputFrame", filterStack.getCanvas());
 
 	filterStack.start();

@@ -159,6 +159,7 @@ class VideoFilterStack {
 
 		this._preFilter.setOutput([this._width, this._height]);
 		this._postFilter.setOutput([this._width, this._height]);
+		console.log(this._postFilter.canvas.width);
 
 		for (const f of this._filters) {
 			/**

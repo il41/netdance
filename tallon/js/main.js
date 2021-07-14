@@ -1,4 +1,5 @@
-const container = document.getElementById("main-container");
+const sidebar = document.getElementById("main-sidebar");
+const vidContainer = document.getElementById("main-video-container");
 
 function main() {
 	/**
@@ -102,7 +103,7 @@ function main() {
 		recordedVideo.controls = true;
 		recordedVideo.loop = true;
 		recordedVideo.style.width = "20%";
-		container.append(recordedVideo);
+		// vidContainer.append(recordedVideo);
 		recordedVideo.onloadedmetadata = () => {
 			callback(recordedVideo);
 		};
@@ -139,7 +140,7 @@ function main() {
 			filterStack.setSourceVideo(requestedVid);
 			handTracker.setSourceVideo(requestedVid, sourceName);
 			bodyTracker.setSourceVideo(requestedVid, sourceName);
-			// requestedVid.play();
+			requestedVid.play();
 		};
 
 		if (activeVideoSource) {
@@ -164,14 +165,31 @@ function main() {
 	});
 
 	// add the output canvas & menu to the DOM
-	container.append(filterStack.getTextureMenuRoot());
-	container.append(filterStack.getFilterMenuRoot());
-	container.append(filterStack.getCanvas());
+	const outputCanvas = filterStack.getCanvas();
+	vidContainer.append(outputCanvas);
+
+	// css provides no way for a div to maintain its aspect ratio, so do that manually...
+	const updateScreenRatio = (e) => {
+		const vidRatio = outputCanvas.width / outputCanvas.height;
+		const screenRatio = e[0].contentRect.width / e[0].contentRect.height;
+		if (vidRatio > screenRatio) {
+			outputCanvas.style.width = "100%";
+			outputCanvas.style.height = "auto";
+		} else {
+			outputCanvas.style.width = "auto";
+			outputCanvas.style.height = "100%";
+		}
+	};
+	new ResizeObserver(updateScreenRatio).observe(vidContainer);
+
+
+	sidebar.append(filterStack.getTextureMenuRoot());
+	sidebar.append(filterStack.getFilterMenuRoot());
 
 	// INFORMATION THAT YOU WANT TO PASS INTO TEXTURES
 	filterStack.registerExternalData("lastMotionData", lastMotionData);
 	filterStack.registerExternalData("motionData", motionData);
-	filterStack.registerExternalData("lastOutputFrame", filterStack.getCanvas());
+	filterStack.registerExternalData("lastOutputFrame", outputCanvas);
 
 	filterStack.addFilter(vfGradient);
 

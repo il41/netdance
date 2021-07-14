@@ -78,7 +78,7 @@ class _VideoMotionTracker {
 		this._videoElement = vid;
 		this._currentSourceName = sourceName;
 		const stored = this._storedData.get(this._currentSourceName);
-		
+
 		if (stored !== undefined) {
 			this._activeStore = stored;
 		}
@@ -121,10 +121,7 @@ class _VideoMotionTracker {
 
 				if (this._activeStore !== null) {
 					const chunkI = (Math.floor(vidTime * this._storeGranularity) + this._storeOffset) * this._storeChunkSize;
-					const chunk = this._activeStore.subarray(
-						chunkI,
-						chunkI + this._storeChunkSize
-					);
+					const chunk = this._activeStore.subarray(chunkI, chunkI + this._storeChunkSize);
 					let avg = 0;
 					const processedChunk = new Array(this._markerCount);
 					for (let i = 0; i < this._markerCount; i++) {
@@ -132,7 +129,7 @@ class _VideoMotionTracker {
 						processedChunk[i] = [chunk[i3], chunk[i3 + 1], chunk[i3 + 2]];
 						avg += chunk[i3] + chunk[i3 + 1] + chunk[i3 + 2];
 					}
-					
+
 					// console.log(processedChunk);
 
 					this._callback(null, processedChunk);
@@ -193,25 +190,34 @@ class VideoHandTracker extends _VideoMotionTracker {
 			return pointDataOnly;
 		}
 
+		let i = 0;
+
 		for (const handInfo of data.multiHandedness) {
+			console.log(handInfo);
 			const markers = data.multiHandLandmarks[handInfo.index];
 			if (markers === undefined) {
 				continue;
 			}
 
-			if (handInfo.label === "Left") {
-				// left hand data
-				for (let i = 0; i < 21; i++) {
-					const marker = markers[i];
-					pointDataOnly[i] = [marker.x, marker.y, marker.z];
-				}
-			} else if (handInfo.label === "Right") {
-				// right hand data
-				for (let i = 0; i < 21; i++) {
-					const marker = markers[i];
-					pointDataOnly[i * 2] = [marker.x, marker.y, marker.z];
-				}
+			for (let j = 0; j < 21; j++) {
+				const marker = markers[j];
+				pointDataOnly[i] = [marker.x, marker.y, marker.z];
+				i++;
 			}
+
+			// if (handInfo.label === "Left") {
+			// 	// left hand data
+			// 	for (let i = 0; i < 21; i++) {
+			// 		const marker = markers[i];
+			// 		pointDataOnly[i] = [marker.x, marker.y, marker.z];
+			// 	}
+			// } else if (handInfo.label === "Right") {
+			// 	// right hand data
+			// 	for (let i = 0; i < 21; i++) {
+			// 		const marker = markers[i];
+			// 		pointDataOnly[i * 2] = [marker.x, marker.y, marker.z];
+			// 	}
+			// }
 		}
 
 		return pointDataOnly;

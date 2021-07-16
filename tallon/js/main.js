@@ -24,6 +24,21 @@ function main() {
 	 */
 	let webcamVideo = null;
 
+	
+	const generalMenu = new ParameterMenu("Controls", (panelInfo) => panelInfo, false);
+	const getVideoSettings = generalMenu.addItem({name: "Video", paramsInfo: [
+		{ name: "Source", type: "enum", options: ["Webcam", "Left Dance", "Right Dance"], default: "Left Dance" },
+	]}).getValuesUnordered;
+
+	const getTrackingSettings = generalMenu.addItem({name: "Motion Tracking", paramsInfo: [
+		{ name: "Mode", type: "enum", options: ["Full Body", "Just Hands"], default: "Full Body" },
+		{ name: "Smoothing", type: "enum", options: ["None", "Basic", "Springy"], default: "None" },
+		{ name: "Time Offset", type: "number", min: -5, max: 5, default: 0, step: 0.1 },
+	]}).getValuesUnordered;
+
+	const getRecordingSettings = generalMenu.addItem({name: "Recording", paramsInfo: [
+	]}).getValuesUnordered;
+
 	/**
 	 * handles all the visual effects stuff
 	 * @type {VideoFilterStack}
@@ -183,6 +198,7 @@ function main() {
 	new ResizeObserver(updateScreenRatio).observe(vidContainer);
 
 
+	sidebar.append(generalMenu.getRoot());
 	sidebar.append(filterStack.getTextureMenuRoot());
 	sidebar.append(filterStack.getFilterMenuRoot());
 

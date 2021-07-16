@@ -2,9 +2,11 @@ class ParameterMenu {
 	/**
 	 * @param {String} name The displayed name of the menu
 	 * @param {(item: any) => {name: String, paramsInfo: Object, otherPanelArgs: Object | undefined}} itemToPanelParamsFunc A function that takes an item and extracts from it the necessary parameters for creating a menu panel
+	 * @param {boolean} sortable
+	 * @param {String|null} addButtonText
 	 * @param {{addMenuUsed: (e: MouseEvent, menu: ParameterMenu, pickedOption: String) => void}} callbacks
 	 */
-	constructor(name, itemToPanelParamsFunc, sortable, addButtonText, addMenuOptions = [], callbacks = {}) {
+	constructor(name, itemToPanelParamsFunc, sortable, addButtonText = null, addMenuOptions = [], callbacks = {}) {
 		this._name = name;
 		this._itemToPanelParamsFunc = itemToPanelParamsFunc;
 

@@ -356,6 +356,10 @@ class RangeInput extends ParamInput {
 			values[paramParams.name] = val;
 			this._components.numberInput.value = val;
 			this._components.sliderInput.value = val;
+
+			if(paramParams.callback !== undefined){
+				paramParams.callback(val);
+			}
 		};
 
 		this._components.numberInput.addEventListener("change", changeEvent);
@@ -381,7 +385,11 @@ class CheckboxInput extends ParamInput {
 		});
 
 		this._components.checkboxInput.addEventListener("change", (e) => {
-			values[paramParams.name] = e.target.checked ? true : false;
+			const val = e.target.checked ? true : false;
+			values[paramParams.name] = val;
+			if(paramParams.callback !== undefined){
+				paramParams.callback(val);
+			}
 		});
 		this._components.root.append(this._components.checkboxInput);
 
@@ -414,6 +422,9 @@ class EnumInput extends ParamInput {
 
 		this._components.selectInput.addEventListener("change", (e) => {
 			values[paramParams.name] = e.target.value;
+			if(paramParams.callback !== undefined){
+				paramParams.callback(e.target.value);
+			}
 		});
 
 		const optionNames = paramParams.options ?? panel.getMenu().getSourcingData(paramParams.source);
@@ -533,17 +544,21 @@ class ColorInput extends ParamInput {
 		this._components.collapsible.append(this._components.collapsibleInner);
 		this._components.root.append(this._components.collapsible);
 
-		const changed = (val) => {
+		const changeEvent = (val) => {
 			values[paramParams.name] = val;
 			this._components.basicInput.value = val.slice(0, 7);
 			this._iroPicker.setColors([val]);
+
+			if(paramParams.callback !== undefined){
+				paramParams.callback(val);
+			}
 		};
 		// events
 		this._components.basicInput.addEventListener("change", (e) => {
-			changed(e.target.value);
+			changeEvent(e.target.value);
 		});
 		this._iroPicker.on(["color:change", "color:init"], (color) => {
-			changed(color.hex8String);
+			changeEvent(color.hex8String);
 		});
 	}
 }

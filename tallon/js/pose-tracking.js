@@ -193,7 +193,7 @@ class VideoHandTracker extends _VideoMotionTracker {
 		let i = 0;
 
 		for (const handInfo of data.multiHandedness) {
-			console.log(handInfo);
+			// console.log(handInfo);
 			const markers = data.multiHandLandmarks[handInfo.index];
 			if (markers === undefined) {
 				continue;

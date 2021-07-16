@@ -7,10 +7,12 @@ function main() {
 	 */
 	let activeTracker = false;
 
-	/**
-	 * false: video, true: webcam
-	 */
-	let activeVideoSource = false;
+	const videoSources = new Map([
+		["Left Video", null],
+		["Right Video", null],
+		["Webcam", null],
+	]);
+	let activeVideoSource = null;
 
 	/**
 	 * a video element that contains the prerecorded dance video. null until later
@@ -24,20 +26,41 @@ function main() {
 	 */
 	let webcamVideo = null;
 
-	
 	const generalMenu = new ParameterMenu("Controls", (panelInfo) => panelInfo, false);
-	const getVideoSettings = generalMenu.addItem({name: "Video", paramsInfo: [
-		{ name: "Source", type: "enum", options: ["Webcam", "Left Dance", "Right Dance"], default: "Left Dance" },
-	]}).getValuesUnordered;
+	generalMenu.addItem({
+		name: "Video",
+		paramsInfo: [
+			{
+				name: "Source",
+				type: "enum",
+				options: ["Webcam", "Left Video", "Right Video"],
+				default: "Left Video",
+				callback: (val) => {
+					changeActiveSourceVideo(val);
+				},
+			},
+		],
+	}).getValuesUnordered;
 
-	const getTrackingSettings = generalMenu.addItem({name: "Motion Tracking", paramsInfo: [
-		{ name: "Mode", type: "enum", options: ["Full Body", "Just Hands"], default: "Full Body" },
-		{ name: "Smoothing", type: "enum", options: ["None", "Basic", "Springy"], default: "None" },
-		{ name: "Time Offset", type: "number", min: -5, max: 5, default: 0, step: 0.1 },
-	]}).getValuesUnordered;
+	generalMenu.addItem({
+		name: "Motion Tracking",
+		paramsInfo: [
+			{
+				name: "Mode",
+				type: "enum",
+				options: ["Full Body", "Just Hands"],
+				default: "Full Body",
+				callback: (val) => {
+					activeTracker = val;
+					updateTrackingMode();
+				},
+			},
+			{ name: "Smoothing", type: "enum", options: ["None", "Basic", "Springy"], default: "None" },
+			{ name: "Time Offset", type: "number", min: -5, max: 5, default: 0, step: 0.1 },
+		],
+	}).getValuesUnordered;
 
-	const getRecordingSettings = generalMenu.addItem({name: "Recording", paramsInfo: [
-	]}).getValuesUnordered;
+	generalMenu.addItem({ name: "Recording", paramsInfo: [] }).getValuesUnordered;
 
 	/**
 	 * handles all the visual effects stuff
@@ -60,7 +83,7 @@ function main() {
 	const handTracker = new VideoHandTracker();
 	const bodyTracker = new VideoBodyTracker();
 
-	bodyTracker.storeData("Left", trackingDataBodyLeft);
+	bodyTracker.storeData("Left Video", trackingDataBodyLeft);
 
 	// this function is called whenever either tracker is updated
 	const trackerCallback = (dat, pointDataOnly) => {
@@ -83,7 +106,7 @@ function main() {
 	bodyTracker.setCallback(trackerCallback);
 
 	const updateTrackingMode = () => {
-		if (activeTracker) {
+		if (activeTracker === "Just Hands") {
 			bodyTracker.stopTracking();
 			handTracker.startTracking();
 		} else {
@@ -93,32 +116,24 @@ function main() {
 	};
 	updateTrackingMode();
 
-	// allow changing tracking mode via an html checkbox
-	const trackingModeSwitch = document.getElementById("tracking-mode-switch");
-	trackingModeSwitch.checked = activeTracker;
-	trackingModeSwitch.addEventListener("change", (e) => {
-		activeTracker = e.target.checked ? true : false;
-		updateTrackingMode();
-	});
-
 	/**
 	 * Get prerecorded video and do stuff once it's loaded (or right away if it's already loaded)
 	 * @param {(video: HTMLVideoElement) => void} callback
 	 * @returns
 	 */
-	const requestRecordedVideo = (callback) => {
+	const requestRecordedVideo = (callback, path) => {
 		if (recordedVideo !== null) {
 			callback(recordedVideo);
 			return;
 		}
 
 		recordedVideo = document.createElement("video");
-		recordedVideo.src = "./Left-720p.mp4";
+		recordedVideo.src = path;
 		recordedVideo.crossOrigin = "anonymous";
 		recordedVideo.controls = true;
 		recordedVideo.loop = true;
 		recordedVideo.style.width = "20%";
-		// vidContainer.append(recordedVideo);
+		vidContainer.append(recordedVideo);
 		recordedVideo.onloadedmetadata = () => {
 			callback(recordedVideo);
 		};
@@ -146,38 +161,45 @@ function main() {
 		});
 	};
 
-	const updateSourceVideo = () => {
-		/**
-		 *
-		 * @param {HTMLVideoElement} requestedVid
-		 */
-		const callback = (requestedVid, sourceName) => {
-			filterStack.setSourceVideo(requestedVid);
-			handTracker.setSourceVideo(requestedVid, sourceName);
-			bodyTracker.setSourceVideo(requestedVid, sourceName);
-			requestedVid.play();
+	const changeActiveSourceVideo = (newSourceName) => {
+		if (activeVideoSource !== null) {
+			activeVideoSource.pause();
+		}
+
+		const play = (newSource) => {
+			activeVideoSource = newSource;
+			filterStack.setSourceVideo(newSource);
+			handTracker.setSourceVideo(newSource, newSourceName);
+			bodyTracker.setSourceVideo(newSource, newSourceName);
+			newSource.play();
 		};
 
-		if (activeVideoSource) {
-			if (recordedVideo !== null) {
-				recordedVideo.pause();
-			}
-			requestWebcamVideo((vid) => callback(vid, "Webcam"));
+		/**
+		 *
+		 * @param {HTMLVideoElement} newSource
+		 */
+		const callback = (newSource) => {
+			videoSources.set(newSourceName, newSource);
+			play(newSource);
+		};
+
+		let source = videoSources.get(newSourceName);
+		if (source) {
+			play(source);
 		} else {
-			if (webcamVideo !== null) {
-				webcamVideo.pause();
+			switch (newSourceName) {
+				case "Left Video":
+					requestRecordedVideo(callback, "./Left-720p.mp4");
+					break;
+				case "Right Video":
+					requestRecordedVideo(callback, "./Right-720p.mp4");
+					break;
+				case "Webcam":
+					requestWebcamVideo(callback);
+					break;
 			}
-			requestRecordedVideo((vid) => callback(vid, "Left"));
 		}
 	};
-
-	// allow changing source video via an html checkbox
-	const sourceVideoSwitch = document.getElementById("source-video-switch");
-	sourceVideoSwitch.checked = activeTracker;
-	sourceVideoSwitch.addEventListener("change", (e) => {
-		activeVideoSource = e.target.checked ? true : false;
-		updateSourceVideo();
-	});
 
 	// add the output canvas & menu to the DOM
 	const outputCanvas = filterStack.getCanvas();
@@ -197,7 +219,6 @@ function main() {
 	};
 	new ResizeObserver(updateScreenRatio).observe(vidContainer);
 
-
 	sidebar.append(generalMenu.getRoot());
 	sidebar.append(filterStack.getTextureMenuRoot());
 	sidebar.append(filterStack.getFilterMenuRoot());
@@ -209,9 +230,9 @@ function main() {
 
 	filterStack.addFilter(vfGradient);
 
-	// filterStack.start();
+	filterStack.start();
 
-	updateSourceVideo();
+	changeActiveSourceVideo("Left Video");
 }
 
 main();

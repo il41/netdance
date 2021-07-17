@@ -128,13 +128,13 @@ function main() {
 	};
 
 	handTracker.setCallback((dat, pointDataOnly) => {
-		if(loadingRequests.delete("hand tracking")){
+		if (loadingRequests.delete("hand tracking")) {
 			updateLoadingOverlay();
 		}
 		trackerCallback(dat, pointDataOnly);
 	});
 	bodyTracker.setCallback((dat, pointDataOnly) => {
-		if(loadingRequests.delete("body tracking")){
+		if (loadingRequests.delete("body tracking")) {
 			updateLoadingOverlay();
 		}
 		trackerCallback(dat, pointDataOnly);

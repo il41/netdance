@@ -1,5 +1,18 @@
 const sidebar = document.getElementById("main-sidebar");
 const vidContainer = document.getElementById("main-video-container");
+const loadingOverlay = document.getElementById("loading-overlay");
+const loadingOverlayList = document.getElementById("loading-overlay-list");
+
+let loadingRequests = new Set();
+let trackingModeLoading = false;
+
+const updateLoadingOverlay = () => {
+	if (loadingRequests.size === 0) {
+		loadingOverlay.classList.remove("visible");
+	} else {
+		loadingOverlay.classList.add("visible");
+	}
+};
 
 function main() {
 	/**
@@ -56,10 +69,18 @@ function main() {
 				},
 			},
 			{ name: "Smoothing", type: "enum", options: ["None", "Basic", "Springy"], default: "None" },
-			{ name: "Time Delay", type: "number", min: -5, max: 5, default: 0, step: 0.1, callback: (val) => {
-				bodyTracker.setStoreOffset(-val);
-				handTracker.setStoreOffset(-val);
-			} },
+			{
+				name: "Time Delay",
+				type: "number",
+				min: -5,
+				max: 5,
+				default: 0,
+				step: 0.1,
+				callback: (val) => {
+					bodyTracker.setStoreOffset(-val);
+					handTracker.setStoreOffset(-val);
+				},
+			},
 		],
 	}).getValuesUnordered;
 
@@ -105,14 +126,33 @@ function main() {
 		*/
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	};
-	handTracker.setCallback(trackerCallback);
-	bodyTracker.setCallback(trackerCallback);
+
+	handTracker.setCallback((dat, pointDataOnly) => {
+		if(loadingRequests.delete("hand tracking")){
+			updateLoadingOverlay();
+		}
+		trackerCallback(dat, pointDataOnly);
+	});
+	bodyTracker.setCallback((dat, pointDataOnly) => {
+		if(loadingRequests.delete("body tracking")){
+			updateLoadingOverlay();
+		}
+		trackerCallback(dat, pointDataOnly);
+	});
 
 	const updateTrackingMode = () => {
+		trackingModeLoading = true;
+
 		if (activeTracker === "Just Hands") {
+			loadingRequests.add("hand tracking");
+			updateLoadingOverlay();
+
 			bodyTracker.stopTracking();
 			handTracker.startTracking();
 		} else {
+			loadingRequests.add("body tracking");
+			updateLoadingOverlay();
+
 			handTracker.stopTracking();
 			bodyTracker.startTracking();
 		}
@@ -136,6 +176,7 @@ function main() {
 		recordedVideo.controls = true;
 		recordedVideo.loop = true;
 		recordedVideo.style.width = "20%";
+
 		// vidContainer.append(recordedVideo);
 		recordedVideo.onloadedmetadata = () => {
 			callback(recordedVideo);
@@ -183,6 +224,10 @@ function main() {
 		 */
 		const callback = (newSource) => {
 			videoSources.set(newSourceName, newSource);
+
+			loadingRequests.delete("video/webcam");
+			updateLoadingOverlay();
+
 			play(newSource);
 		};
 
@@ -190,6 +235,9 @@ function main() {
 		if (source) {
 			play(source);
 		} else {
+			loadingRequests.add("video/webcam");
+			updateLoadingOverlay();
+
 			switch (newSourceName) {
 				case "Left Video":
 					requestRecordedVideo(callback, "./Left-720p.mp4");

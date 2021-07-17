@@ -14,73 +14,7 @@
 		<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400&display=swap" rel="stylesheet" />
 
 		<link rel="stylesheet" href="./filter-menu.css" />
-
-		<style>
-			html {
-				height: 100%;
-				padding: 0px;
-				margin: 0px;
-			}
-
-			body {
-				background: #ccc;
-				height: 100%;
-				padding: 0px;
-				margin: 0px;
-			}
-
-			#main-container {
-				width: 100%;
-				height: 100%;
-			}
-
-			#main-video-container {
-				width: 100vw;
-				height: 100vh;
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				background-color: black;
-			}
-
-			#main-sidebar:not(:hover) {
-				opacity: 0;
-				transition: opacity 0.4s;
-			}
-
-			#main-sidebar {
-				transition-delay: 0.2s;
-				transition: opacity 0.2s;
-				opacity: 0.8;
-				position: absolute;
-				/* height: 100vh; */
-				top: 16px;
-				right: 16px;
-				bottom: 16px;
-				left: auto;
-
-				display: flex;
-				justify-content: flex-start;
-				flex-direction: column;
-				/* border: 1px solid #bbb; */
-				border-radius: 8px;
-				overflow-y: scroll;
-				background: #eee4;
-
-				padding: 16px;
-				/* backdrop-filter: blur(2px); */
-
-				/* weird performance magic */
-				/* -webkit-backface-visibility: hidden;
-				-webkit-perspective: 1000;
-				-webkit-transform: translate3d(0, 0, 0);
-				-webkit-transform: translateZ(0);
-				backface-visibility: hidden;
-				perspective: 1000;
-				transform: translate3d(0, 0, 0);
-				transform: translateZ(0); */
-			}
-		</style>
+		<link rel="stylesheet" href="./index-style.css" />
 	</head>
 
 	<body>
@@ -88,6 +22,9 @@
 			<div id="main-video-container"></div>
 			<div id="main-sidebar">
 			</div>
+		</div>
+		<div id="loading-overlay">
+			Loading...
 		</div>
 
 		<script src="./js/misc-helpful.js"></script>

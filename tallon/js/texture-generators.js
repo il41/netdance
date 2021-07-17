@@ -60,15 +60,19 @@ const tgTrails = new TextureGeneratorType(
 				const newVal = params[varName];
 				if (force || newVal !== selfData[varName]) {
 					selfData[varName] = newVal;
-					ctx.filter = `blur(${newVal}px)`;
+					if(newVal > 0){
+						ctx.filter = `blur(${newVal}px)`;
+					}else{
+						ctx.filter = "none";
+					}
 				}
 			};
-			// selfData.updateBlur(true);
+			selfData.updateBlur(true);
 		},
 		drawFunc: (selfData, canvas, ctx, input, params, other) => {
 			selfData.updateFade(false);
 			selfData.updateThickness(false);
-			// selfData.updateBlur(false);
+			selfData.updateBlur(false);
 
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -130,15 +134,19 @@ const tgChaoticRectangles = new TextureGeneratorType(
 				const newVal = params[varName];
 				if (force || newVal !== selfData[varName]) {
 					selfData[varName] = newVal;
-					ctx.filter = `blur(${newVal}px)`;
+					if(newVal > 0){
+						ctx.filter = `blur(${newVal}px)`;
+					}else{
+						ctx.filter = "none";
+					}
 				}
 			};
-			// selfData.updateBlur(true);
+			selfData.updateBlur(true);
 		},
 		drawFunc: (selfData, canvas, ctx, input, params, other) => {
 			selfData.updateThickness(false);
 			selfData.updateFade(false);
-			// selfData.updateBlur(false);
+			selfData.updateBlur(false);
 
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -187,14 +195,18 @@ const tgSprinkles = new TextureGeneratorType(
 				const newVal = params[varName];
 				if (force || newVal !== selfData[varName]) {
 					selfData[varName] = newVal;
-					ctx.filter = `blur(${newVal}px)`;
+					if(newVal > 0){
+						ctx.filter = `blur(${newVal}px)`;
+					}else{
+						ctx.filter = "none";
+					}
 				}
 			};
-			// selfData.updateBlur(true);
+			selfData.updateBlur(true);
 		},
 		drawFunc: (selfData, canvas, ctx, input, params, other) => {
 			selfData.updateSize(false);
-			// selfData.updateBlur(false);
+			selfData.updateBlur(false);
 
 			ctx.fillStyle = `rgba(0,0,0,${params["Fade"]})`;
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -263,15 +275,19 @@ const tgSpikyMesh = new TextureGeneratorType(
 				const newVal = params[varName];
 				if (force || newVal !== selfData[varName]) {
 					selfData[varName] = newVal;
-					ctx.filter = `blur(${newVal}px)`;
+					if(newVal > 0){
+						ctx.filter = `blur(${newVal}px)`;
+					}else{
+						ctx.filter = "none";
+					}
 				}
 			};
-			// selfData.updateBlur(true);
+			selfData.updateBlur(true);
 		},
 		drawFunc: (selfData, canvas, ctx, input, params, other) => {
 			selfData.updateThickness(false);
 			selfData.updateFade(false);
-			// selfData.updateBlur(false);
+			selfData.updateBlur(false);
 
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -354,16 +370,20 @@ const tgPolygon = new TextureGeneratorType(
 				const newVal = params[varName];
 				if (force || newVal !== selfData[varName]) {
 					selfData[varName] = newVal;
-					ctx.filter = `blur(${newVal}px)`;
+					if(newVal > 0){
+						ctx.filter = `blur(${newVal}px)`;
+					}else{
+						ctx.filter = "none";
+					}
 				}
 			};
-			// selfData.updateBlur(true);
+			selfData.updateBlur(true);
 		},
 		drawFunc: (selfData, canvas, ctx, input, params, other) => {
 			selfData.updateDrift(false);
 			selfData.updateThickness(false);
 			selfData.updateFade(false);
-			// selfData.updateBlur(false);
+			selfData.updateBlur(false);
 
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
 

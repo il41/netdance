@@ -39,10 +39,15 @@ class _VideoMotionTracker {
 		this._lastStoreTimeIndex = 0;
 		/**
 		 * @type {number}
-		 * index offset for accessing cached data; positive numbers mean the tracking data is "from the future"
+		 * indices per second. (In other words, delay between frames is `1 second / _storeGranularity`)
 		 */
 		this._storeGranularity = 10;
-		this._storeOffset = 20;
+
+		/**
+		 * @type {number}
+		 * time offset for accessing cached data; positive numbers mean the tracking data is "from the future"
+		 */
+		this._storeOffsetSeconds = 0;
 
 		this._tracker = trackerCreator();
 		this._isTracking = false;
@@ -55,6 +60,10 @@ class _VideoMotionTracker {
 		});
 
 		this._callback = Function.prototype;
+	}
+
+	setStoreOffset(offset) {
+		this._storeOffsetSeconds = offset;
 	}
 
 	/**
@@ -120,7 +129,8 @@ class _VideoMotionTracker {
 				lastVideoTime = this._videoElement.currentTime;
 
 				if (this._activeStore !== null) {
-					const chunkI = (Math.floor(vidTime * this._storeGranularity) + this._storeOffset) * this._storeChunkSize;
+					const chunkI =
+						Math.floor((vidTime + this._storeOffsetSeconds) * this._storeGranularity) * this._storeChunkSize;
 					const chunk = this._activeStore.subarray(chunkI, chunkI + this._storeChunkSize);
 					let avg = 0;
 					const processedChunk = new Array(this._markerCount);

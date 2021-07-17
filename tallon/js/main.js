@@ -56,7 +56,10 @@ function main() {
 				},
 			},
 			{ name: "Smoothing", type: "enum", options: ["None", "Basic", "Springy"], default: "None" },
-			{ name: "Time Offset", type: "number", min: -5, max: 5, default: 0, step: 0.1 },
+			{ name: "Time Delay", type: "number", min: -5, max: 5, default: 0, step: 0.1, callback: (val) => {
+				bodyTracker.setStoreOffset(-val);
+				handTracker.setStoreOffset(-val);
+			} },
 		],
 	}).getValuesUnordered;
 
@@ -133,7 +136,7 @@ function main() {
 		recordedVideo.controls = true;
 		recordedVideo.loop = true;
 		recordedVideo.style.width = "20%";
-		vidContainer.append(recordedVideo);
+		// vidContainer.append(recordedVideo);
 		recordedVideo.onloadedmetadata = () => {
 			callback(recordedVideo);
 		};

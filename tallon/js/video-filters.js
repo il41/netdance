@@ -46,7 +46,7 @@ function repack4(a4) {
  */
 const vfShape = new VideoFilterType(
 	"Just Shape",
-	[{ name: "Shape", type: "enum", source: "Textures", default: "Trails" }],
+	(owner) => [owner.shapeParameterCreator("Trails")],
 	() => {
 		return gpu.createKernel(function (frame, mask) {
 			const x = this.thread.x;
@@ -63,10 +63,7 @@ const vfShape = new VideoFilterType(
  */
 const vfColor = new VideoFilterType(
 	"Color",
-	[
-		{ name: "Shape", type: "enum", source: "Textures", default: "Nothing" },
-		{ name: "Color", type: "color", default: "#f008", alpha: true },
-	],
+	(owner) => [owner.shapeParameterCreator("Trails"), { name: "Color", type: "color", default: "#f008", alpha: true }],
 	() => {
 		return gpu
 			.createKernel(function (frame, mask, color) {
@@ -85,8 +82,8 @@ const vfColor = new VideoFilterType(
  */
 const vfGradient = new VideoFilterType(
 	"Gradient",
-	[
-		{ name: "Shape", type: "enum", source: "Textures", default: "Polygon" },
+	(owner) => [
+		owner.shapeParameterCreator("Polygon"),
 		{ name: "Time", type: "number", source: "Time", hidden: true },
 		{ name: "Speed", type: "number", min: 0, max: 10, default: 0.5, step: 0.1 },
 		{ name: "Scale", type: "number", min: 1, max: 20, default: 1, step: 1 },
@@ -133,8 +130,8 @@ const vfGradient = new VideoFilterType(
  */
 const vfRGBLevels = new VideoFilterType(
 	"RGB Levels",
-	[
-		{ name: "Shape", type: "enum", source: "Textures", default: "Everything" },
+	(owner) => [
+		owner.shapeParameterCreator("Everything"),
 		{ name: "Color", type: "color", default: "#fff", alpha: false },
 		{ name: "Invert", type: "boolean", default: false },
 	],
@@ -166,8 +163,8 @@ const vfRGBLevels = new VideoFilterType(
  */
 const vfWobble = new VideoFilterType(
 	"Wobble",
-	[
-		{ name: "Shape", type: "enum", source: "Textures", default: "Everything" },
+	(owner) => [
+		owner.shapeParameterCreator("Everything"),
 		{ name: "Time", type: "number", source: "Time", hidden: true },
 		{ name: "Speed", type: "number", min: -10, max: 10, default: 1 },
 		{ name: "Frequency", type: "number", min: 0, max: 0.2, default: 0.05, step: 0.001 },
@@ -201,9 +198,9 @@ const vfWobble = new VideoFilterType(
  */
 const vfMotionBlur = new VideoFilterType(
 	"Motion Blur",
-	[
+	(owner) => [
+		owner.shapeParameterCreator("Last Output Frame"),
 		{ name: "Last Frame", hidden: true, type: "enum", source: "Textures", default: "Last Output Frame" },
-		{ name: "Shape", type: "enum", source: "Textures", default: "Last Output Frame" },
 		{ name: "Intensity", type: "number", min: 0, max: 0.99, default: 0.5 },
 	],
 	() => {
@@ -223,9 +220,9 @@ const vfMotionBlur = new VideoFilterType(
  */
 const vfZoomBlur = new VideoFilterType(
 	"Zoom Blur",
-	[
+	(owner) => [
+		owner.shapeParameterCreator("Last Output Frame"),
 		{ name: "Last Frame", hidden: true, type: "enum", source: "Textures", default: "Last Output Frame" },
-		{ name: "Shape", type: "enum", source: "Textures", default: "Last Output Frame" },
 		{ name: "Intensity", type: "number", min: 0, max: 1, default: 0.75 },
 		{ name: "Scale", type: "number", min: 0.8, max: 1.2, default: 0.95 },
 	],
@@ -242,11 +239,7 @@ const vfZoomBlur = new VideoFilterType(
 				const x2 = ((x - xOffset) * scale + xOffset) % w;
 				const y2 = ((y - yOffset) * scale + yOffset) % h;
 
-				return lerp3_3(
-					frame[y][x],
-					lastFrame[y2][x2],
-					mult3(mask[y2][x2], amount)
-				);
+				return lerp3_3(frame[y][x], lastFrame[y2][x2], mult3(mask[y2][x2], amount));
 			})
 			.setFunctions([lerp, lerp3_3, mult3]);
 	}

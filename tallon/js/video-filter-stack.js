@@ -81,10 +81,9 @@ class VideoFilterStack {
 		this._filterMenu = new ParameterMenu(
 			"Filters",
 			(inst) => {
-				const t = inst.getType();
 				return {
-					paramsInfo: t.getParamsParams(),
-					name: t.getName(),
+					paramsInfo: inst.getParamsParams(),
+					name: inst.getName(),
 					otherPanelArgs: {
 						deletable: true,
 					},
@@ -108,16 +107,13 @@ class VideoFilterStack {
 
 		this._textureMenu = new ParameterMenu(
 			"Shapes",
-			(inst) => {
-				const t = inst.getType();
-				return {
-					paramsInfo: t.getParamsParams(),
-					name: t.getName(),
-					otherPanelArgs: {
-						deletable: false,
-					},
-				};
-			},
+			(inst) => ({
+				paramsInfo: inst.getParamsParams(),
+				name: inst.getName(),
+				otherPanelArgs: {
+					deletable: false,
+				},
+			}),
 			false,
 			"Add Shape",
 			[],
@@ -134,6 +130,18 @@ class VideoFilterStack {
 		 * @type {{item: VideoFilterInstance, panel: ParamPanel}}
 		 */
 		this._filters = this._filterMenu.getItemsList();
+	}
+
+	/**
+	 * 
+	 * @param {String} def default shape name
+	 * @returns param params for a shape input
+	 */
+	shapeParameterCreator(def){
+		return {name: "Shape", type:"enum", source: "Textures", default: def, callback: (val, prevVal) => {
+			this._textures.get(prevVal)?.unuse();
+			this._textures.get(val)?.use();
+		}};
 	}
 
 	/**
@@ -230,7 +238,7 @@ class VideoFilterStack {
 	 * @param {VideoFilterType} filterType
 	 */
 	addFilter(filterType) {
-		const filter = new VideoFilterInstance(filterType);
+		const filter = new VideoFilterInstance(this, filterType);
 		filter.setDimensions(this._width, this._height);
 		const panel = this._filterMenu.addItem(filter);
 		filter.setParamValueGetter(panel.getValuesOrdered);
@@ -326,8 +334,8 @@ class VideoFilterType {
 	 * 	}
 	 * );
 	 */
-	constructor(name, filterParams, kernelGenerationFunc) {
-		this._filterParamsParams = filterParams;
+	constructor(name, filterParamsGen, kernelGenerationFunc) {
+		this._filterParamsParamsGen = filterParamsGen;
 		this._name = name;
 		this._kernelGenerationFunc = kernelGenerationFunc;
 		// this.processParamsParams();
@@ -337,30 +345,15 @@ class VideoFilterType {
 		return this._name;
 	}
 
-	getParamsParams() {
-		return this._filterParamsParams;
+	getParamsParamsGen() {
+		return this._filterParamsParamsGen;
 	}
 
 	createKernel() {
 		return this._kernelGenerationFunc().setDynamicOutput(true).setPipeline(true);
 	}
 
-	// processParamsParams() {
-	// 	for (const paramInfo of this._filterParamsParams) {
-	// 		if (paramInfo.type === "enum" && paramInfo.options === undefined) {
-	// 			if (paramInfo.source === "Textures") {
-	// 				paramInfo.options = textureNames;
-	// 			} else {
-	// 				console.error(`Unknown enum source "${paramInfo.source}"!`);
-	// 			}
-	// 		}
-	// 	}
-	// }
-
 	getCanvas() {
-		// NOTE: ctx.drawImage(this._postFilter.canvas,0,0) DOES NOT WORK.
-		// this is because the filter's canvas is a webgl2 canvas that does not preserve its buffer.
-		// most of the canvas's functions are also undefined for some reason?
 		return this._kernel?.canvas;
 	}
 }
@@ -373,11 +366,22 @@ class VideoFilterInstance {
 	 *
 	 * @param {VideoFilterType} filterType
 	 */
-	constructor(filterType) {
+	constructor(owner, filterType) {
+		this._owner = owner;
 		this._filterType = filterType;
+
+		this._paramsParams = this._filterType.getParamsParamsGen()(owner);
 		this._kernelFunc = filterType.createKernel();
 		this.getParamValues = null;
 		this._dimensionsSet = false;
+	}
+
+	getName(){
+		return this._filterType.getName();
+	}
+
+	getParamsParams() {
+		return this._paramsParams;
 	}
 
 	/**
@@ -417,7 +421,7 @@ class VideoFilterInstance {
 
 		// process parameters before sending to shaders
 		const cleanedParamValues = new Array(rawParamValues.length);
-		const paramsParams = this._filterType.getParamsParams();
+		const paramsParams = this._paramsParams;
 		for (let i = 0; i < paramsParams.length; i++) {
 			const paramInfo = paramsParams[i];
 			const paramValue = rawParamValues[i];

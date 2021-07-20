@@ -39,53 +39,6 @@ function main() {
 	 */
 	let webcamVideo = null;
 
-	const generalMenu = new ParameterMenu("Controls", (panelInfo) => panelInfo, false);
-	generalMenu.addItem({
-		name: "Video",
-		paramsInfo: [
-			{
-				name: "Source",
-				type: "enum",
-				options: ["Webcam", "Left Video", "Right Video"],
-				default: "Left Video",
-				callback: (val) => {
-					changeActiveSourceVideo(val);
-				},
-			},
-		],
-	}).getValuesUnordered;
-
-	generalMenu.addItem({
-		name: "Motion Tracking",
-		paramsInfo: [
-			{
-				name: "Mode",
-				type: "enum",
-				options: ["Full Body", "Just Hands"],
-				default: "Full Body",
-				callback: (val) => {
-					activeTracker = val;
-					updateTrackingMode();
-				},
-			},
-			{ name: "Smoothing", type: "enum", options: ["None", "Basic", "Springy"], default: "None" },
-			{
-				name: "Time Delay",
-				type: "number",
-				min: -5,
-				max: 5,
-				default: 0,
-				step: 0.1,
-				callback: (val) => {
-					bodyTracker.setStoreOffset(-val);
-					handTracker.setStoreOffset(-val);
-				},
-			},
-		],
-	}).getValuesUnordered;
-
-	generalMenu.addItem({ name: "Recording", paramsInfo: [] }).getValuesUnordered;
-
 	/**
 	 * handles all the visual effects stuff
 	 * @type {VideoFilterStack}
@@ -269,6 +222,53 @@ function main() {
 		}
 	};
 	new ResizeObserver(updateScreenRatio).observe(vidContainer);
+
+	const generalMenu = new ParameterMenu("Controls", (panelInfo) => panelInfo, false);
+	generalMenu.addItem({
+		name: "Video",
+		paramsInfo: [
+			{
+				name: "Source",
+				type: "enum",
+				options: ["Webcam", "Left Video", "Right Video"],
+				default: "Left Video",
+				callback: (val) => {
+					changeActiveSourceVideo(val);
+				},
+			},
+		],
+	}).getValuesUnordered;
+
+	generalMenu.addItem({
+		name: "Motion Tracking",
+		paramsInfo: [
+			{
+				name: "Mode",
+				type: "enum",
+				options: ["Full Body", "Just Hands"],
+				default: "Full Body",
+				callback: (val) => {
+					activeTracker = val;
+					updateTrackingMode();
+				},
+			},
+			{ name: "Smoothing", type: "enum", options: ["None", "Basic", "Springy"], default: "None" },
+			{
+				name: "Time Delay",
+				type: "number",
+				min: -5,
+				max: 5,
+				default: 0,
+				step: 0.1,
+				callback: (val) => {
+					bodyTracker.setStoreOffset(-val);
+					handTracker.setStoreOffset(-val);
+				},
+			},
+		],
+	}).getValuesUnordered;
+
+	generalMenu.addItem({ name: "Recording", paramsInfo: [] }).getValuesUnordered;
 
 	sidebar.append(generalMenu.getRoot());
 	sidebar.append(filterStack.getTextureMenuRoot());

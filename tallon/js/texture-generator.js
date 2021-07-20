@@ -38,7 +38,8 @@ class TextureGeneratorInstance {
 	 * @param {Object} externalDataObj
 	 */
 	constructor(type, sourceCanvas, initFunc, drawFunc, externalDataObj) {
-		this._type = type;
+		this._textureType = type;
+		this._paramParams = this._textureType.getParamsParams();
 		this._sourceCanvas = sourceCanvas;
 		this._canvas = document.createElement("canvas");
 
@@ -62,10 +63,32 @@ class TextureGeneratorInstance {
 
 		this.getParamValues = () =>
 			console.error("getParamValues has not been assigned yet! Use setParamValueGetter to assign it.");
+
+		/**
+		 * number of things that need this texture generator to be actively updating
+		 * @type {number}
+		 */
+		this._users = 0;
+	}
+
+	getName(){
+		return this._textureType.getName();
+	}
+	
+	getParamsParams(){
+		return this._textureType.getParamsParams();
+	}
+
+	use() {
+		this._users++;
+	}
+
+	unuse() {
+		this._users--;
 	}
 
 	getType() {
-		return this._type;
+		return this._textureType;
 	}
 
 	setParamValueGetter(getter) {
@@ -80,7 +103,9 @@ class TextureGeneratorInstance {
 	}
 
 	draw() {
-		this.drawFunc(this.selfData, this._canvas, this.ctx, this._sourceCanvas, this.getParamValues(), this.externalData);
+		if(this._users > 0){
+			this.drawFunc(this.selfData, this._canvas, this.ctx, this._sourceCanvas, this.getParamValues(), this.externalData);
+		}
 	}
 
 	getCanvas() {

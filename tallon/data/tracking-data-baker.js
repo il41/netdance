@@ -22,6 +22,9 @@ recordedVideo.loop = false;
 container.append(recordedVideo);
 
 recordedVideo.onended = () => {
+}
+
+recordedVideo.onpause = () => {
 	console.log("asd");
 	textOutput.innerText = text;
 }

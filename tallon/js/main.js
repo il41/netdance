@@ -28,12 +28,6 @@ function main() {
 	let activeVideoSource = null;
 
 	/**
-	 * a video element that contains the prerecorded dance video. null until later
-	 * @type {HTMLVideoElement}
-	 */
-	let recordedVideo = null;
-
-	/**
 	 * a video element that contains the webcam input. null until webcam is enabled by user
 	 * @type {HTMLVideoElement}
 	 */
@@ -61,6 +55,7 @@ function main() {
 	const bodyTracker = new VideoBodyTracker();
 
 	bodyTracker.storeData("Left Video", trackingDataBodyLeft);
+	bodyTracker.storeData("Right Video", trackingDataBodyRight);
 
 	// this function is called whenever either tracker is updated
 	const trackerCallback = (dat, pointDataOnly) => {
@@ -117,13 +112,14 @@ function main() {
 	 * @param {(video: HTMLVideoElement) => void} callback
 	 * @returns
 	 */
-	const requestRecordedVideo = (callback, path) => {
-		if (recordedVideo !== null) {
-			callback(recordedVideo);
+	const requestRecordedVideo = (callback, name, path) => {
+		const existing = videoSources.get(name);
+		if (existing !== null) {
+			callback(existing);
 			return;
 		}
 
-		recordedVideo = document.createElement("video");
+		const recordedVideo = document.createElement("video");
 		recordedVideo.src = path;
 		recordedVideo.crossOrigin = "anonymous";
 		recordedVideo.controls = true;
@@ -193,10 +189,10 @@ function main() {
 
 			switch (newSourceName) {
 				case "Left Video":
-					requestRecordedVideo(callback, "./Left-720p.mp4");
+					requestRecordedVideo(callback, newSourceName, "./Left-720p.mp4");
 					break;
 				case "Right Video":
-					requestRecordedVideo(callback, "./Right-720p.mp4");
+					requestRecordedVideo(callback, newSourceName, "./Right-720p.mp4");
 					break;
 				case "Webcam":
 					requestWebcamVideo(callback);
@@ -282,8 +278,6 @@ function main() {
 	filterStack.addFilter(vfGradient);
 
 	filterStack.start();
-
-	changeActiveSourceVideo("Left Video");
 }
 
 main();

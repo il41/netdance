@@ -15,7 +15,7 @@ recordedVideo.onloadeddata = () => {
 	bodyTracker.setSourceVideo(recordedVideo);
 	bodyTracker.startTracking();
 };
-recordedVideo.src = "./Left-720p.mp4";
+recordedVideo.src = "./Right-720p.mp4";
 recordedVideo.crossOrigin = "anonymous";
 recordedVideo.controls = true;
 recordedVideo.loop = false;

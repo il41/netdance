@@ -3,10 +3,10 @@
 granularity = 0.1
 
 currentTime = 0
-with open("./body-left-raw.csv", "r") as raw, open("./body-left.js", "w+") as output:
+with open("./body-right-raw.csv", "r") as raw, open("./body-right.js", "w+") as output:
   lastValid = raw.readline()
   done = False
-  output.write("const trackingDataBodyLeft = Float32Array.from([")
+  output.write("const trackingDataBodyRight = Float32Array.from([")
   while True:
     if done:
       break

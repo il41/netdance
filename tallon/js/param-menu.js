@@ -296,13 +296,18 @@ class ParamInput {
 	 * @param {Object} values
 	 * @param {Object} paramParams
 	 */
-	constructor(panel, values, paramParams) {
+	constructor(panel, values, paramParams, defVal) {
 		/**
 		 * @type {ParamPanel}
 		 */
 		this._panel = panel;
 		this._paramParams = paramParams;
 		this._components = {};
+
+		values[paramParams.name] = defVal;
+		if(paramParams.callback !== undefined){
+			paramParams.callback(defVal, undefined);
+		}
 	}
 
 	getRootElement() {
@@ -320,7 +325,7 @@ class RangeInput extends ParamInput {
 	 * @param {Object} paramParams
 	 */
 	constructor(panel, values, paramParams) {
-		super(panel, values, paramParams);
+		super(panel, values, paramParams, paramParams.default ?? 0);
 
 		this._components.root = elem("div", ["range"]);
 
@@ -377,13 +382,13 @@ class CheckboxInput extends ParamInput {
 	 * @param {Object} paramParams
 	 */
 	constructor(panel, values, paramParams) {
-		super(panel, values, paramParams);
+		super(panel, values, paramParams, paramParams.default ?? false);
 
 		this._components.root = elem("div", ["checkbox-outer"]);
 
 		this._components.checkboxInput = elem("input", ["checkbox"], {
 			type: "checkbox",
-			checked: paramParams.value,
+			checked: paramParams.default ?? false,
 		});
 
 		this._components.checkboxInput.addEventListener("change", (e) => {
@@ -417,7 +422,7 @@ class EnumInput extends ParamInput {
 	 * @param {Object} paramParams
 	 */
 	constructor(panel, values, paramParams) {
-		super(panel, values, paramParams);
+		super(panel, values, paramParams, paramParams.default);
 
 		this._components.root = elem("div", ["select-outer"]);
 
@@ -487,7 +492,7 @@ class EnumInput extends ParamInput {
 
 class ColorInput extends ParamInput {
 	constructor(panel, values, paramParams) {
-		super(panel, values, paramParams);
+		super(panel, values, paramParams, paramParams.default ?? "#000000");
 
 		this._components.root = elem("div", ["color-outer"]);
 
@@ -536,7 +541,7 @@ class ColorInput extends ParamInput {
 
 		this._iroPicker = new iro.ColorPicker(this._components.collapsibleInner, {
 			width: 100,
-			color: paramParams.default,
+			color: paramParams.default ?? "#000000",
 			display: "flex",
 			margin: 4,
 			padding: 2,

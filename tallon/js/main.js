@@ -27,6 +27,9 @@ function main() {
 	]);
 	let activeVideoSource = null;
 
+	// a hacky way for other code to keep a reference to the active video
+	const activeVideoSourceRef = [null];
+
 	/**
 	 * a video element that contains the webcam input. null until webcam is enabled by user
 	 * @type {HTMLVideoElement}
@@ -161,6 +164,7 @@ function main() {
 
 		const play = (newSource) => {
 			activeVideoSource = newSource;
+			activeVideoSourceRef[0] = newSource;
 			filterStack.setSourceVideo(newSource);
 			handTracker.setSourceVideo(newSource, newSourceName);
 			bodyTracker.setSourceVideo(newSource, newSourceName);
@@ -232,6 +236,7 @@ function main() {
 					changeActiveSourceVideo(val);
 				},
 			},
+			{ name: "Recording", type: "record", canvas: outputCanvas, videoRef: activeVideoSourceRef },
 		],
 	}).getValuesUnordered;
 
@@ -263,8 +268,6 @@ function main() {
 			},
 		],
 	}).getValuesUnordered;
-
-	generalMenu.addItem({ name: "Recording", paramsInfo: [] }).getValuesUnordered;
 
 	sidebar.append(generalMenu.getRoot());
 	sidebar.append(filterStack.getTextureMenuRoot());

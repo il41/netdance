@@ -48,7 +48,7 @@ class ParameterMenu {
 					addMenuList: elem("div", ["add-menu-list"]),
 					addMenuOptions: [],
 				});
-				
+
 				comps.addButton.classList.add("expandable");
 				comps.addButton.append(comps.addMenu);
 				comps.addMenu.append(comps.addMenuHeader);
@@ -188,7 +188,7 @@ class ParamPanel {
 			title: elem("div", ["panel-title"], { innerText: this._name }),
 			deleteIcon: null,
 			body: elem("div", ["panel-body"]),
-			expandIcon: elem("span", ["expand-icon", "material-icons"], {innerText: "tune"}),
+			expandIcon: elem("span", ["expand-icon", "material-icons"], { innerText: "tune" }),
 		};
 
 		const comps = this._components;
@@ -243,6 +243,9 @@ class ParamPanel {
 					break;
 				case "color":
 					input = new ColorInput(this, this._values, paramInfo);
+					break;
+				case "record":
+					input = new RecordButton(this, this._values, paramInfo);
 					break;
 			}
 			if (input !== null) {
@@ -305,7 +308,7 @@ class ParamInput {
 		this._components = {};
 
 		values[paramParams.name] = defVal;
-		if(paramParams.callback !== undefined){
+		if (paramParams.callback !== undefined) {
 			paramParams.callback(defVal, undefined);
 		}
 	}
@@ -364,7 +367,7 @@ class RangeInput extends ParamInput {
 			this._components.numberInput.value = val;
 			this._components.sliderInput.value = val;
 
-			if(paramParams.callback !== undefined){
+			if (paramParams.callback !== undefined) {
 				paramParams.callback(val, prevVal);
 			}
 		};
@@ -395,7 +398,7 @@ class CheckboxInput extends ParamInput {
 			const prevVal = values[paramParams.name];
 			const val = e.target.checked ? true : false;
 			values[paramParams.name] = val;
-			if(paramParams.callback !== undefined){
+			if (paramParams.callback !== undefined) {
 				paramParams.callback(val, prevVal);
 			}
 		});
@@ -431,7 +434,7 @@ class EnumInput extends ParamInput {
 		this._components.selectInput.addEventListener("change", (e) => {
 			const prevVal = values[paramParams.name];
 			values[paramParams.name] = e.target.value;
-			if(paramParams.callback !== undefined){
+			if (paramParams.callback !== undefined) {
 				paramParams.callback(e.target.value, prevVal);
 			}
 		});
@@ -559,7 +562,7 @@ class ColorInput extends ParamInput {
 			this._components.basicInput.value = val.slice(0, 7);
 			this._iroPicker.setColors([val]);
 
-			if(paramParams.callback !== undefined){
+			if (paramParams.callback !== undefined) {
 				paramParams.callback(val, prevVal);
 			}
 		};
@@ -569,6 +572,95 @@ class ColorInput extends ParamInput {
 		});
 		this._iroPicker.on(["color:change", "color:init"], (color) => {
 			changeEvent(color.hex8String);
+		});
+	}
+}
+
+class RecordButton extends ParamInput {
+	/**
+	 *
+	 * @param {ParamPanel} panel
+	 * @param {Object} values
+	 * @param {Object} paramParams
+	 */
+	constructor(panel, values, paramParams) {
+		super(panel, values, paramParams, "(record buttons don't have values!)");
+
+		const comps = this._components;
+		comps.root = elem("div", ["record-outer"]);
+
+		comps.recordButton = elem("div", ["button", "record-button"]);
+		comps.recordIcon = elem("span", ["record-icon", "material-icons"], { innerText: "radio_button_checked" });
+		comps.recordText = elem("span", ["record-text"], { innerText: "New recording" });
+		comps.recordButton.append(comps.recordIcon);
+		comps.recordButton.append(comps.recordText);
+		comps.root.append(comps.recordButton);
+
+		comps.downloadButton = elem("div", ["button", "download-button"]);
+		comps.downloadIcon = elem("span", ["download-icon", "material-icons"], { innerText: "file_download" });
+		comps.downloadText = elem("span", ["download-text"], { innerText: "Download recording" });
+		comps.downloadLink = elem("a", ["download-link"]);
+		comps.downloadLink.style.display = "none";
+		comps.downloadLink.download = "dance.webm";
+		comps.downloadButton.append(comps.downloadIcon);
+		comps.downloadButton.append(comps.downloadText);
+		comps.downloadButton.addEventListener("click", (e) => {
+			comps.downloadLink.click();
+		});
+		comps.root.append(comps.downloadButton);
+
+		comps.duration = elem("div", ["record-duration"], { innerText: "" });
+		comps.root.append(comps.duration);
+
+		let recording = false;
+		const mediaRecorder = new MediaRecorder(paramParams.canvas.captureStream(30));
+
+		let startTime = null;
+
+		let chunks = [];
+		mediaRecorder.ondataavailable = function (e) {
+			chunks.push(e.data);
+		};
+		mediaRecorder.onstop = function (e) {
+			const blob = new Blob(chunks, { type: "video/webm" });
+			chunks = [];
+			comps.downloadLink.href = URL.createObjectURL(blob);
+			comps.downloadButton.classList.add("enabled");
+		};
+
+		window.setInterval(() => {
+			const time = (Date.now() - startTime);
+			if (recording) {
+				comps.duration.innerText = "";
+
+				const seconds = ~~(time / 1000);
+				const minutes = ~~(seconds / 60);
+				const hours = ~~(minutes / 60);
+				if (hours > 0) {
+					comps.duration.innerText += `${hours}:`;
+				}
+				const minW = minutes % 60;
+				const secW = seconds % 60;
+				comps.duration.innerText += `${minW < 10 ? "0" : ""}${minW}:${secW < 10 ? "0" : ""}${secW}`;
+			}
+		}, 200);
+
+		comps.recordButton.addEventListener("click", (e) => {
+			recording = !recording;
+			if (recording) {
+				mediaRecorder.start();
+				comps.recordButton.classList.add("recording");
+				comps.recordText.innerText = "End recording";
+
+				comps.downloadButton.classList.remove("enabled");
+				window.URL.revokeObjectURL(comps.downloadLink.href);
+
+				startTime = Date.now();
+			} else {
+				mediaRecorder.stop();
+				comps.recordButton.classList.remove("recording");
+				comps.recordText.innerText = "New recording";
+			}
 		});
 	}
 }

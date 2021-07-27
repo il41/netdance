@@ -84,17 +84,18 @@ function main() {
 				pos = oldPos.lerp(pos,smoothness);
 			} else {
 				//spring
-				let forceVec = pos
-				let force = Vector2D.sub(pos, oldPos)
+				let vec = pos
+				let force = pos.sub(pos, oldPos)
+				force = force.multiplyScalar(strength)
 				vel = vel.multiply(drag);
 				vel = vel.add(force);
-				vec = vec.add(vel);
+				pos = pos.add(vel);
 			}
 			smoothMotionData[i] = [pos.x, pos.y, 0];
 			// smoothMotionData[i] = [pos.x, pos.y, motionData[i][2]];
 
 		}
-		console.log(smoothMotionData)
+		// console.log(smoothMotionData)
 		// motionData = smoothMotionData
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		/*

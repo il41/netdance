@@ -65,27 +65,37 @@ function main() {
 			lastMotionData[i] = motionData[i];
 			motionData[i] = pointDataOnly[i];
 		}
+		//variables to be changed with global GUI object
+		let smooth=true;
+		let drag = 0.55;
+		let strength = 0.1;
+		let smoothness = 0.5;
 
 		//vector smoothing algorithms (between smooth and spring)
-		for (var i = 0; i < motionData.length; i++) {
-			let smooth=true;
-			let drag = 0.55;
-			let strength = 0.1;
+		for (let i = 0; i < motionData.length; i++) {
+
+			//define vectors and velocity
 			let vel = new Vector2D(0,0);
-			let vec = new Vector2D(motionData[i][0],motionData[i][1]);
-			let oldVec = new Vector2D(lastMotionData[i][0],lastMotionData[i][1]);
+			let pos = new Vector2D(motionData[i][0],motionData[i][1]);
+			let oldPos = new Vector2D(lastMotionData[i][0],lastMotionData[i][1]);
+
 			if(smooth){
 				//lerp
-				vec = oldVec.lerp(vec,0.5);
+				pos = oldPos.lerp(pos,smoothness);
 			} else {
 				//spring
+				let forceVec = pos
+				let force = Vector2D.sub(pos, oldPos)
 				vel = vel.multiply(drag);
 				vel = vel.add(force);
 				vec = vec.add(vel);
 			}
-			smoothMotionData[i][0]=vec.x;
-			smoothMotionData[i][1]=vec.y;
+			smoothMotionData[i] = [pos.x, pos.y, 0];
+			// smoothMotionData[i] = [pos.x, pos.y, motionData[i][2]];
+
 		}
+		console.log(smoothMotionData)
+		// motionData = smoothMotionData
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		/*
 			If you want to do math on the tracking data, this would be the place to do so.
@@ -203,7 +213,7 @@ function main() {
 	// INFORMATION THAT YOU WANT TO PASS INTO TEXTURES
 	filterStack.registerExternalData("lastMotionData", lastMotionData);
 	filterStack.registerExternalData("motionData", motionData);
-	filterStack.registerExternalData("smoothMotionData", smoothMotionData);
+	// filterStack.registerExternalData("smoothMotionData", smoothMotionData);
 	filterStack.registerExternalData("lastOutputFrame", filterStack.getCanvas());
 
 	filterStack.start();

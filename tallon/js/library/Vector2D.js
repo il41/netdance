@@ -1,434 +1,309 @@
-var Vector2D = (function(){
-    'use strict';
+class Vector2D {
+	constructor(x, y) {
+		this.x = x || 0;
+		this.y = y || 0;
+	}
+
+	set(x, y) {
+		this.x = x;
+		this.y = y;
+
+		return this;
+	}
+
+	setX(x) {
+		this.x = x;
+
+		return this;
+	}
+
+	setY(y) {
+		this.y = y;
+
+		return this;
+	}
+
+	setComponent(index, value) {
+		switch (index) {
+			case 0:
+				this.x = value;
+				break;
+			case 1:
+				this.y = value;
+				break;
+			default:
+				throw new Error("Vector2D.setComponent: index is out of range: " + index);
+		}
+	}
+
+	getComponent(index) {
+		switch (index) {
+			case 0:
+				return this.x;
+			case 1:
+				return this.y;
+			default:
+				throw new Error("Vector2D.getComponent: index is out of range: " + index);
+		}
+	}
+
+	copy(v) {
+		this.x = v.x;
+		this.y = v.y;
+
+		return this;
+	}
+
+	add(v, w) {
+		if (w !== undefined) {
+			return this.addVectors(v, w);
+		}
+
+		this.x += v.x;
+		this.y += v.y;
+
+		return this;
+	}
+
+	addScalar(s) {
+		this.x += s;
+		this.y += s;
+
+		return this;
+	}
+
+	addVectors(a, b) {
+		this.x = a.x + b.x;
+		this.y = a.y + b.y;
+
+		return this;
+	}
+
+	sub(v, w) {
+		if (w !== undefined) {
+			return this.subVectors(v, w);
+		}
+
+		this.x -= v.x;
+		this.y -= v.y;
+
+		return this;
+	}
+
+	subScalar(s) {
+		this.x -= s;
+		this.y -= s;
+
+		return this;
+	}
+
+	subVectors(a, b) {
+		this.x = a.x - b.x;
+		this.y = a.y - b.y;
 
-    function Vector2D( x, y ) {
+		return this;
+	}
 
-        this.x = x || 0;
-        this.y = y || 0;
+	multiply(v) {
+		this.x *= v.x;
+		this.y *= v.y;
 
-    }
+		return this;
+	}
 
-    Vector2D.prototype = {
+	multiplyScalar(s) {
+		this.x *= s;
+		this.y *= s;
 
-        constructor: Vector2D,
+		return this;
+	}
 
-        set: function ( x, y ) {
+	divide(v) {
+		this.x /= v.x;
+		this.y /= v.y;
 
-            this.x = x;
-            this.y = y;
+		return this;
+	}
 
-            return this;
+	divideScalar(scalar) {
+		if (scalar !== 0) {
+			var invScalar = 1 / scalar;
 
-        },
+			this.x *= invScalar;
+			this.y *= invScalar;
+		} else {
+			this.x = 0;
+			this.y = 0;
+		}
 
-        setX: function ( x ) {
+		return this;
+	}
 
-            this.x = x;
+	min(v) {
+		if (this.x > v.x) {
+			this.x = v.x;
+		}
 
-            return this;
+		if (this.y > v.y) {
+			this.y = v.y;
+		}
 
-        },
+		return this;
+	}
 
-        setY: function ( y ) {
+	max(v) {
+		if (this.x < v.x) {
+			this.x = v.x;
+		}
 
-            this.y = y;
+		if (this.y < v.y) {
+			this.y = v.y;
+		}
 
-            return this;
+		return this;
+	}
 
-        },
+	clamp(min, max) {
+		// Thi assumes min < max, if this assumption isn't true it will not operate correctly
 
-        setComponent: function ( index, value ) {
+		if (this.x < min.x) {
+			this.x = min.x;
+		} else if (this.x > max.x) {
+			this.x = max.x;
+		}
 
-            switch ( index ) {
+		if (this.y < min.y) {
+			this.y = min.y;
+		} else if (this.y > max.y) {
+			this.y = max.y;
+		}
 
-                case 0: this.x = value; break;
-                case 1: this.y = value; break;
-                default: throw new Error( 'Vector2D.setComponent: index is out of range: ' + index );
+		return this;
+	}
 
-            }
+	clampScalar(min, max) {
+		return this.clamp(new Vector2D(min, min), new Vector2D(max, max));
+	}
 
-        },
+	floor() {
+		this.x = Math.floor(this.x);
+		this.y = Math.floor(this.y);
 
-        getComponent: function ( index ) {
+		return this;
+	}
 
-            switch ( index ) {
+	ceil() {
+		this.x = Math.ceil(this.x);
+		this.y = Math.ceil(this.y);
 
-                case 0: return this.x;
-                case 1: return this.y;
-                default: throw new Error( 'Vector2D.getComponent: index is out of range: ' + index );
+		return this;
+	}
 
-            }
+	round() {
+		this.x = Math.round(this.x);
+		this.y = Math.round(this.y);
 
-        },
+		return this;
+	}
 
-        copy: function ( v ) {
+	roundToZero() {
+		this.x = this.x < 0 ? Math.ceil(this.x) : Math.floor(this.x);
+		this.y = this.y < 0 ? Math.ceil(this.y) : Math.floor(this.y);
 
-            this.x = v.x;
-            this.y = v.y;
+		return this;
+	}
 
-            return this;
+	negate() {
+		this.x = -this.x;
+		this.y = -this.y;
 
-        },
+		return this;
+	}
 
-        add: function ( v, w ) {
+	dot(v) {
+		return this.x * v.x + this.y * v.y;
+	}
 
-            if ( w !== undefined ) {
-                return this.addVectors( v, w );
+	lengthSq() {
+		return this.x * this.x + this.y * this.y;
+	}
 
-            }
+	length() {
+		return Math.sqrt(this.x * this.x + this.y * this.y);
+	}
 
-            this.x += v.x;
-            this.y += v.y;
+	normalize() {
+		return this.divideScalar(this.length());
+	}
 
-            return this;
+	distanceTo(v) {
+		return Math.sqrt(this.distanceToSquared(v));
+	}
 
-        },
+	distanceToSquared(v) {
+		var dx = this.x - v.x,
+			dy = this.y - v.y;
+		return dx * dx + dy * dy;
+	}
 
-        addScalar: function ( s ) {
+	setLength(l) {
+		var oldLength = this.length();
 
-            this.x += s;
-            this.y += s;
+		if (oldLength !== 0 && l !== oldLength) {
+			this.multiplyScalar(l / oldLength);
+		}
 
-            return this;
+		return this;
+	}
 
-        },
+	lerp(v, alpha) {
+		this.x += (v.x - this.x) * alpha;
+		this.y += (v.y - this.y) * alpha;
 
-        addVectors: function ( a, b ) {
+		return this;
+	}
 
-            this.x = a.x + b.x;
-            this.y = a.y + b.y;
+	lerpVectors(v1, v2, alpha) {
+		this.subVectors(v2, v1).multiplyScalar(alpha).add(v1);
 
-            return this;
+		return this;
+	}
 
-        },
+	equals(v) {
+		return v.x === this.x && v.y === this.y;
+	}
 
-        sub: function ( v, w ) {
+	fromArray(array, offset) {
+		if (offset === undefined) offset = 0;
 
-            if ( w !== undefined ) {
+		this.x = array[offset];
+		this.y = array[offset + 1];
 
-                return this.subVectors( v, w );
+		return this;
+	}
 
-            }
+	toArray(array, offset) {
+		if (array === undefined) array = [];
+		if (offset === undefined) offset = 0;
 
-            this.x -= v.x;
-            this.y -= v.y;
+		array[offset] = this.x;
+		array[offset + 1] = this.y;
 
-            return this;
+		return array;
+	}
 
-        },
+	fromAttribute(attribute, index, offset) {
+		if (offset === undefined) offset = 0;
 
-        subScalar: function ( s ) {
+		index = index * attribute.itemSize + offset;
 
-            this.x -= s;
-            this.y -= s;
+		this.x = attribute.array[index];
+		this.y = attribute.array[index + 1];
 
-            return this;
+		return this;
+	}
 
-        },
-
-        subVectors: function ( a, b ) {
-
-            this.x = a.x - b.x;
-            this.y = a.y - b.y;
-
-            return this;
-
-        },
-
-        multiply: function ( v ) {
-
-            this.x *= v.x;
-            this.y *= v.y;
-
-            return this;
-
-        },
-
-        multiplyScalar: function ( s ) {
-
-            this.x *= s;
-            this.y *= s;
-
-            return this;
-
-        },
-
-        divide: function ( v ) {
-
-            this.x /= v.x;
-            this.y /= v.y;
-
-            return this;
-
-        },
-
-        divideScalar: function ( scalar ) {
-
-            if ( scalar !== 0 ) {
-
-                var invScalar = 1 / scalar;
-
-                this.x *= invScalar;
-                this.y *= invScalar;
-
-            } else {
-
-                this.x = 0;
-                this.y = 0;
-
-            }
-
-            return this;
-
-        },
-
-        min: function ( v ) {
-
-            if ( this.x > v.x ) {
-
-                this.x = v.x;
-
-            }
-
-            if ( this.y > v.y ) {
-
-                this.y = v.y;
-
-            }
-
-            return this;
-
-        },
-
-        max: function ( v ) {
-
-            if ( this.x < v.x ) {
-
-                this.x = v.x;
-
-            }
-
-            if ( this.y < v.y ) {
-
-                this.y = v.y;
-
-            }
-
-            return this;
-
-        },
-
-        clamp: function ( min, max ) {
-
-            // This function assumes min < max, if this assumption isn't true it will not operate correctly
-
-            if ( this.x < min.x ) {
-
-                this.x = min.x;
-
-            } else if ( this.x > max.x ) {
-
-                this.x = max.x;
-
-            }
-
-            if ( this.y < min.y ) {
-
-                this.y = min.y;
-
-            } else if ( this.y > max.y ) {
-
-                this.y = max.y;
-
-            }
-
-            return this;
-        },
-
-        clampScalar: ( function () {
-
-            var min, max;
-
-            return function ( minVal, maxVal ) {
-
-                if ( min === undefined ) {
-
-                    min = new Vector2D();
-                    max = new Vector2D();
-
-                }
-
-                min.set( minVal, minVal );
-                max.set( maxVal, maxVal );
-
-                return this.clamp( min, max );
-
-            };
-
-        } )(),
-
-
-        floor: function () {
-
-            this.x = Math.floor( this.x );
-            this.y = Math.floor( this.y );
-
-            return this;
-
-        },
-
-        ceil: function () {
-
-            this.x = Math.ceil( this.x );
-            this.y = Math.ceil( this.y );
-
-            return this;
-
-        },
-
-        round: function () {
-
-            this.x = Math.round( this.x );
-            this.y = Math.round( this.y );
-
-            return this;
-
-        },
-
-        roundToZero: function () {
-
-            this.x = ( this.x < 0 ) ? Math.ceil( this.x ) : Math.floor( this.x );
-            this.y = ( this.y < 0 ) ? Math.ceil( this.y ) : Math.floor( this.y );
-
-            return this;
-
-        },
-
-        negate: function () {
-
-            this.x = - this.x;
-            this.y = - this.y;
-
-            return this;
-
-        },
-
-        dot: function ( v ) {
-
-            return this.x * v.x + this.y * v.y;
-
-        },
-
-        lengthSq: function () {
-
-            return this.x * this.x + this.y * this.y;
-
-        },
-
-        length: function () {
-
-            return Math.sqrt( this.x * this.x + this.y * this.y );
-
-        },
-
-        normalize: function () {
-
-            return this.divideScalar( this.length() );
-
-        },
-
-        distanceTo: function ( v ) {
-
-            return Math.sqrt( this.distanceToSquared( v ) );
-
-        },
-
-        distanceToSquared: function ( v ) {
-
-            var dx = this.x - v.x, dy = this.y - v.y;
-            return dx * dx + dy * dy;
-
-        },
-
-        setLength: function ( l ) {
-
-            var oldLength = this.length();
-
-            if ( oldLength !== 0 && l !== oldLength ) {
-
-                this.multiplyScalar( l / oldLength );
-            }
-
-            return this;
-
-        },
-
-        lerp: function ( v, alpha ) {
-
-            this.x += ( v.x - this.x ) * alpha;
-            this.y += ( v.y - this.y ) * alpha;
-
-            return this;
-
-        },
-
-        lerpVectors: function ( v1, v2, alpha ) {
-
-            this.subVectors( v2, v1 ).multiplyScalar( alpha ).add( v1 );
-
-            return this;
-
-        },
-
-        equals: function ( v ) {
-
-            return ( ( v.x === this.x ) && ( v.y === this.y ) );
-
-        },
-
-        fromArray: function ( array, offset ) {
-
-            if ( offset === undefined ) offset = 0;
-
-            this.x = array[ offset ];
-            this.y = array[ offset + 1 ];
-
-            return this;
-
-        },
-
-        toArray: function ( array, offset ) {
-
-            if ( array === undefined ) array = [];
-            if ( offset === undefined ) offset = 0;
-
-            array[ offset ] = this.x;
-            array[ offset + 1 ] = this.y;
-
-            return array;
-
-        },
-
-        fromAttribute: function ( attribute, index, offset ) {
-
-            if ( offset === undefined ) offset = 0;
-
-            index = index * attribute.itemSize + offset;
-
-            this.x = attribute.array[ index ];
-            this.y = attribute.array[ index + 1 ];
-
-            return this;
-
-        },
-
-        clone: function () {
-
-            return new Vector2D( this.x, this.y );
-
-        }
-    };
-
-    return Vector2D;
-
-}());
+	clone() {
+		return new Vector2D(this.x, this.y);
+	}
+}

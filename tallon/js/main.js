@@ -50,10 +50,32 @@ function main() {
 
 	// variables used for routing hand tracking data to the VideoFilterStack
 	// hand tracking has 42 markers, and body tracking has 33; here we just use the larger
-	let lastRawMotionData = new Array(42).fill([-1, -1, -1]);
-	let rawMotionData = new Array(42).fill([-1, -1, -1]);
-	let lastSmoothMotionData = new Array(42).fill([-1, -1, -1]);
-	let smoothMotionData = new Array(42).fill([-1, -1, -1]);
+	const markerCount = 42;
+
+	/**
+	 * @type {[number, number, number]}
+	 */
+	const rawMotionData = new Array(markerCount);
+	/**
+	 * @type {[number, number, number]}
+	 */
+	const lastSmoothMotionData = new Array(markerCount);
+	/**
+	 * @type {[number, number, number]}
+	 */
+	const smoothMotionData = new Array(markerCount);
+
+	/**
+	 * @type {[Vector2D]}
+	 */
+	const motionDataVelocity = new Array(markerCount);
+
+	for (let i = 0; i < markerCount; i++) {
+		rawMotionData[i] = [-1, -1, -1];
+		lastSmoothMotionData[i] = [-1, -1, -1];
+		smoothMotionData[i] = [-1, -1, -1];
+		motionDataVelocity[i] = new Vector2D(0, 0);
+	}
 
 	// the actual tracking happens here
 	const handTracker = new VideoHandTracker();
@@ -65,67 +87,51 @@ function main() {
 	// this function is called whenever either tracker is updated
 	const trackerCallback = (dat, pointDataOnly) => {
 		for (let i = 0; i < pointDataOnly.length; i++) {
-			lastRawMotionData[i] = rawMotionData[i];
 			rawMotionData[i] = pointDataOnly[i];
 		}
-		//variables to be changed with global GUI object
-		let smooth=true;
-		let drag = 0.55;
-		let strength = 0.1;
-		let smoothness = 0.5;
-
-		//vector smoothing algorithms (between smooth and spring)
-		for (let i = 0; i < rawMotionData.length; i++) {
-
-			//define vectors and velocity
-			let vel = new Vector2D(0,0);
-			let pos = new Vector2D(rawMotionData[i][0],rawMotionData[i][1]);
-			let oldPos = new Vector2D(lastRawMotionData[i][0],lastRawMotionData[i][1]);
-
-			if(smooth){
-				//lerp
-				pos = oldPos.lerp(pos,smoothness);
-			} else {
-				//spring
-				let vec = pos
-				let force = pos.sub(pos, oldPos)
-				force = force.multiplyScalar(strength)
-				vel = vel.multiply(drag);
-				vel = vel.add(force);
-				pos = pos.add(vel);
-			}
-			smoothMotionData[i] = [pos.x, pos.y, 0];
-			// smoothMotionData[i] = [pos.x, pos.y, motionData[i][2]];
-
-		}
-		// console.log(smoothMotionData)
-		// motionData = smoothMotionData
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		/*
-			If you want to do math on the tracking data, this would be the place to do so.
-			I suggest putting all the actual math in a different file/function for readability, though.
-
-			It's important that any variables you want to pass to the shaders should be declared outside of this callback,
-			and later added to the filterStack using filterStack.registerExternalData
-		*/
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	};
 
+	let smoothingMode = "Springy";
+	let lerpStrength = 0.2;
+	let drag = 0.55;
+	let strength = 0.1;
+
 	const smoothingFunc = () => {
-		for (let i = 0; i < rawMotionData.length; i++) {
+		console.log(smoothingMode);
+		for (let i = 0; i < markerCount; i++) {
 			lastSmoothMotionData[i] = smoothMotionData[i];
-			if(rawMotionData[i][0] === -1 || smoothingMode === "None"){
+			// don't smooth if the coord is invalid or smoothing is disabled
+			if (rawMotionData[i][0] === -1 || smoothingMode === "None") {
 				smoothMotionData[i] = rawMotionData[i];
-			}else{
-				switch(smoothingMode){
+			} else {
+				// if last point is invalid, just replace it with current point
+				const lastSmoothMarker = lastSmoothMotionData[i][0] !== -1 ? lastSmoothMotionData[i] : rawMotionData[i];
+				const lastSmooth2d = new Vector2D(lastSmoothMarker[0], lastSmoothMarker[1]);
+				const raw2d = new Vector2D(rawMotionData[i][0], rawMotionData[i][1]);
+
+				// actual smoothing
+				switch (smoothingMode) {
 					case "Lerp":
-						smoothMotionData[i] = rawMotionData[i];
+						{
+							const newPos = lastSmooth2d.lerp(raw2d, lerpStrength);
+							smoothMotionData[i] = [newPos.x, newPos.y, rawMotionData[2]];
+						}
+						break;
+					case "Springy":
+						{
+							motionDataVelocity[i] = motionDataVelocity[i]
+								.multiplyScalar(drag)
+								.add(raw2d.sub(lastSmooth2d).multiplyScalar(strength));
+
+							const newPos = lastSmooth2d.add(motionDataVelocity[i]);
+							smoothMotionData[i] = [newPos.x, newPos.y, rawMotionData[2]];
+						}
 						break;
 				}
 			}
 		}
 		requestAnimationFrame(smoothingFunc);
-	}
+	};
 
 	requestAnimationFrame(smoothingFunc);
 
@@ -304,7 +310,15 @@ function main() {
 					updateTrackingMode();
 				},
 			},
-			{ name: "Smoothing", type: "enum", options: ["None", "Basic", "Springy"], default: "None" },
+			{
+				name: "Smoothing",
+				type: "enum",
+				options: ["None", "Lerp", "Springy"],
+				default: smoothingMode,
+				callback: (val) => {
+					smoothingMode = val;
+				},
+			},
 			{
 				name: "Time Delay",
 				type: "number",

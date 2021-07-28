@@ -254,8 +254,8 @@ function main() {
 	});
 
 	let smoothingMode = "Springy";
-	let smoothingStrength = 0.2;
-	let springDrag = 0.55;
+	let pullStrength = 0.2;
+	let springStrength = 0.75;
 
 	generalMenu.addItem({
 		name: "Motion Tracking",
@@ -273,32 +273,32 @@ function main() {
 			{
 				name: "Smoothing Mode",
 				type: "enum",
-				options: ["None", "Lerp", "Springy"],
+				options: ["None", "Basic", "Springy"],
 				default: smoothingMode,
 				callback: (val) => {
 					smoothingMode = val;
 				},
 			},
 			{
-				name: "Smoothing Strength",
+				name: "Pull Strength",
 				type: "number",
 				min: 0.01,
 				max: 1,
 				step: 0.01,
-				default: smoothingStrength,
+				default: pullStrength,
 				callback: (val) => {
-					smoothingStrength = val;
+					pullStrength = val;
 				},
 			},
 			{
-				name: "Spring Drag",
+				name: "Spring Strength",
 				type: "number",
 				min: 0,
 				max: 1,
 				step: 0.01,
-				default: springDrag,
+				default: springStrength,
 				callback: (val) => {
-					springDrag = val;
+					springStrength = val;
 				},
 			},
 			{
@@ -335,17 +335,17 @@ function main() {
 
 				// actual smoothing
 				switch (smoothingMode) {
-					case "Lerp":
+					case "Basic":
 						{
-							const newPos = lastSmooth2d.lerp(raw2d, smoothingStrength);
+							const newPos = lastSmooth2d.lerp(raw2d, pullStrength);
 							smoothMotionData[i] = [newPos.x, newPos.y, rawMotionData[2]];
 						}
 						break;
 					case "Springy":
 						{
 							motionDataVelocity[i] = motionDataVelocity[i]
-								.multiplyScalar(springDrag)
-								.add(raw2d.sub(lastSmooth2d).multiplyScalar(smoothingStrength));
+								.multiplyScalar(springStrength)
+								.add(raw2d.sub(lastSmooth2d).multiplyScalar(pullStrength));
 
 							const newPos = lastSmooth2d.add(motionDataVelocity[i]);
 							smoothMotionData[i] = [newPos.x, newPos.y, rawMotionData[2]];

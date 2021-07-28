@@ -91,50 +91,6 @@ function main() {
 		}
 	};
 
-	let smoothingMode = "Springy";
-	let lerpStrength = 0.2;
-	let drag = 0.55;
-	let strength = 0.1;
-
-	const smoothingFunc = () => {
-		console.log(smoothingMode);
-		for (let i = 0; i < markerCount; i++) {
-			lastSmoothMotionData[i] = smoothMotionData[i];
-			// don't smooth if the coord is invalid or smoothing is disabled
-			if (rawMotionData[i][0] === -1 || smoothingMode === "None") {
-				smoothMotionData[i] = rawMotionData[i];
-			} else {
-				// if last point is invalid, just replace it with current point
-				const lastSmoothMarker = lastSmoothMotionData[i][0] !== -1 ? lastSmoothMotionData[i] : rawMotionData[i];
-				const lastSmooth2d = new Vector2D(lastSmoothMarker[0], lastSmoothMarker[1]);
-				const raw2d = new Vector2D(rawMotionData[i][0], rawMotionData[i][1]);
-
-				// actual smoothing
-				switch (smoothingMode) {
-					case "Lerp":
-						{
-							const newPos = lastSmooth2d.lerp(raw2d, lerpStrength);
-							smoothMotionData[i] = [newPos.x, newPos.y, rawMotionData[2]];
-						}
-						break;
-					case "Springy":
-						{
-							motionDataVelocity[i] = motionDataVelocity[i]
-								.multiplyScalar(drag)
-								.add(raw2d.sub(lastSmooth2d).multiplyScalar(strength));
-
-							const newPos = lastSmooth2d.add(motionDataVelocity[i]);
-							smoothMotionData[i] = [newPos.x, newPos.y, rawMotionData[2]];
-						}
-						break;
-				}
-			}
-		}
-		requestAnimationFrame(smoothingFunc);
-	};
-
-	requestAnimationFrame(smoothingFunc);
-
 	handTracker.setCallback((dat, pointDataOnly) => {
 		if (loadingRequests.delete("hand tracking")) {
 			updateLoadingOverlay();
@@ -295,7 +251,11 @@ function main() {
 			},
 			{ name: "Recording", type: "record", canvas: outputCanvas, videoRef: activeVideoSourceRef },
 		],
-	}).getValuesUnordered;
+	});
+
+	let smoothingMode = "Springy";
+	let smoothingStrength = 0.2;
+	let springDrag = 0.55;
 
 	generalMenu.addItem({
 		name: "Motion Tracking",
@@ -311,12 +271,34 @@ function main() {
 				},
 			},
 			{
-				name: "Smoothing",
+				name: "Smoothing Mode",
 				type: "enum",
 				options: ["None", "Lerp", "Springy"],
 				default: smoothingMode,
 				callback: (val) => {
 					smoothingMode = val;
+				},
+			},
+			{
+				name: "Smoothing Strength",
+				type: "number",
+				min: 0.01,
+				max: 1,
+				step: 0.01,
+				default: smoothingStrength,
+				callback: (val) => {
+					smoothingStrength = val;
+				},
+			},
+			{
+				name: "Spring Drag",
+				type: "number",
+				min: 0,
+				max: 1,
+				step: 0.01,
+				default: springDrag,
+				callback: (val) => {
+					springDrag = val;
 				},
 			},
 			{
@@ -332,11 +314,50 @@ function main() {
 				},
 			},
 		],
-	}).getValuesUnordered;
+	});
 
 	sidebar.append(generalMenu.getRoot());
 	sidebar.append(filterStack.getTextureMenuRoot());
 	sidebar.append(filterStack.getFilterMenuRoot());
+
+	// motion data smoothing stuff
+	const smoothingFunc = () => {
+		for (let i = 0; i < markerCount; i++) {
+			lastSmoothMotionData[i] = smoothMotionData[i];
+			// don't smooth if the coord is invalid or smoothing is disabled
+			if (rawMotionData[i][0] === -1 || smoothingMode === "None") {
+				smoothMotionData[i] = rawMotionData[i];
+			} else {
+				// if last point is invalid, just replace it with current point
+				const lastSmoothMarker = lastSmoothMotionData[i][0] !== -1 ? lastSmoothMotionData[i] : rawMotionData[i];
+				const lastSmooth2d = new Vector2D(lastSmoothMarker[0], lastSmoothMarker[1]);
+				const raw2d = new Vector2D(rawMotionData[i][0], rawMotionData[i][1]);
+
+				// actual smoothing
+				switch (smoothingMode) {
+					case "Lerp":
+						{
+							const newPos = lastSmooth2d.lerp(raw2d, smoothingStrength);
+							smoothMotionData[i] = [newPos.x, newPos.y, rawMotionData[2]];
+						}
+						break;
+					case "Springy":
+						{
+							motionDataVelocity[i] = motionDataVelocity[i]
+								.multiplyScalar(springDrag)
+								.add(raw2d.sub(lastSmooth2d).multiplyScalar(smoothingStrength));
+
+							const newPos = lastSmooth2d.add(motionDataVelocity[i]);
+							smoothMotionData[i] = [newPos.x, newPos.y, rawMotionData[2]];
+						}
+						break;
+				}
+			}
+		}
+		requestAnimationFrame(smoothingFunc);
+	};
+
+	requestAnimationFrame(smoothingFunc);
 
 	// INFORMATION THAT YOU WANT TO PASS INTO TEXTURES
 	filterStack.registerExternalData("lastMotionData", lastSmoothMotionData);

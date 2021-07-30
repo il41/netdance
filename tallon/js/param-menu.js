@@ -614,14 +614,14 @@ class RecordButton extends ParamInput {
 		const comps = this._components;
 		comps.root = elem("div", ["record-outer"]);
 
-		comps.recordButton = elem("div", ["button", "record-button"]);
+		comps.recordButton = elem("button", ["button", "record-button"]);
 		comps.recordIcon = elem("span", ["record-icon", "material-icons"], { innerText: "radio_button_checked" });
 		comps.recordText = elem("span", ["record-text"], { innerText: "New recording" });
 		comps.recordButton.append(comps.recordIcon);
 		comps.recordButton.append(comps.recordText);
 		comps.root.append(comps.recordButton);
 
-		comps.downloadButton = elem("div", ["button", "download-button"]);
+		comps.downloadButton = elem("button", ["button", "download-button"]);
 		comps.downloadIcon = elem("span", ["download-icon", "material-icons"], { innerText: "file_download" });
 		comps.downloadText = elem("span", ["download-text"], { innerText: "Download recording" });
 		comps.downloadLink = elem("a", ["download-link"]);

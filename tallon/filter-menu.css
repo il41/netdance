@@ -117,11 +117,11 @@
 	cursor: pointer;
 }
 
-.add-menu-option-button:hover, .add-menu-option-button:focus {
+.add-menu-option-button:hover,
+.add-menu-option-button:focus {
 	transition: 0.2s all;
 	background-color: #ccc;
 	padding-left: 8px;
-
 }
 
 .add-menu-option:not(:last-of-type) {
@@ -507,6 +507,12 @@
 }
 
 .param-body .record-outer .button {
+	font-family: inherit;
+	padding: 0px;
+	margin: 0px;
+	appearance: none;
+	outline: none;
+
 	display: flex;
 	flex-direction: row;
 	justify-content: flex-start;
@@ -534,7 +540,8 @@
 	--hover-color: #e03333;
 }
 
-.param-body .record-outer .button:hover {
+.param-body .record-outer .button:hover,
+.param-body .record-outer .button:focus {
 	--color: var(--hover-color);
 	box-shadow: 0px 0px 4px var(--color);
 }

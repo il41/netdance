@@ -137,8 +137,8 @@ class VideoFilterStack {
 	 * @param {String} def default shape name
 	 * @returns param params for a shape input
 	 */
-	shapeParameterCreator(def){
-		return {name: "Shape", type:"enum", source: "Textures", default: def, callback: (val, prevVal) => {
+	shapeParameterCreator(def, name="Shape", hidden=false){
+		return {name: name, type:"enum", hidden: hidden, source: "Textures", default: def, callback: (val, prevVal) => {
 			this._textures.get(prevVal)?.unuse();
 			this._textures.get(val)?.use();
 		}};
@@ -413,7 +413,7 @@ class VideoFilterInstance {
 	 */
 	process(pipe, textures, otherData) {
 		if (!this._dimensionsSet) {
-			console.error("Cannot use kernel before dimensions have been set!");
+			console.error("Cannot use kernel before dimensio+ns have been set!");
 		}
 		const rawParamValues = this.getParamValues();
 

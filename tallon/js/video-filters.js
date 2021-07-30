@@ -18,6 +18,10 @@ function lerp3_3(a3, b3, x3) {
 	return [lerp(a3[0], b3[0], x3[0]), lerp(a3[1], b3[1], x3[1]), lerp(a3[2], b3[2], x3[2]), 1];
 }
 
+function add3(a3, x) {
+	return [a3[0] + x, a3[1] + x, a3[2] + x];
+}
+
 function mult3(a3, x) {
 	return [a3[0] * x, a3[1] * x, a3[2] * x];
 }
@@ -31,6 +35,11 @@ function rotate(x, y, rot) {
 // clamping (can't call it "clamp" because gpu.js uses that already)
 function iclamp(a, min, max) {
 	return Math.max(min, Math.min(a, max));
+}
+
+// clamping (can't call it "clamp" because gpu.js uses that already)
+function min3(a3, min) {
+	return [Math.min(a3[0], min), Math.min(a3[1], min), Math.min(a3[2], min)];
 }
 
 // force gpu.js to recognize that an array with 4 items is indeed an Array(4)
@@ -199,9 +208,9 @@ const vfWobble = new VideoFilterType(
 const vfMotionBlur = new VideoFilterType(
 	"Motion Blur",
 	(owner) => [
-		owner.shapeParameterCreator("Last Output Frame"),
-		{ name: "Last Frame", hidden: true, type: "enum", source: "Textures", default: "Last Output Frame" },
-		{ name: "Intensity", type: "number", min: 0, max: 0.99, default: 0.5 },
+		owner.shapeParameterCreator("Last Output Frame", "Last Frame", true),
+		owner.shapeParameterCreator("Everything"),
+		{ name: "Intensity", type: "number", min: 0, max: 0.99, default: 0.8 },
 	],
 	() => {
 		return gpu
@@ -221,8 +230,8 @@ const vfMotionBlur = new VideoFilterType(
 const vfZoomBlur = new VideoFilterType(
 	"Zoom Blur",
 	(owner) => [
+		owner.shapeParameterCreator("Last Output Frame", "Last Frame", true),
 		owner.shapeParameterCreator("Last Output Frame"),
-		{ name: "Last Frame", hidden: true, type: "enum", source: "Textures", default: "Last Output Frame" },
 		{ name: "Intensity", type: "number", min: 0, max: 1, default: 0.75 },
 		{ name: "Scale", type: "number", min: 0.8, max: 1.2, default: 0.95 },
 	],

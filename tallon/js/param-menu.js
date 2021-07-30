@@ -137,6 +137,7 @@ class ParameterMenu {
 
 	removeIndex(index) {
 		const itemAndPanel = this._itemPanelPairs[index];
+		itemAndPanel.panel.onRemoved();
 		this._itemPanelPairs.splice(index, 1);
 		itemAndPanel.panel.getRootElement().remove();
 		return itemAndPanel;
@@ -160,6 +161,7 @@ class ParamPanel {
 		 */
 		this._menu = menu;
 		this._item = item;
+		this._paramsInfo = paramsInfo;
 		this._name = name;
 		this._id = panelIdCounter++;
 		/**
@@ -228,6 +230,9 @@ class ParamPanel {
 			this._orderedValueNames.push(paramInfo.name);
 
 			if (paramInfo.hidden) {
+				if (paramInfo.callback !== undefined) {
+					paramInfo.callback(paramInfo.default, undefined);
+				}
 				continue;
 			}
 			let input = null;
@@ -257,6 +262,14 @@ class ParamPanel {
 				comps.body.append(paramBody);
 
 				this._inputs.set(paramInfo.name, { label: paramLabel, container: paramBody, input: input });
+			}
+		}
+	}
+
+	onRemoved() {
+		for (const paramInfo of this._paramsInfo) {
+			if (paramInfo.callback !== undefined) {
+				paramInfo.callback(undefined, this._values[paramInfo.name]);
 			}
 		}
 	}

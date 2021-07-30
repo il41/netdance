@@ -80,10 +80,12 @@ class TextureGeneratorInstance {
 	}
 
 	use() {
+		// console.log(this._textureType.getName(), "+", this._users, "->", this._users+1);
 		this._users++;
 	}
 
 	unuse() {
+		// console.log(this._textureType.getName(), "-", this._users, "->", this._users-1);
 		this._users--;
 	}
 

@@ -364,10 +364,10 @@ function main() {
 	filterStack.registerExternalData("motionData", smoothMotionData);
 	filterStack.registerExternalData("lastOutputFrame", outputCanvas);
 
-	filterStack.addFilter(vfGradient);
+	// filterStack.addFilter(vfGradient);
+	filterStack.addFilter(vfMotionBlur);
 
 	filterStack.start();
 }
 
 main();
-// console.log(trackingDataBodyLeft.length);

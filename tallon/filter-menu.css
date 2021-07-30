@@ -203,10 +203,13 @@
 	user-select: none;
 	transition: 0.1s all;
 	cursor: pointer;
+	nav-index: 0;
 }
 
 .panel-header .expand-icon:hover,
-.panel.expanded .panel-header .expand-icon:hover {
+.panel.expanded .panel-header .expand-icon:hover
+.panel-header .expand-icon:focus,
+.panel.expanded .panel-header .expand-icon:focus {
 	/* color: #eee; */
 	text-shadow: 0px 0px 4px #000000;
 }

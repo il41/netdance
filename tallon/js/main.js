@@ -1,3 +1,4 @@
+const startOverlay = document.getElementById("start-overlay");
 const sidebar = document.getElementById("main-sidebar");
 const vidContainer = document.getElementById("main-video-container");
 const loadingOverlay = document.getElementById("loading-overlay");
@@ -370,4 +371,16 @@ function main() {
 	filterStack.start();
 }
 
-main();
+function startScreen(){
+	let started = false;
+	document.addEventListener("keydown", (e) => {
+		if(started){
+			return;
+		}
+		startOverlay.style.display = "none";
+		started = true;
+		main();
+	});
+}
+
+startScreen();

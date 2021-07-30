@@ -68,7 +68,8 @@
 }
 
 .add-button.expandable:hover,
-.add-button.expandable:focus {
+.add-button.expandable:focus,
+.add-button.expandable:focus-within {
 	border-radius: 0px;
 	box-shadow: 1px 1px 4px #0006;
 	width: 150px;
@@ -99,7 +100,12 @@
 	overflow-y: scroll;
 }
 
-.add-menu-option {
+.add-menu-option-button {
+	display: block;
+	appearance: none;
+	outline: none;
+	border: none;
+
 	color: #222;
 	padding-left: 4px;
 	height: 20px;
@@ -111,11 +117,11 @@
 	cursor: pointer;
 }
 
-.add-menu-option:hover,
-.add-menu-option:focus {
+.add-menu-option-button:hover, .add-menu-option-button:focus {
 	transition: 0.2s all;
 	background-color: #ccc;
 	padding-left: 8px;
+
 }
 
 .add-menu-option:not(:last-of-type) {

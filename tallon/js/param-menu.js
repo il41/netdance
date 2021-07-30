@@ -55,11 +55,15 @@ class ParameterMenu {
 				comps.addMenu.append(comps.addMenuList);
 
 				for (const optionName of addMenuOptions) {
-					const optionElem = elem("div", ["add-menu-option"], { innerText: optionName });
-					optionElem.addEventListener("click", (e) => {
+					const optionElemButton = elem("button", ["add-menu-option-button"], { innerText: optionName });
+					// const optionElem = elem("div", ["add-menu-option"], { innerText: optionName });
+					comps.addMenuList.append(optionElemButton);
+					// comps.addMenuList.append(optionElem);
+					
+					// optionElem.addEventListener("click", (e) => optionElemButton.click(e));
+					optionElemButton.addEventListener("click", (e) => {
 						callbacks.addMenuUsed(e, this, optionName);
 					});
-					comps.addMenuList.append(optionElem);
 				}
 			}
 		}

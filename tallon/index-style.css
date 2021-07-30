@@ -25,16 +25,16 @@ body {
 	background-color: black;
 }
 
-#main-sidebar:not(:hover),
-#main-sidebar.visible {
-	opacity: 0;
-	transition: opacity 0.4s;
+#main-sidebar:hover,
+#main-sidebar:focus-within {
+	transition: opacity 0.2s;
+	opacity: 0.8;
 }
 
 #main-sidebar {
+	opacity: 0;
+	transition: opacity 0.4s;
 	transition-delay: 0.2s;
-	transition: opacity 0.2s;
-	opacity: 0.8;
 	position: absolute;
 	/* height: 100vh; */
 	top: 16px;
@@ -79,7 +79,6 @@ body {
 #loading-overlay:not(.visible) {
 	display: none;
 }
-
 
 #start-overlay {
 	background: #444;

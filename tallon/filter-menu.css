@@ -98,16 +98,30 @@
 
 .add-menu-list {
 	overflow-y: scroll;
+	display: none;
 }
 
-.add-menu-option-button {
+.add-button:hover .add-menu-list, 
+.add-button:focus-within .add-menu-list {
 	display: block;
+}
+
+
+.add-menu-option-button {
+	margin: 0px;
+	padding: 0px;
+	display: flex;
 	appearance: none;
 	outline: none;
 	border: none;
 
+	justify-content: flex-start;
+	align-items: center;
+
+	width: 100%;
 	color: #222;
 	padding-left: 4px;
+	padding-right: 4px;
 	height: 20px;
 	font-size: 90%;
 	user-select: none;
@@ -124,7 +138,7 @@
 	padding-left: 8px;
 }
 
-.add-menu-option:not(:last-of-type) {
+.add-menu-option-button:not(:last-of-type) {
 	border-bottom: 1px solid #ccc;
 }
 

@@ -190,6 +190,7 @@ class ParamPanel {
 			title: elem("div", ["panel-title"], { innerText: this._name }),
 			deleteIcon: null,
 			body: elem("div", ["panel-body"]),
+			expandButton: elem("button", ["expand-button"]),
 			expandIcon: elem("span", ["expand-icon", "material-icons"], { innerText: "tune" }),
 		};
 
@@ -205,6 +206,7 @@ class ParamPanel {
 		comps.root.append(comps.contents);
 
 		comps.contents.append(comps.header);
+		comps.header.append(comps.expandButton);
 		comps.header.append(comps.expandIcon);
 		comps.header.append(comps.title);
 		comps.header.append(comps.headerRight);
@@ -219,8 +221,9 @@ class ParamPanel {
 			});
 		}
 
+		comps.expandIcon.addEventListener("click", (e) => comps.expandButton.click(e));
 		// create expand icon
-		comps.expandIcon.addEventListener("click", (e) => {
+		comps.expandButton.addEventListener("click", (e) => {
 			comps.root.classList.toggle("expanded");
 		});
 

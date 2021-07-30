@@ -188,6 +188,7 @@ class ParamPanel {
 			header: elem("div", ["panel-header"]),
 			headerRight: elem("div", ["panel-header-right"]),
 			title: elem("div", ["panel-title"], { innerText: this._name }),
+			deleteButton: null,
 			deleteIcon: null,
 			body: elem("div", ["panel-body"]),
 			expandButton: elem("button", ["expand-button"]),
@@ -214,9 +215,13 @@ class ParamPanel {
 		comps.contents.append(comps.body);
 
 		if (otherPanelArgs.deletable === true) {
+			const deleteButton = elem("button", ["delete-button"]);
 			const deleteIcon = elem("span", ["delete-icon", "material-icons"], { innerText: "clear" });
+			comps.headerRight.append(deleteButton);
 			comps.headerRight.append(deleteIcon);
-			deleteIcon.addEventListener("click", (e) => {
+			
+			deleteIcon.addEventListener("click", (e) => deleteButton.click(e));
+			deleteButton.addEventListener("click", (e) => {
 				this._menu.removeItem(this._item);
 			});
 		}

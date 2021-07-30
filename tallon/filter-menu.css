@@ -209,28 +209,32 @@
 	transition: 0.1s all;
 	cursor: pointer;
 }
-
-.panel-header .expand-icon:hover,
-.panel-header .expand-button:focus + .expand-icon {
+.panel-header .expand-button:focus + .expand-icon,
+.panel-header .expand-icon:hover {
 	text-shadow: 0px 0px 4px #005fb8 !important;
 }
-
 
 .panel.expanded .panel-header .expand-icon {
 	text-shadow: 0px 0px 2px #000000;
 	color: #fff;
 }
 
+.panel-header .delete-button {
+	position: fixed;
+	opacity: 0;
+}
+
 .panel-header .delete-icon {
-	color: #da8385;
+	color: #e99091;
 	user-select: none;
 	transition: 0.1s all;
 	cursor: pointer;
 }
 
+.panel-header .delete-button:focus + .delete-icon,
 .panel-header .delete-icon:hover {
-	color: #ff5258;
-	text-shadow: 0px 0px 4px #ff9752;
+	color: #ff2a31;
+	text-shadow: 0px 0px 4px #ff7627;
 }
 
 .panel:not(.expanded) .panel-header {
@@ -535,9 +539,8 @@
 	text-shadow: 0px 0px 4px var(--color);
 }
 
-
 .param-body .record-outer .download-button {
-	--color: #005F9B;
+	--color: #005f9b;
 	--hover-color: #2641bd;
 	white-space: nowrap;
 }
@@ -547,5 +550,5 @@
 }
 
 .param-body .record-outer .record-duration {
-	font-family: 'Courier New', Courier, monospace;
+	font-family: "Courier New", Courier, monospace;
 }

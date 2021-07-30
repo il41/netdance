@@ -373,14 +373,17 @@ function main() {
 
 function startScreen(){
 	let started = false;
-	document.addEventListener("keydown", (e) => {
+	const start = (e) => {
 		if(started){
 			return;
 		}
 		startOverlay.style.display = "none";
 		started = true;
 		main();
-	});
+	};
+
+	document.addEventListener("mousedown", start);
+	document.addEventListener("keydown", start);
 }
 
 startScreen();

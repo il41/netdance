@@ -52,7 +52,7 @@ function main() {
 	 */
 	const filterStack = new VideoFilterStack(
 		[tgEverything, tgRawInput, tgPolygon, tgTrails, tgChaoticRectangles, tgSpikyMesh, tgSprinkles, tgLastOutputFrame],
-		[vfShape, vfWobble, vfGradient, vfColor, vfMotionBlur, vfZoomBlur, vfRGBLevels]
+		[vfTexture, vfWobble, vfGradient, vfColor, vfMotionBlur, vfZoomBlur, vfRGBLevels]
 	);
 
 	// variables used for routing hand tracking data to the VideoFilterStack

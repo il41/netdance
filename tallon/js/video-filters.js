@@ -53,16 +53,19 @@ function repack4(a4) {
  * A very minimal video filter that draws its shape texture
  * @type {VideoFilterType}
  */
-const vfShape = new VideoFilterType(
-	"Just Shape",
-	(owner) => [owner.shapeParameterCreator("Trails")],
+const vfTexture = new VideoFilterType(
+	"Just Texture",
+	(owner) => [
+		owner.shapeParameterCreator("Raw Video Frame", "Texture"),
+		owner.shapeParameterCreator("Chaotic Rectangles"),
+	],
 	() => {
-		return gpu.createKernel(function (frame, mask) {
+		return gpu.createKernel(function (frame, texture, mask) {
 			const x = this.thread.x;
 			const y = this.thread.y;
 
-			return mask[y][x];
-		});
+			return lerp3_3(frame[y][x], texture[y][x], mask[y][x]);
+		}).setFunctions([lerp, lerp3_3]);
 	}
 );
 

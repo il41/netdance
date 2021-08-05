@@ -59,7 +59,7 @@ class ParameterMenu {
 					// const optionElem = elem("div", ["add-menu-option"], { innerText: optionName });
 					comps.addMenuList.append(optionElemButton);
 					// comps.addMenuList.append(optionElem);
-					
+
 					// optionElem.addEventListener("click", (e) => optionElemButton.click(e));
 					optionElemButton.addEventListener("click", (e) => {
 						callbacks.addMenuUsed(e, this, optionName);
@@ -154,6 +154,34 @@ class ParameterMenu {
 		}
 		return null;
 	}
+
+	swapItemUp(item){
+		const i = this._itemPanelPairs.findIndex((pair) => pair.item === item);
+		if(i <= 0){
+			return;
+		}
+		const itemAndPanel = this._itemPanelPairs[i];
+		const panelRoot = itemAndPanel.panel._components.root;
+		
+		panelRoot.parentNode.insertBefore(panelRoot, panelRoot.previousSibling);
+
+		this._itemPanelPairs[i] = this._itemPanelPairs[i - 1];
+		this._itemPanelPairs[i - 1] = itemAndPanel;
+	}
+
+	swapItemDown(item){
+		const i = this._itemPanelPairs.findIndex((pair) => pair.item === item);
+		if(i >= this._itemPanelPairs.length - 1){
+			return;
+		}
+		const itemAndPanel = this._itemPanelPairs[i];
+		const panelRoot = itemAndPanel.panel._components.root;
+		
+		panelRoot.parentNode.insertBefore(panelRoot.nextSibling, panelRoot);
+
+		this._itemPanelPairs[i] = this._itemPanelPairs[i + 1];
+		this._itemPanelPairs[i + 1] = itemAndPanel;
+	}
 }
 
 let panelIdCounter = 0;
@@ -204,8 +232,24 @@ class ParamPanel {
 		if (this._menu.isSortable()) {
 			comps.edge = elem("div", ["panel-edge"]);
 			comps.dragIcon = elem("span", ["drag-icon", "material-icons"], { innerText: "drag_indicator" });
+			comps.reorderUpButton = elem("button", ["reorder-button", "reorder-up-button", "material-icons"], {
+				innerText: "expand_less",
+			});
+			comps.reorderDownButton = elem("button", ["reorder-button", "reorder-down-button", "material-icons"], {
+				innerText: "expand_more",
+			});
 			comps.root.append(comps.edge);
+			comps.edge.append(comps.reorderUpButton);
 			comps.edge.append(comps.dragIcon);
+			comps.edge.append(comps.reorderDownButton);
+
+			comps.reorderUpButton.addEventListener("click", (e) => {
+				this._menu.swapItemUp(this._item);
+			});
+
+			comps.reorderDownButton.addEventListener("click", (e) => {
+				this._menu.swapItemDown(this._item);
+			});
 		}
 
 		comps.root.append(comps.contents);
@@ -223,7 +267,7 @@ class ParamPanel {
 			const deleteIcon = elem("span", ["delete-icon", "material-icons"], { innerText: "clear" });
 			comps.headerRight.append(deleteButton);
 			comps.headerRight.append(deleteIcon);
-			
+
 			deleteIcon.addEventListener("click", (e) => deleteButton.click(e));
 			deleteButton.addEventListener("click", (e) => {
 				this._menu.removeItem(this._item);
@@ -654,7 +698,7 @@ class RecordButton extends ParamInput {
 		};
 
 		window.setInterval(() => {
-			const time = (Date.now() - startTime);
+			const time = Date.now() - startTime;
 			if (recording) {
 				comps.duration.innerText = "";
 

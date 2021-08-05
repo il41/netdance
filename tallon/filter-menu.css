@@ -179,6 +179,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	flex-direction: column;
 
 	user-select: none;
 }
@@ -189,6 +190,33 @@
 
 .panel-edge:active {
 	cursor: grabbing;
+}
+
+.panel-edge .reorder-button {
+	appearance: none;
+	outline: none;
+	border: none;
+	background: none;
+	color: inherit;
+	height: 12px;
+	line-height: 0;
+	width: 100%;
+	justify-content: center;
+	align-items: center;
+	display: flex;
+	cursor: pointer;
+}
+
+.panel:last-of-type .reorder-down-button {
+ display: none;
+}
+
+.panel:first-of-type .reorder-up-button {
+	display: none;
+ }
+
+.panel-edge .reorder-button:hover, .panel-edge .reorder-button:focus {
+	text-shadow: 0px 0px 4px #005fb8;
 }
 
 .panel-contents {

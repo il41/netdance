@@ -86,6 +86,10 @@ class VideoFilterStack {
 					name: inst.getName(),
 					otherPanelArgs: {
 						deletable: true,
+						toggleable: true,
+						toggled: (value) => {
+							inst.enabled = value;
+						},
 					},
 				};
 			},
@@ -300,7 +304,9 @@ class VideoFilterStack {
 	_process(imageData, externalData) {
 		let pipe = this._preFilter(imageData);
 		for (const filter of this._filters) {
-			pipe = filter.item.process(pipe, this._textures, externalData);
+			if(filter.item.enabled){
+				pipe = filter.item.process(pipe, this._textures, externalData);
+			}
 		}
 		this._postFilter(pipe);
 	}
@@ -369,11 +375,12 @@ class VideoFilterInstance {
 	constructor(owner, filterType) {
 		this._owner = owner;
 		this._filterType = filterType;
-
+		
 		this._paramsParams = this._filterType.getParamsParamsGen()(owner);
 		this._kernelFunc = filterType.createKernel();
 		this.getParamValues = null;
 		this._dimensionsSet = false;
+		this.enabled = true;
 	}
 
 	getName(){

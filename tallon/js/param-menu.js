@@ -155,28 +155,28 @@ class ParameterMenu {
 		return null;
 	}
 
-	swapItemUp(item){
+	swapItemUp(item) {
 		const i = this._itemPanelPairs.findIndex((pair) => pair.item === item);
-		if(i <= 0){
+		if (i <= 0) {
 			return;
 		}
 		const itemAndPanel = this._itemPanelPairs[i];
 		const panelRoot = itemAndPanel.panel._components.root;
-		
+
 		panelRoot.parentNode.insertBefore(panelRoot, panelRoot.previousSibling);
 
 		this._itemPanelPairs[i] = this._itemPanelPairs[i - 1];
 		this._itemPanelPairs[i - 1] = itemAndPanel;
 	}
 
-	swapItemDown(item){
+	swapItemDown(item) {
 		const i = this._itemPanelPairs.findIndex((pair) => pair.item === item);
-		if(i >= this._itemPanelPairs.length - 1){
+		if (i >= this._itemPanelPairs.length - 1) {
 			return;
 		}
 		const itemAndPanel = this._itemPanelPairs[i];
 		const panelRoot = itemAndPanel.panel._components.root;
-		
+
 		panelRoot.parentNode.insertBefore(panelRoot.nextSibling, panelRoot);
 
 		this._itemPanelPairs[i] = this._itemPanelPairs[i + 1];
@@ -261,6 +261,25 @@ class ParamPanel {
 		comps.header.append(comps.headerRight);
 
 		comps.contents.append(comps.body);
+
+		if (otherPanelArgs.toggleable === true) {
+			const toggleButton = elem("button", ["toggle-button"]);
+			const toggleIcon = elem("span", ["toggle-icon", "material-icons", "active"], { innerText: "power_settings_new" });
+			comps.headerRight.append(toggleButton);
+			comps.headerRight.append(toggleIcon);
+
+			let value = true;
+			toggleIcon.addEventListener("click", (e) => toggleButton.click(e));
+			toggleButton.addEventListener("click", (e) => {
+				value = !value;
+				otherPanelArgs.toggled(value);
+				if (value) {
+					toggleIcon.classList.add("active");
+				} else {
+					toggleIcon.classList.remove("active");
+				}
+			});
+		}
 
 		if (otherPanelArgs.deletable === true) {
 			const deleteButton = elem("button", ["delete-button"]);

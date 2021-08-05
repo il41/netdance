@@ -285,6 +285,30 @@
 	text-shadow: 0px 0px 4px #ff7627;
 }
 
+
+.panel-header .toggle-button {
+	position: fixed;
+	opacity: 0;
+}
+
+.panel-header .toggle-icon {
+	user-select: none;
+	transition: 0.1s all;
+	cursor: pointer;
+}
+
+.panel-header .toggle-button:focus + .toggle-icon.active,
+.panel-header .toggle-icon.active:hover,
+.panel-header .toggle-button:focus + .toggle-icon,
+.panel-header .toggle-icon:hover {
+	text-shadow: 0px 0px 4px #0edf54 !important;
+}
+
+.panel-header .toggle-icon.active {
+	color: #7bff60;
+	text-shadow: 0px 0px 2px #047700;
+}
+
 .panel:not(.expanded) .panel-header {
 	border-bottom-width: 0px;
 }

@@ -106,3 +106,36 @@ body {
 	box-shadow: 0px 0px 4px #55ccff;
 	border-radius: 999px;
 } */
+
+#settings-io-tab {
+	color: #eee;
+	cursor: pointer;
+	font-family: "Exo 2", sans-serif;
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 10px;
+}
+
+#settings-io-tab > .io-container {
+	display: flex;
+	flex-direction: row;
+	user-select: none;
+}
+
+.io-container > * {
+	transition: 0.2s all;
+}
+
+.io-container > button {
+	position: fixed;
+	opacity: 0;
+}
+
+.io-container > button:focus ~ *, .io-container:hover {
+	text-shadow: 0px 0px 4px #005fb8;
+	color: #6cb8ff;
+}
+
+#import-icon {
+	transform: rotate(180deg);
+}

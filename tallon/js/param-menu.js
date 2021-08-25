@@ -1,7 +1,7 @@
 class ParameterMenu {
 	/**
 	 * @param {String} name The displayed name of the menu
-	 * @param {(item: any) => {name: String, paramsInfo: Object, otherPanelArgs: Object | undefined}} itemToPanelParamsFunc A function that takes an item and extracts from it the necessary parameters for creating a menu panel
+	 * @param {(item: any) => {name: String, paramsInfo: Object, otherPanelArgs: Object | undefined, initialValues: Object | undefined}} itemToPanelParamsFunc A function that takes an item and extracts from it the necessary parameters for creating a menu panel
 	 * @param {boolean} sortable
 	 * @param {String|null} addButtonText
 	 * @param {{addMenuUsed: (e: MouseEvent, menu: ParameterMenu, pickedOption: String) => void}} callbacks
@@ -133,7 +133,7 @@ class ParameterMenu {
 	 */
 	addItem(item) {
 		const panelParams = this._itemToPanelParamsFunc(item);
-		const panel = new ParamPanel(this, item, panelParams.name, panelParams.paramsInfo, panelParams.otherPanelArgs);
+		const panel = new ParamPanel(this, item, panelParams.name, panelParams.paramsInfo, panelParams.otherPanelArgs, panelParams.initialValues);
 		this._itemPanelPairs.push({ item, panel });
 		this._components.panelsContainer.append(panel.getRootElement());
 		return panel;
@@ -187,7 +187,7 @@ class ParameterMenu {
 let panelIdCounter = 0;
 
 class ParamPanel {
-	constructor(menu, item, name, paramsInfo, otherPanelArgs = {}) {
+	constructor(menu, item, name, paramsInfo, otherPanelArgs = {}, initialValues = {}) {
 		/**
 		 * @type {ParameterMenu}
 		 */
@@ -205,7 +205,7 @@ class ParamPanel {
 		 * The object that contains the actual parameter values for dat.gui to interact with
 		 * @type {Object}
 		 */
-		this._values = {};
+		this._values = initialValues;
 
 		/**
 		 * Provides a way to access values in order later
@@ -301,12 +301,12 @@ class ParamPanel {
 
 		// create input elements
 		for (const paramInfo of paramsInfo) {
-			this._values[paramInfo.name] = paramInfo.default;
+			this._values[paramInfo.name] = this._values[paramInfo.name] ?? paramInfo.default;
 			this._orderedValueNames.push(paramInfo.name);
 
 			if (paramInfo.hidden) {
 				if (paramInfo.callback !== undefined) {
-					paramInfo.callback(paramInfo.default, undefined);
+					paramInfo.callback(this._values[paramInfo.name], undefined);
 				}
 				continue;
 			}
@@ -416,7 +416,7 @@ class RangeInput extends ParamInput {
 	 * @param {Object} paramParams
 	 */
 	constructor(panel, values, paramParams) {
-		super(panel, values, paramParams, paramParams.default ?? 0);
+		super(panel, values, paramParams, values[paramParams.name] ?? 0);
 
 		this._components.root = elem("div", ["range"]);
 
@@ -425,7 +425,7 @@ class RangeInput extends ParamInput {
 			type: "number",
 			min: paramParams.min,
 			max: paramParams.max,
-			value: paramParams.default ?? 0,
+			value: values[paramParams.name] ?? 0,
 			step: paramParams.step || 0.01,
 		});
 		this._components.root.append(this._components.numberInput);
@@ -436,7 +436,7 @@ class RangeInput extends ParamInput {
 			max: paramParams.max ?? 1,
 			step: paramParams.step || 0.01,
 		});
-		this._components.sliderInput.value = paramParams.default; // this has to happen after step/min/max are set
+		this._components.sliderInput.value = values[paramParams.name]; // this has to happen after step/min/max are set
 		this._components.root.append(this._components.sliderInput);
 
 		const changeEvent = (e) => {
@@ -473,13 +473,13 @@ class CheckboxInput extends ParamInput {
 	 * @param {Object} paramParams
 	 */
 	constructor(panel, values, paramParams) {
-		super(panel, values, paramParams, paramParams.default ?? false);
+		super(panel, values, paramParams, values[paramParams.name] ?? false);
 
 		this._components.root = elem("div", ["checkbox-outer"]);
 
 		this._components.checkboxInput = elem("input", ["checkbox"], {
 			type: "checkbox",
-			checked: paramParams.default ?? false,
+			checked: values[paramParams.name] ?? false,
 		});
 
 		this._components.checkboxInput.addEventListener("change", (e) => {
@@ -513,11 +513,14 @@ class EnumInput extends ParamInput {
 	 * @param {Object} paramParams
 	 */
 	constructor(panel, values, paramParams) {
-		super(panel, values, paramParams, paramParams.default);
+		super(panel, values, paramParams, values[paramParams.name]);
 
 		this._components.root = elem("div", ["select-outer"]);
 
 		this._components.selectInput = elem("select", ["select"]);
+
+		this._values = values;
+		this._paramParams = paramParams;
 
 		this._components.selectInput.addEventListener("change", (e) => {
 			const prevVal = values[paramParams.name];
@@ -545,7 +548,7 @@ class EnumInput extends ParamInput {
 			innerText: optName,
 			value: optName,
 		});
-		if (optName === this._paramParams.default) {
+		if (optName === this._values[this._paramParams.name]) {
 			opt.selected = "selected";
 		}
 		this._components.selectInput.append(opt);
@@ -583,7 +586,7 @@ class EnumInput extends ParamInput {
 
 class ColorInput extends ParamInput {
 	constructor(panel, values, paramParams) {
-		super(panel, values, paramParams, paramParams.default ?? "#000000");
+		super(panel, values, paramParams, values[paramParams.name] ?? "#000000");
 
 		this._components.root = elem("div", ["color-outer"]);
 
@@ -632,7 +635,7 @@ class ColorInput extends ParamInput {
 
 		this._iroPicker = new iro.ColorPicker(this._components.collapsibleInner, {
 			width: 100,
-			color: paramParams.default ?? "#000000",
+			color: values[paramParams.name] ?? "#000000",
 			display: "flex",
 			margin: 4,
 			padding: 2,

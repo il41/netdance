@@ -91,6 +91,7 @@ class VideoFilterStack {
 							inst.enabled = value;
 						},
 					},
+					initialValues: inst.initialValues,
 				};
 			},
 			true,
@@ -111,13 +112,16 @@ class VideoFilterStack {
 
 		this._textureMenu = new ParameterMenu(
 			"Shapes",
-			(inst) => ({
-				paramsInfo: inst.getParamsParams(),
-				name: inst.getName(),
-				otherPanelArgs: {
-					deletable: false,
-				},
-			}),
+			(inst) => {
+				return {
+					paramsInfo: inst.getParamsParams(),
+					name: inst.getName(),
+					otherPanelArgs: {
+						deletable: false,
+					},
+					initialValues: inst.initialValues,
+				};
+			},
 			false,
 			"Add Shape",
 			[],
@@ -137,15 +141,31 @@ class VideoFilterStack {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param {String} def default shape name
 	 * @returns param params for a shape input
 	 */
-	shapeParameterCreator(def, name="Shape", hidden=false){
-		return {name: name, type:"enum", hidden: hidden, source: "Textures", default: def, callback: (val, prevVal) => {
-			this._textures.get(prevVal)?.unuse();
-			this._textures.get(val)?.use();
-		}};
+	shapeParameterCreator(def, name = "Shape", hidden = false) {
+		return {
+			name: name,
+			type: "enum",
+			hidden: hidden,
+			source: "Textures",
+			default: def,
+			callback: (val, prevVal) => {
+				this._textures.get(prevVal)?.unuse();
+				this._textures.get(val)?.use();
+			},
+		};
+	}
+
+	/**
+	 * 
+	 * @param {String} name 
+	 * @returns {VideoFilterType}
+	 */
+	getFilterType(name) {
+		return this._filterTypes.get(name);
 	}
 
 	/**
@@ -219,8 +239,8 @@ class VideoFilterStack {
 	 * @param {TextureGeneratorType} textureGenType
 	 * @returns {TextureGeneratorInstance} Returns the added instance of the provided texture generator
 	 */
-	addTextureGenerator(name, textureGenType) {
-		const texGen = textureGenType.instantiate(this._vidCanvas, this._externalData);
+	addTextureGenerator(name, textureGenType, initialValues = {}) {
+		const texGen = textureGenType.instantiate(this._vidCanvas, this._externalData, initialValues);
 		this._textures.set(name, texGen);
 		this._textureNameList.push(name);
 		this._filterMenu.sourcingDataChanged("Shapes", { added: [name] });
@@ -241,8 +261,8 @@ class VideoFilterStack {
 	 *
 	 * @param {VideoFilterType} filterType
 	 */
-	addFilter(filterType) {
-		const filter = new VideoFilterInstance(this, filterType);
+	addFilter(filterType, initialValues) {
+		const filter = new VideoFilterInstance(this, filterType, initialValues);
 		filter.setDimensions(this._width, this._height);
 		const panel = this._filterMenu.addItem(filter);
 		filter.setParamValueGetter(panel.getValuesOrdered);
@@ -304,11 +324,22 @@ class VideoFilterStack {
 	_process(imageData, externalData) {
 		let pipe = this._preFilter(imageData);
 		for (const filter of this._filters) {
-			if(filter.item.enabled){
+			if (filter.item.enabled) {
 				pipe = filter.item.process(pipe, this._textures, externalData);
 			}
 		}
 		this._postFilter(pipe);
+	}
+
+	gatherFilterSettings(){
+		const list = [];
+		for(const pair of this._filters){
+			list.push({
+				t: pair.item.getType().getName(),
+				v: pair.panel.getValuesUnordered(),
+			});
+		}
+		return list;
 	}
 }
 
@@ -372,18 +403,20 @@ class VideoFilterInstance {
 	 *
 	 * @param {VideoFilterType} filterType
 	 */
-	constructor(owner, filterType) {
+	constructor(owner, filterType, initialValues = {}) {
 		this._owner = owner;
 		this._filterType = filterType;
-		
+
 		this._paramsParams = this._filterType.getParamsParamsGen()(owner);
 		this._kernelFunc = filterType.createKernel();
 		this.getParamValues = null;
 		this._dimensionsSet = false;
 		this.enabled = true;
+
+		this.initialValues = initialValues;
 	}
 
-	getName(){
+	getName() {
 		return this._filterType.getName();
 	}
 

@@ -3,6 +3,14 @@ const sidebar = document.getElementById("main-sidebar");
 const vidContainer = document.getElementById("main-video-container");
 const loadingOverlay = document.getElementById("loading-overlay");
 const loadingOverlayList = document.getElementById("loading-overlay-list");
+let urlParams;
+try{
+	urlParams = JSON.parse(atob(window.location.search.slice(1)));
+}catch {
+	urlParams = {filters: []};
+}
+
+console.log(urlParams);
 
 let loadingRequests = new Set();
 let trackingModeLoading = false;
@@ -17,7 +25,7 @@ const updateLoadingOverlay = () => {
 
 function main() {
 	document.addEventListener("keydown", (e) => {
-		if(e.key === "Escape"){
+		if (e.key === "Escape") {
 			document.activeElement.blur();
 		}
 	});
@@ -323,6 +331,21 @@ function main() {
 		],
 	});
 
+	const exportButton = document.getElementById("export-button");
+	const exportContainer = document.getElementById("export-container");
+	exportContainer.addEventListener("click", (e) => exportButton.click(e));
+	exportButton.addEventListener("click", (e) => {
+		const settings = {
+			filters: filterStack.gatherFilterSettings(),
+		}
+		const str = btoa(JSON.stringify(settings));
+		window.history.replaceState(null, null, `${location.pathname}?${str}`);
+	});
+
+	// const importButton = document.getElementById("import-button");
+	// const importContainer = document.getElementById("import-container");
+	// importContainer.addEventListener("click", (e) => importButton.click(e));
+
 	sidebar.append(generalMenu.getRoot());
 	sidebar.append(filterStack.getTextureMenuRoot());
 	sidebar.append(filterStack.getFilterMenuRoot());
@@ -371,16 +394,17 @@ function main() {
 	filterStack.registerExternalData("motionData", smoothMotionData);
 	filterStack.registerExternalData("lastOutputFrame", outputCanvas);
 
-	// filterStack.addFilter(vfGradient);
-	filterStack.addFilter(vfMotionBlur);
+	for(const filt of urlParams.filters){
+		filterStack.addFilter(filterStack.getFilterType(filt.t), filt.v);
+	}
 
 	filterStack.start();
 }
 
-function startScreen(){
+function startScreen() {
 	let started = false;
 	const start = (e) => {
-		if(started){
+		if (started) {
 			return;
 		}
 		startOverlay.style.display = "none";

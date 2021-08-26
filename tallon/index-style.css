@@ -140,3 +140,7 @@ body {
 #import-icon {
 	transform: rotate(180deg);
 }
+
+#url-holder {
+	display: none;
+}

@@ -19,7 +19,7 @@ const filterTypes = [vfTexture, vfWobble, vfGradient, vfColor, vfMotionBlur, vfZ
 /**
  * This variable is not actively updated; It's just used for initialization.
  * ...Except for the `tracking` section— That's actively updated and accessed.
- * 
+ *
  * it works, don't question it
  */
 let settings;
@@ -37,7 +37,7 @@ try {
 			pullStrength: 0.2,
 			springStrength: 0.75,
 			timeOffset: 0,
-		}
+		},
 	};
 }
 
@@ -60,7 +60,6 @@ function main() {
 			document.activeElement.blur();
 		}
 	});
-
 
 	const videoSources = new Map([
 		["Left Video", null],
@@ -352,17 +351,25 @@ function main() {
 		],
 	});
 
-	const exportButton = document.getElementById("export-button");
-	const exportContainer = document.getElementById("export-container");
-	exportContainer.addEventListener("click", (e) => exportButton.click(e));
-	exportButton.addEventListener("click", (e) => {
+	const updateUrl = () => {
 		const newSettings = {
 			textures: filterStack.getTextureSettings(),
 			filters: filterStack.getFilterSettings(),
 			tracking: settings.tracking,
 		};
-		const str = btoa(JSON.stringify(newSettings));
-		window.history.replaceState(null, null, `${location.pathname}?${str}`);
+		const url = `${location.pathname}?${btoa(JSON.stringify(newSettings))}`;
+		window.history.replaceState(null, null, url);
+		return url;
+	};
+
+	setInterval(updateUrl, 500);
+
+	const exportContainer = document.getElementById("export-container");
+	const urlHolder = document.getElementById("url-holder");
+	exportContainer.addEventListener("click", () => {
+		updateUrl()
+		navigator.clipboard.writeText(window.location).then(() => alert("Link (with settings) copied to clipboard!"));
+		// setTimeout(() => alert("A link with your settings has been copied to your clipboard!"), 1000);
 	});
 
 	// const importButton = document.getElementById("import-button");

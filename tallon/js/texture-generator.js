@@ -22,8 +22,15 @@ class TextureGeneratorType {
 		return this._paramParams;
 	}
 
-	instantiate(sourceCanvas, externalDataObj) {
-		return new TextureGeneratorInstance(this, sourceCanvas, this.initFunc, this.drawFunc, externalDataObj);
+	instantiate(sourceCanvas, externalDataObj, initialValues) {
+		return new TextureGeneratorInstance(
+			this,
+			sourceCanvas,
+			this.initFunc,
+			this.drawFunc,
+			externalDataObj,
+			initialValues
+		);
 	}
 }
 
@@ -37,13 +44,14 @@ class TextureGeneratorInstance {
 	 * @param {Object} paramParams
 	 * @param {Object} externalDataObj
 	 */
-	constructor(type, sourceCanvas, initFunc, drawFunc, externalDataObj) {
+	constructor(type, sourceCanvas, initFunc, drawFunc, externalDataObj, initialValues = {}) {
 		this._textureType = type;
 		this._paramParams = this._textureType.getParamsParams();
 		this._sourceCanvas = sourceCanvas;
 		this._canvas = document.createElement("canvas");
 
 		this.ctx = this._canvas.getContext("2d");
+		this.initialValues = initialValues;
 
 		/**
 		 * @type {(selfData: Object, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, input: HTMLCanvasElement, params: Object, other: Object) => void}
@@ -71,11 +79,11 @@ class TextureGeneratorInstance {
 		this._users = 0;
 	}
 
-	getName(){
+	getName() {
 		return this._textureType.getName();
 	}
-	
-	getParamsParams(){
+
+	getParamsParams() {
 		return this._textureType.getParamsParams();
 	}
 
@@ -105,8 +113,15 @@ class TextureGeneratorInstance {
 	}
 
 	draw() {
-		if(this._users > 0){
-			this.drawFunc(this.selfData, this._canvas, this.ctx, this._sourceCanvas, this.getParamValues(), this.externalData);
+		if (this._users > 0) {
+			this.drawFunc(
+				this.selfData,
+				this._canvas,
+				this.ctx,
+				this._sourceCanvas,
+				this.getParamValues(),
+				this.externalData
+			);
 		}
 	}
 

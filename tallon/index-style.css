@@ -124,6 +124,7 @@ body {
 
 .io-container > * {
 	transition: 0.2s all;
+	cursor: pointer;
 }
 
 .io-container > button {

@@ -16,18 +16,32 @@ const textureGenTypes = [
 ];
 const filterTypes = [vfTexture, vfWobble, vfGradient, vfColor, vfMotionBlur, vfZoomBlur, vfRGBLevels];
 
-let urlParams;
+/**
+ * This variable is not actively updated; It's just used for initialization.
+ * ...Except for the `tracking` section— That's actively updated and accessed.
+ * 
+ * it works, don't question it
+ */
+let settings;
+
 try {
-	urlParams = JSON.parse(atob(window.location.search.slice(1)));
+	settings = JSON.parse(atob(window.location.search.slice(1)));
 } catch {
 	// default settings
-	urlParams = { 
-		filters: [{t: "Gradient", v: {}}], 
-		textures: textureGenTypes.map((typ) => ({ t: typ.getName(), v: {} })) 
+	settings = {
+		filters: [{ t: "Gradient", v: {} }],
+		textures: textureGenTypes.map((typ) => ({ t: typ.getName(), v: {} })),
+		tracking: {
+			activeTracker: "Full Body",
+			smoothingMode: "Springy",
+			pullStrength: 0.2,
+			springStrength: 0.75,
+			timeOffset: 0,
+		}
 	};
 }
 
-console.log(urlParams);
+console.log(settings);
 
 let loadingRequests = new Set();
 let trackingModeLoading = false;
@@ -47,10 +61,6 @@ function main() {
 		}
 	});
 
-	/**
-	 * false: body, true: hands
-	 */
-	let activeTracker = false;
 
 	const videoSources = new Map([
 		["Left Video", null],
@@ -136,7 +146,7 @@ function main() {
 	const updateTrackingMode = () => {
 		trackingModeLoading = true;
 
-		if (activeTracker === "Just Hands") {
+		if (settings.activeTracker === "Just Hands") {
 			loadingRequests.add("hand tracking");
 			updateLoadingOverlay();
 
@@ -282,10 +292,6 @@ function main() {
 		],
 	});
 
-	let smoothingMode = "Springy";
-	let pullStrength = 0.2;
-	let springStrength = 0.75;
-
 	generalMenu.addItem({
 		name: "Motion Tracking",
 		paramsInfo: [
@@ -293,9 +299,9 @@ function main() {
 				name: "Mode",
 				type: "enum",
 				options: ["Full Body", "Just Hands"],
-				default: "Full Body",
+				default: settings.tracking.activeTracker,
 				callback: (val) => {
-					activeTracker = val;
+					settings.tracking.activeTracker = val;
 					updateTrackingMode();
 				},
 			},
@@ -303,9 +309,9 @@ function main() {
 				name: "Smoothing Mode",
 				type: "enum",
 				options: ["None", "Basic", "Springy"],
-				default: smoothingMode,
+				default: settings.tracking.smoothingMode,
 				callback: (val) => {
-					smoothingMode = val;
+					settings.tracking.smoothingMode = val;
 				},
 			},
 			{
@@ -314,9 +320,9 @@ function main() {
 				min: 0.01,
 				max: 1,
 				step: 0.01,
-				default: pullStrength,
+				default: settings.tracking.pullStrength,
 				callback: (val) => {
-					pullStrength = val;
+					settings.tracking.pullStrength = val;
 				},
 			},
 			{
@@ -325,9 +331,9 @@ function main() {
 				min: 0,
 				max: 1,
 				step: 0.01,
-				default: springStrength,
+				default: settings.tracking.springStrength,
 				callback: (val) => {
-					springStrength = val;
+					settings.tracking.springStrength = val;
 				},
 			},
 			{
@@ -335,11 +341,12 @@ function main() {
 				type: "number",
 				min: -5,
 				max: 5,
-				default: 0,
+				default: settings.tracking.timeOffset,
 				step: 0.1,
 				callback: (val) => {
-					bodyTracker.setStoreOffset(-val);
-					handTracker.setStoreOffset(-val);
+					settings.tracking.timeOffset = -val;
+					bodyTracker.setStoreOffset(settings.tracking.timeOffset);
+					handTracker.setStoreOffset(settings.tracking.timeOffset);
 				},
 			},
 		],
@@ -349,11 +356,12 @@ function main() {
 	const exportContainer = document.getElementById("export-container");
 	exportContainer.addEventListener("click", (e) => exportButton.click(e));
 	exportButton.addEventListener("click", (e) => {
-		const settings = {
+		const newSettings = {
 			textures: filterStack.getTextureSettings(),
 			filters: filterStack.getFilterSettings(),
+			tracking: settings.tracking,
 		};
-		const str = btoa(JSON.stringify(settings));
+		const str = btoa(JSON.stringify(newSettings));
 		window.history.replaceState(null, null, `${location.pathname}?${str}`);
 	});
 
@@ -370,7 +378,7 @@ function main() {
 		for (let i = 0; i < markerCount; i++) {
 			lastSmoothMotionData[i] = smoothMotionData[i];
 			// don't smooth if the coord is invalid or smoothing is disabled
-			if (rawMotionData[i][0] === -1 || smoothingMode === "None") {
+			if (rawMotionData[i][0] === -1 || settings.tracking.smoothingMode === "None") {
 				smoothMotionData[i] = rawMotionData[i];
 			} else {
 				// if last point is invalid, just replace it with current point
@@ -379,18 +387,18 @@ function main() {
 				const raw2d = new Vector2D(rawMotionData[i][0], rawMotionData[i][1]);
 
 				// actual smoothing
-				switch (smoothingMode) {
+				switch (settings.tracking.smoothingMode) {
 					case "Basic":
 						{
-							const newPos = lastSmooth2d.lerp(raw2d, pullStrength);
+							const newPos = lastSmooth2d.lerp(raw2d, settings.tracking.pullStrength);
 							smoothMotionData[i] = [newPos.x, newPos.y, rawMotionData[2]];
 						}
 						break;
 					case "Springy":
 						{
 							motionDataVelocity[i] = motionDataVelocity[i]
-								.multiplyScalar(springStrength)
-								.add(raw2d.sub(lastSmooth2d).multiplyScalar(pullStrength));
+								.multiplyScalar(settings.tracking.springStrength)
+								.add(raw2d.sub(lastSmooth2d).multiplyScalar(settings.tracking.pullStrength));
 
 							const newPos = lastSmooth2d.add(motionDataVelocity[i]);
 							smoothMotionData[i] = [newPos.x, newPos.y, rawMotionData[2]];
@@ -409,12 +417,12 @@ function main() {
 	filterStack.registerExternalData("motionData", smoothMotionData);
 	filterStack.registerExternalData("lastOutputFrame", outputCanvas);
 
-	for (const tex of urlParams.textures) {
+	for (const tex of settings.textures) {
 		const texTyp = filterStack.getTextureGeneratorType(tex.t);
 		filterStack.addTextureGenerator(texTyp.getName(), texTyp, tex.v);
 	}
 
-	for (const filt of urlParams.filters) {
+	for (const filt of settings.filters) {
 		filterStack.addFilter(filterStack.getFilterType(filt.t), filt.v);
 	}
 

@@ -309,7 +309,7 @@ const tgSpikyMesh = new TextureGeneratorType(
 const tgPolygon = new TextureGeneratorType(
 	"Polygon",
 	[
-		{ name: "Drift", type: "number", min: 0, max: 2, default: 1, step: 0.1 },
+		{ name: "Drift", type: "number", min: 0, max: 2, default: 0, step: 0.1 },
 		{ name: "Thickness", type: "number", min: 0.1, max: 10, default: 0.5, step: 0.1 },
 		{ name: "Fade", type: "number", min: 0, max: 1, default: 1, step: 0.01 },
 		{ name: "Blur", type: "number", min: 0, max: 5, default: 0, step: 1 },

@@ -3,11 +3,28 @@ const sidebar = document.getElementById("main-sidebar");
 const vidContainer = document.getElementById("main-video-container");
 const loadingOverlay = document.getElementById("loading-overlay");
 const loadingOverlayList = document.getElementById("loading-overlay-list");
+
+const textureGenTypes = [
+	tgEverything,
+	tgRawInput,
+	tgPolygon,
+	tgTrails,
+	tgChaoticRectangles,
+	tgSpikyMesh,
+	tgSprinkles,
+	tgLastOutputFrame,
+];
+const filterTypes = [vfTexture, vfWobble, vfGradient, vfColor, vfMotionBlur, vfZoomBlur, vfRGBLevels];
+
 let urlParams;
-try{
+try {
 	urlParams = JSON.parse(atob(window.location.search.slice(1)));
-}catch {
-	urlParams = {filters: []};
+} catch {
+	// default settings
+	urlParams = { 
+		filters: [{t: "Gradient", v: {}}], 
+		textures: textureGenTypes.map((typ) => ({ t: typ.getName(), v: {} })) 
+	};
 }
 
 console.log(urlParams);
@@ -58,10 +75,7 @@ function main() {
 	/**
 	 * @type {VideoFilterStack}
 	 */
-	const filterStack = new VideoFilterStack(
-		[tgEverything, tgRawInput, tgPolygon, tgTrails, tgChaoticRectangles, tgSpikyMesh, tgSprinkles, tgLastOutputFrame],
-		[vfTexture, vfWobble, vfGradient, vfColor, vfMotionBlur, vfZoomBlur, vfRGBLevels]
-	);
+	const filterStack = new VideoFilterStack(textureGenTypes, filterTypes);
 
 	// variables used for routing hand tracking data to the VideoFilterStack
 	// hand tracking has 42 markers, and body tracking has 33; here we just use the larger
@@ -336,8 +350,9 @@ function main() {
 	exportContainer.addEventListener("click", (e) => exportButton.click(e));
 	exportButton.addEventListener("click", (e) => {
 		const settings = {
-			filters: filterStack.gatherFilterSettings(),
-		}
+			textures: filterStack.getTextureSettings(),
+			filters: filterStack.getFilterSettings(),
+		};
 		const str = btoa(JSON.stringify(settings));
 		window.history.replaceState(null, null, `${location.pathname}?${str}`);
 	});
@@ -394,7 +409,12 @@ function main() {
 	filterStack.registerExternalData("motionData", smoothMotionData);
 	filterStack.registerExternalData("lastOutputFrame", outputCanvas);
 
-	for(const filt of urlParams.filters){
+	for (const tex of urlParams.textures) {
+		const texTyp = filterStack.getTextureGeneratorType(tex.t);
+		filterStack.addTextureGenerator(texTyp.getName(), texTyp, tex.v);
+	}
+
+	for (const filt of urlParams.filters) {
 		filterStack.addFilter(filterStack.getFilterType(filt.t), filt.v);
 	}
 

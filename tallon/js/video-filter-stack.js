@@ -128,10 +128,6 @@ class VideoFilterStack {
 			{}
 		);
 
-		for (const type of textureTypes) {
-			this.addTextureGenerator(type.getName(), type);
-		}
-
 		/**
 		 * List of filter instances
 		 *
@@ -166,6 +162,23 @@ class VideoFilterStack {
 	 */
 	getFilterType(name) {
 		return this._filterTypes.get(name);
+	}
+
+	/**
+	 * 
+	 * @param {String} name 
+	 * @returns {TextureGeneratorType}
+	 */
+	getTextureGeneratorType(name) {
+		return this._textureTypes.get(name);
+	}
+
+	/**
+	 * 
+	 * @returns {Map<String, TextureGeneratorType>}
+	 */
+	getTextureTypes(){
+		return this._textureTypes;
 	}
 
 	/**
@@ -331,13 +344,25 @@ class VideoFilterStack {
 		this._postFilter(pipe);
 	}
 
-	gatherFilterSettings(){
+	getFilterSettings(){
 		const list = [];
 		for(const pair of this._filters){
 			list.push({
 				t: pair.item.getType().getName(),
 				v: pair.panel.getValuesUnordered(),
 			});
+		}
+		return list;
+	}
+
+	getTextureSettings(){
+		const list = [];
+		for (const kv of this._textures){
+			list.push({
+				// n: kv[0],
+				t: kv[1].getType().getName(),
+				v: kv[1].getParamValues(),
+			})
 		}
 		return list;
 	}

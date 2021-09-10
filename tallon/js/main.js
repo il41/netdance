@@ -145,7 +145,8 @@ function main() {
 	const updateTrackingMode = () => {
 		trackingModeLoading = true;
 
-		if (settings.activeTracker === "Just Hands") {
+		console.log(settings.tracking.activeTracker);
+		if (settings.tracking.activeTracker === "Just Hands") {
 			loadingRequests.add("hand tracking");
 			updateLoadingOverlay();
 

@@ -87,8 +87,10 @@ class _VideoMotionTracker {
 		this._videoElement = vid;
 		this._currentSourceName = sourceName;
 		const stored = this._storedData.get(this._currentSourceName);
-
-		if (stored !== undefined) {
+		
+		if (stored === undefined) {
+			this._activeStore = null;
+		}else{
 			this._activeStore = stored;
 		}
 	}
